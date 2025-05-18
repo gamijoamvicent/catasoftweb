@@ -1,0 +1,110 @@
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #F3F6F9;
+    margin: 0;
+    padding: 0;
+}
+
+.page-container {
+    max-width: 1000px;
+    margin: 40px auto;
+    padding: 30px;
+    background-color: white;
+    border-radius: 12px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+}
+
+.header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+.header h2 {
+    color: #5A5A5A;
+    margin-bottom: 10px;
+}
+.header p {
+    color: #888;
+    font-size: 14px;
+}
+
+/* Campo de búsqueda */
+.buscador-container {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 20px;
+}
+.buscador-container label {
+    font-weight: bold;
+    margin-bottom: 6px;
+    color: #444;
+}
+.buscador-container input[type="text"] {
+    padding: 12px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    background-color: #FAFAFA;
+    font-size: 14px;
+}
+.buscador-container input:focus {
+    outline: none;
+    border-color: #AED9E0;
+}
+
+/* Contenedor de tabla con scroll */
+.table-container {
+    max-height: 500px; /* Altura máxima antes de activar scroll */
+    overflow-y: auto;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    background-color: #fff;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+/* Estilo de tabla */
+.modern-table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: #fff;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.modern-table thead {
+    background-color: #D9B3FF;
+    color: white;
+}
+
+.modern-table th,
+.modern-table td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+}
+
+.modern-table tr:hover {
+    background-color: #f1f1f1;
+}
+
+/* Botones */
+.action-button {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 20px;
+}
+
+.btn-back {
+    padding: 10px 20px;
+    background-color: #B6D7A8;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+.btn-back:hover {
+    background-color: #a1c993;
+}

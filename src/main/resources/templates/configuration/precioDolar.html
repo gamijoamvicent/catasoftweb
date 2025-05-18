@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+    <head>
+        <meta charset="UTF-8">
+        <title>Precio del Dólar</title>
+        <link rel="stylesheet" th:href="@{/css/precioDolar.css}">
+    </head>
+    <body>
+
+        <div class="page-container">
+            <div class="header">
+                <h2>Configuración del Precio del Dólar</h2>
+                <p>Establece o actualiza el valor actual del dólar.</p>
+            </div>
+
+            <!-- Mensaje de éxito -->
+            <div th:if="${mensajeExito}" class="alert alert-success" role="alert" th:text="${mensajeExito}"></div>
+
+            <!-- Mensaje de error -->
+            <div th:if="${mensajeError}" class="alert alert-danger" role="alert" th:text="${mensajeError}"></div>
+
+            <!-- Información actual -->
+            <div class="info-box">
+                <p><strong>Precio actual:</strong> $<span th:text="${ultimoPrecio?.precioDolar} ?: '0.00'">0.00</span></p>
+                <p><strong>Última actualización:</strong> 
+                    <span th:text="${ultimoPrecio?.fechaDolar} ?: 'No disponible'">No disponible</span>
+                </p>
+            </div>
+
+            <form th:action="@{/configuracion/dolar}" method="post">
+                <label for="precioInput">Nuevo precio del dólar ($):</label>
+                <input type="number" step="0.01" id="precioInput" name="precioDolar" placeholder="Ej. 36.50" required />
+
+                <button type="submit" class="btn-guardar">Actualizar Precio</button>
+            </form>
+        </div>
+
+        <!-- Botón volver -->
+        <div class="action-button">
+            <button class="btn-back" onclick="window.location.href='/'">Volver al Menú</button>
+        </div>
+
+    </body>
+</html>

@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Actualizar Producto</title>
+    <link rel="stylesheet" th:href="@{/css/styleActualizarProducto.css}">
+</head>
+<body>
+
+<div class="page-container">
+    <div class="header">
+        <h2>Actualizar Producto</h2>
+        <p>Busca, selecciona y edita los datos de los productos.</p>
+    </div>
+
+    <!-- Mensaje de éxito -->
+    <div th:if="${mensajeExito}" class="alert alert-success" role="alert" th:text="${mensajeExito}"></div>
+
+    <!-- Mensaje de error -->
+    <div th:if="${mensajeError}" class="alert alert-danger" role="alert" th:text="${mensajeError}"></div>
+
+    <div class="split-container">
+        <!-- Columna izquierda: Buscador -->
+        <div class="buscador-column">
+            <div class="input-group">
+                <label for="buscarField">Buscar producto:</label>
+                <input type="text" id="buscarField" placeholder="Ej. Cuaderno" onkeyup="buscarProducto()" autocomplete="off">
+            </div>
+
+            <!-- Lista de resultados -->
+            <ul id="sugerenciasList" class="sugerencias-list" onclick="seleccionarProducto(event)">
+                <!-- Productos aparecerán aquí dinámicamente -->
+            </ul>
+        </div>
+
+        <!-- Columna derecha: Formulario -->
+        <div class="form-column">
+            <h3>Editar Datos</h3>
+            <form th:action="@{/producto/actualizar}" method="post" th:object="${producto}">
+                <input type="hidden" id="idInput" name="id">
+
+                <label for="nombreInput">Nombre</label>
+                <input type="text" id="nombreInput" name="nombre" placeholder="Nombre del producto" required autocomplete="off">
+
+                <label for="descripcionInput">Descripción</label>
+                <input type="text" id="descripcionInput" name="descripcion" placeholder="Breve descripción" autocomplete="off">
+
+                <label for="codigoInput">Código Único</label>
+                <input type="text" autocomplete="off" id="codigoInput" name="codigoUnico" placeholder="Código único" readonly>
+
+                <label for="precioVentaInput">Precio Venta ($)</label>
+                <input type="number" autocomplete="off" step="0.01" id="precioVentaInput" name="precioVenta" placeholder="0.00" required>
+
+                <label for="precioCostoInput">Precio Costo ($)</label>
+                <input type="number" autocomplete="off" step="0.01" id="precioCostoInput" name="precioCosto" placeholder="0.00" required>
+
+                <label for="categoriaInput">Categoría</label>
+                <input type="text" autocomplete="off" id="categoriaInput" name="categoria" placeholder="Ej. Papelería">
+
+                <label for="marcaInput">Marca</label>
+                <input type="text" autocomplete="off" id="marcaInput" name="marca" placeholder="Ej. Norma">
+
+                <label for="proveedorInput">Proveedor</label>
+                <input type="text" autocomplete="off" id="proveedorInput" name="proveedor" placeholder="Nombre del proveedor">
+
+                <label for="cantidadInput">Cantidad</label>
+                <input type="number" autocomplete="off" id="cantidadInput" name="cantidad" placeholder="Unidades" required>
+
+                <button type="submit" class="btn-submit">Actualizar Producto</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Botón volver -->
+    <div class="action-button">
+        <button class="btn-back" onclick="window.location.href='/'">Volver al Menú</button>
+    </div>
+</div>
+
+<!-- Datos ocultos desde Thymeleaf -->
+<ul id="productosData" style="display: none;">
+    <li th:each="producto : ${productos}"
+        th:data-id="${producto.id}"
+        th:data-nombre="${producto.nombre}"
+        th:data-descripcion="${producto.descripcion}"
+        th:data-codigoUnico="${producto.codigoUnico}"
+        th:data-precioVenta="${producto.precioVenta}"
+        th:data-precioCosto="${producto.precioCosto}"
+        th:data-categoria="${producto.categoria}"
+        th:data-marca="${producto.marca}"
+        th:data-proveedor="${producto.proveedor}"
+        th:data-cantidad="${producto.cantidad}">
+    </li>
+</ul>
+
+<script>
+    let todosLosProductos = [];
+
+    // Cargar productos al inicio desde Thymeleaf
+    window.onload = () => {
+        const dataProductos = document.querySelectorAll("#productosData li");
+
+        if (dataProductos.length === 0) {
+            console.warn("⚠️ No se encontraron productos.");
+            return;
+        }
+
+        todosLosProductos = Array.from(dataProductos).map(li => ({
+            id: li.getAttribute("data-id"),
+            nombre: li.getAttribute("data-nombre") || "",
+            descripcion: li.getAttribute("data-descripcion") || "",
+            codigoUnico: li.getAttribute("data-codigoUnico") || "",
+            precioVenta: parseFloat(li.getAttribute("data-precioVenta")) || 0,
+            precioCosto: parseFloat(li.getAttribute("data-precioCosto")) || 0,
+            categoria: li.getAttribute("data-categoria") || "",
+            marca: li.getAttribute("data-marca") || "Sin marca",
+            proveedor: li.getAttribute("data-proveedor") || "",
+            cantidad: parseInt(li.getAttribute("data-cantidad")) || 0
+        }));
+
+        renderizarSugerencias(todosLosProductos);
+    };
+
+    // Buscar productos en tiempo real
+    function buscarProducto() {
+        const input = document.getElementById("buscarField");
+        const valor = input.value.trim().toLowerCase();
+
+        if (!valor) {
+            renderizarSugerencias(todosLosProductos);
+            return;
+        }
+
+        const filtrados = todosLosProductos.filter(p =>
+            p.nombre.toLowerCase().includes(valor) ||
+            p.codigoUnico.toLowerCase().includes(valor) ||
+            p.categoria.toLowerCase().includes(valor) ||
+            p.marca.toLowerCase().includes(valor)
+        );
+
+        renderizarSugerencias(filtrados);
+    }
+
+    // Renderizar lista de sugerencias
+    function renderizarSugerencias(productos) {
+        const sugerenciasList = document.getElementById("sugerenciasList");
+        sugerenciasList.innerHTML = "";
+
+        if (productos.length === 0) {
+            const li = document.createElement("li");
+            li.textContent = "❌ No se encontraron productos";
+            li.style.textAlign = "center";
+            li.style.color = "#999";
+            li.style.fontStyle = "italic";
+            sugerenciasList.appendChild(li);
+            return;
+        }
+
+        productos.forEach(prod => {
+            const li = document.createElement("li");
+            li.setAttribute("data-id", prod.id);
+            li.setAttribute("data-nombre", prod.nombre);
+            li.setAttribute("data-descripcion", prod.descripcion);
+            li.setAttribute("data-codigoUnico", prod.codigoUnico);
+            li.setAttribute("data-precioVenta", prod.precioVenta);
+            li.setAttribute("data-precioCosto", prod.precioCosto);
+            li.setAttribute("data-categoria", prod.categoria);
+            li.setAttribute("data-marca", prod.marca);
+            li.setAttribute("data-proveedor", prod.proveedor);
+            li.setAttribute("data-cantidad", prod.cantidad);
+
+            li.textContent = `${prod.nombre} - ${prod.codigoUnico} - $${parseFloat(prod.precioVenta).toFixed(2)} - Marca: ${prod.marca || 'Sin marca'} - ${prod.cantidad} unidades`;
+
+            sugerenciasList.appendChild(li);
+        });
+    }
+
+    // Seleccionar producto y llenar formulario
+    function seleccionarProducto(event) {
+        if (event.target.tagName !== "LI") return;
+
+        const producto = event.target;
+
+        document.getElementById("idInput").value = producto.getAttribute("data-id");
+        document.getElementById("nombreInput").value = producto.getAttribute("data-nombre");
+        document.getElementById("descripcionInput").value = producto.getAttribute("data-descripcion");
+        document.getElementById("codigoInput").value = producto.getAttribute("data-codigoUnico");
+        document.getElementById("precioVentaInput").value = producto.getAttribute("data-precioVenta");
+        document.getElementById("precioCostoInput").value = producto.getAttribute("data-precioCosto");
+        document.getElementById("categoriaInput").value = producto.getAttribute("data-categoria");
+        document.getElementById("marcaInput").value = producto.getAttribute("data-marca") || "";
+        document.getElementById("proveedorInput").value = producto.getAttribute("data-proveedor") || "";
+        document.getElementById("cantidadInput").value = producto.getAttribute("data-cantidad");
+    }
+</script>
+
+</body>
+</html>

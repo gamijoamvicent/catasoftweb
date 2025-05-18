@@ -1,0 +1,30 @@
+.error-info {
+    background-color: #fff0f0;
+    border: 1px solid #F4C2C2;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+.error-info strong {
+    color: #A94442;
+}
+
+.action-button {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+}
+
+.btn-back {
+    padding: 10px 20px;
+    background-color: #B6D7A8;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+.btn-back:hover {
+    background-color: #a1c993;
+}

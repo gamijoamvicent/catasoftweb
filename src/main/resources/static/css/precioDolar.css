@@ -1,0 +1,118 @@
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #F5F5F5;
+    margin: 0;
+    padding: 0;
+}
+
+.page-container {
+    max-width: 600px;
+    margin: 40px auto;
+    padding: 30px;
+    background-color: white;
+    border-radius: 12px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+}
+
+.header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+.header h2 {
+    color: #5A5A5A;
+    margin-bottom: 10px;
+}
+.header p {
+    color: #888;
+    font-size: 14px;
+}
+
+.info-box {
+    background-color: #FAFAFA;
+    padding: 20px;
+    border-left: 4px solid #D9B3FF;
+    border-radius: 8px;
+    margin-bottom: 30px;
+    font-size: 16px;
+}
+
+label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #444;
+}
+
+input[type="number"] {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    background-color: #FAFAFA;
+    font-size: 14px;
+    transition: border 0.3s ease;
+}
+input:focus {
+    outline: none;
+    border-color: #AED9E0;
+}
+
+.btn-guardar {
+    margin-top: 20px;
+    width: 100%;
+    padding: 14px;
+    background-color: #AED9E0;
+    color: #fff;
+    font-size: 16px;
+    font-weight: bold;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+.btn-guardar:hover {
+    background-color: #96cfd6;
+}
+
+/* Alertas */
+.alert {
+    padding: 15px;
+    margin-bottom: 20px;
+    border-radius: 8px;
+    font-size: 16px;
+}
+
+.alert-success {
+    background-color: #d4edda;
+    color: #155724;
+    border-left: 4px solid #28a745;
+}
+
+.alert-danger {
+    background-color: #f8d7da;
+    color: #721c24;
+    border-left: 4px solid #f44336;
+}
+
+.action-button {
+    display: flex;
+    justify-content: flex-end;
+    margin: 40px 30px 0;
+}
+
+.btn-back {
+    padding: 10px 20px;
+    background-color: #B6D7A8;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+.btn-back:hover {
+    background-color: #a1c993;
+}

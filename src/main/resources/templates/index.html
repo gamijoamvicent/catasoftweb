@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Bienvenido - InventSoft</title>
+    <link rel="stylesheet" th:href="@{/css/stylesMain.css}">
+</head>
+<body>
+
+<div class="page-container">
+    <div class="header">
+        <h2>Bienvenido a InventSoft</h2>
+        <p>Selecciona una opción del menú para comenzar.</p>
+    </div>
+
+    <!-- Mostrar quién está logueado -->
+    <div class="usuario-info" th:if="${#authentication != null and #authentication.isAuthenticated()}">
+        <span>👤 Usuario activo: <b th:text="${#authentication.name}"></b></span> |
+        <span>Rol: 
+            <b th:each="authority : ${#authentication.authorities}" 
+               th:text="${authority.authority.replace('ROLE_', '')}"></b>
+        </span>
+    </div>
+
+    <!-- Menú de opciones según rol -->
+    <div class="menu-container">
+
+        <!-- CAJERO + ADMIN -->
+        <a class="menu-card"
+           sec:authorize="hasRole('CAJERO') or hasRole('ADMIN')"
+           href="/ventas">
+            <img src="/icons/sales.png" alt="Venta" class="menu-icon">
+            Registrar Venta
+        </a>
+
+        <!-- BODEGA + ADMIN -->
+        <a class="menu-card"
+           sec:authorize="hasRole('BODEGA') or hasRole('ADMIN')"
+           href="/producto/agregar">
+            <img src="/icons/add.png" alt="AgregarProducto" class="menu-icon">
+            Agregar Producto
+        </a>
+
+        <!-- ADMIN -->
+        <a class="menu-card"
+           sec:authorize="hasRole('ADMIN')"
+           href="/producto/actualizar">
+            <img src="/icons/update.png" alt="Actualizar" class="menu-icon">
+            Actualizar Producto
+        </a>
+
+        <!-- Todos los roles pueden ver el inventario -->
+        <a class="menu-card"
+           href="/inventario">
+            <img src="/icons/inventory.png" alt="Inventario" class="menu-icon">
+            Ver Inventario
+        </a>
+
+        <!-- BODEGA + ADMIN -->
+        <a class="menu-card"
+           sec:authorize="hasRole('BODEGA') or hasRole('ADMIN')"
+           href="/producto/eliminar">
+            <img src="/icons/delete.png" alt="Eliminar" class="menu-icon">
+            Eliminar Producto
+        </a>
+
+        <!-- CAJERO + ADMIN -->
+        <a class="menu-card"
+           sec:authorize="hasRole('CAJERO') or hasRole('ADMIN')"
+           href="/configuracion/dolar">
+            <img src="/icons/settings.png" alt="PrecioDolar" class="menu-icon">
+            Configurar Dólar
+        </a>
+
+        <!-- Solo ADMIN -->
+        <a class="menu-card btn-admin"
+           sec:authorize="hasRole('ADMIN')"
+           th:href="@{/usuarios/registrar}">
+            <img src="/icons/icon_usuario.png" alt="Usuario" class="menu-icon">
+            Registrar nuevo usuario
+        </a>
+    </div>
+
+    <!-- Botón de cierre de sesión -->
+    <div class="action-button">
+        <a th:href="@{/logout}" class="btn-logout">Cerrar Sesión</a>
+    </div>
+</div>
+
+</body>
+</html>

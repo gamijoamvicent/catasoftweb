@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Inventario</title>
+    <link rel="stylesheet" th:href="@{/css/stylesInventario.css}">
+</head>
+<body>
+
+<div class="page-container">
+    <div class="header">
+        <h2>Inventario de Productos</h2>
+        <p>Lista completa de productos registrados en el sistema.</p>
+    </div>
+
+    <!-- Campo de búsqueda -->
+    <div class="buscador-container">
+        <label for="buscarField">Buscar producto:</label>
+        <input type="text" id="buscarField" placeholder="Ej. Cuaderno" onkeyup="buscarProducto()" autocomplete="off" />
+    </div>
+
+    <!-- Tabla de productos -->
+    <div class="table-container">
+        <table class="modern-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nombre</th>
+                    <th>Código</th>
+                    <th>Precio Venta</th>
+                    <th>Cantidad</th>
+                    <th>Categoría</th>
+                    <th>Marca</th>
+                    <th>Proveedor</th>
+                </tr>
+            </thead>
+            <tbody id="tablaProductos">
+                <!-- Datos dinámicos aparecerán aquí -->
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Botón volver -->
+    <div class="action-button">
+        <button class="btn-back" onclick="window.location.href='/'">Volver al Menú</button>
+    </div>
+</div>
+
+<!-- Datos ocultos desde Thymeleaf -->
+<ul id="productosData" style="display: none;">
+    <li th:each="producto : ${productos}"
+        th:data-id="${producto.id}"
+        th:data-nombre="${producto.nombre}"
+        th:data-codigo="${producto.codigoUnico}"
+        th:data-precio="${producto.precioVenta}"
+        th:data-cantidad="${producto.cantidad}"
+        th:data-categoria="${producto.categoria}"
+        th:data-marca="${producto.marca}"
+        th:data-proveedor="${producto.proveedor}">
+    </li>
+</ul>
+
+<script>
+    let todosLosProductos = [];
+
+    // Cargar productos al inicio desde Thymeleaf
+    window.onload = () => {
+        const dataProductos = document.querySelectorAll("#productosData li");
+
+        if (dataProductos.length === 0) {
+            console.warn("⚠️ No hay productos en el modelo.");
+            return;
+        }
+
+        todosLosProductos = Array.from(dataProductos).map(li => ({
+            id: li.getAttribute("data-id"),
+            nombre: li.getAttribute("data-nombre") || "",
+            codigoUnico: li.getAttribute("data-codigo") || "",
+            precioVenta: parseFloat(li.getAttribute("data-precio")) || 0,
+            cantidad: parseInt(li.getAttribute("data-cantidad")) || 0,
+            categoria: li.getAttribute("data-categoria") || "Sin categoría",
+            marca: li.getAttribute("data-marca") || "Sin marca",
+            proveedor: li.getAttribute("data-proveedor") || "Sin proveedor"
+        }));
+
+        renderizarTabla(todosLosProductos);
+    };
+
+    // Buscar productos según lo que escriba el usuario
+    function buscarProducto() {
+        const input = document.getElementById("buscarField");
+        const valor = input.value.trim().toLowerCase();
+
+        if (!valor) {
+            renderizarTabla(todosLosProductos);
+            return;
+        }
+
+        const filtrados = todosLosProductos.filter(p =>
+            p.nombre.toLowerCase().includes(valor) ||
+            p.codigoUnico.toLowerCase().includes(valor)
+        );
+
+        renderizarTabla(filtrados);
+    }
+
+    // Renderizar tabla con scroll si hay muchos productos
+    function renderizarTabla(productos) {
+        const tbody = document.getElementById("tablaProductos");
+        tbody.innerHTML = ""; // Limpiar tabla antes de mostrar nuevos resultados
+
+        if (productos.length === 0) {
+            const tr = document.createElement("tr");
+            const td = document.createElement("td");
+            td.colSpan = 8;
+            td.textContent = "❌ No se encontraron productos";
+            td.style.textAlign = "center";
+            td.style.padding = "20px";
+            td.style.color = "#999";
+            tr.appendChild(td);
+            tbody.appendChild(tr);
+            return;
+        }
+
+        productos.forEach(prod => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+                <td>${prod.id}</td>
+                <td>${prod.nombre}</td>
+                <td>${prod.codigoUnico}</td>
+                <td>$${parseFloat(prod.precioVenta).toFixed(2)}</td>
+                <td>${prod.cantidad}</td>
+                <td>${prod.categoria}</td>
+                <td>${prod.marca}</td>
+                <td>${prod.proveedor}</td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+</script>
+
+</body>
+</html>

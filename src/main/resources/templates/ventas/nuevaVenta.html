@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Nueva Venta</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+    
+    <!-- Meta tags para protección CSRF -->
+    <meta th:name="_csrf" th:content="${_csrf.token}" />
+    <meta th:name="_csrf_header" th:content="${_csrf.headerName}" />
+</head>
+<body>
+<div class="page-container">
+    <div class="header">
+        <h2>Registrar Nueva Venta</h2>
+        <p>Agrega productos y confirma la venta.</p>
+    </div>
+
+    <!-- Precio del dólar -->
+    <div class="dolar-info">
+        <span class="label-info">Precio del Dólar:</span>
+        <span class="precio-dolar" id="precioDolarLabel" th:text="${precioDolar} ?: '0.00 Bs'"></span>
+    </div>
+
+    <div class="venta-container">
+        <!-- Columna izquierda: Buscador -->
+        <div class="buscador-column">
+            <div class="input-group">
+                <label for="buscarField">Buscar producto</label>
+                <input type="text" id="buscarField" placeholder="Ej. Cuaderno" onkeyup="buscarProducto()" autocomplete="off"/>
+            </div>
+            <ul id="sugerenciasList" class="sugerencias-list" onclick="agregarProducto(event)">
+                <!-- Productos dinámicos aparecerán aquí -->
+            </ul>
+        </div>
+
+        <!-- Columna derecha: Tabla de ventas -->
+        <div class="tabla-column">
+            <table class="modern-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nombre</th>
+                        <th>Código</th>
+                        <th>Marca</th>
+                        <th>Precio ($)</th>
+                        <th>Precio (Bs)</th>
+                        <th>Cantidad</th>
+                        <th>Subtotal (Bs)</th>
+                        <th>Subtotal ($)</th>
+                    </tr>
+                </thead>
+                <tbody id="ventasTableBody">
+                    <!-- Productos agregados aparecerán aquí -->
+                </tbody>
+            </table>
+
+            <!-- Total general -->
+            <div class="resumen-total">
+                <span class="label-info">Total:</span>
+                <span class="total-label" id="totalLabel">0.00 Bs | $0.00</span>
+            </div>
+
+            <!-- Botón confirmar -->
+            <div class="action-button">
+                <button class="btn-confirmar" onclick="confirmarVenta()">Confirmar Venta</button>
+            </div>
+
+            <!-- Botón limpiar carrito -->
+            <div class="limpiar-button">
+                <button class="btn-confirmar" onclick="limpiarCarrito()">Limpiar Carrito</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Botón volver -->
+    <div class="bottom-back">
+        <button class="btn-back" onclick="window.location.href='/'">Volver al Menú</button>
+    </div>
+</div>
+
+<!-- Datos ocultos con Thymeleaf -->
+<ul id="productosData" style="display: none;">
+    <li th:each="producto : ${productos}"
+        th:data-id="${producto.id}"
+        th:data-nombre="${producto.nombre}"
+        th:data-codigo="${producto.codigoUnico ?: ''}"
+        th:data-precio="${producto.precioVenta}"
+        th:data-cantidad="${producto.cantidad != null ? producto.cantidad : 0}"
+        th:data-marca="${producto.marca ?: 'Sin marca'}">
+    </li>
+</ul>
+
+<script>
+    const precioDolar = parseFloat(document.getElementById("precioDolarLabel").textContent.replace(' Bs', '') || 1);
+    let productosSeleccionados = [];
+    let todosLosProductos = [];
+
+    // Cargar productos desde Thymeleaf
+    window.onload = () => {
+        const dataProductos = document.querySelectorAll("#productosData li");
+        todosLosProductos = Array.from(dataProductos).map(li => {
+            const cantidadRaw = li.getAttribute("data-cantidad");
+            const parsedCantidad = parseInt(cantidadRaw);
+            const cantidadFinal = isNaN(parsedCantidad) || parsedCantidad < 0 ? 0 : parsedCantidad;
+
+            return {
+                id: li.getAttribute("data-id"),
+                nombre: li.getAttribute("data-nombre") || "Producto sin nombre",
+                codigoUnico: li.getAttribute("data-codigo") || "",
+                precioVenta: parseFloat(li.getAttribute("data-precio")) || 0,
+                cantidad: cantidadFinal,
+                marca: li.getAttribute("data-marca") || "Sin marca"
+            };
+        });
+
+        renderizarSugerencias(todosLosProductos);
+    };
+
+    // Buscar productos en tiempo real
+    function buscarProducto() {
+        const input = document.getElementById("buscarField");
+        const valor = input.value.trim().toLowerCase();
+        if (!valor) {
+            renderizarSugerencias(todosLosProductos);
+            return;
+        }
+        const filtrados = todosLosProductos.filter(p =>
+            p.nombre.toLowerCase().includes(valor) ||
+            (p.codigoUnico && p.codigoUnico.toLowerCase().includes(valor))
+        );
+        renderizarSugerencias(filtrados);
+    }
+
+    // Renderiza sugerencias
+    function renderizarSugerencias(productos) {
+        const sugerenciasList = document.getElementById("sugerenciasList");
+        sugerenciasList.innerHTML = "";
+        if (productos.length === 0) {
+            const li = document.createElement("li");
+            li.textContent = "No se encontraron productos.";
+            li.style.textAlign = "center";
+            li.style.color = "#999";
+            li.style.cursor = "default";
+            sugerenciasList.appendChild(li);
+            return;
+        }
+        productos.forEach(prod => {
+            const li = document.createElement("li");
+            li.setAttribute("data-id", prod.id);
+            li.setAttribute("data-nombre", prod.nombre);
+            li.setAttribute("data-codigo", prod.codigoUnico);
+            li.setAttribute("data-precio", prod.precioVenta);
+            li.setAttribute("data-cantidad", prod.cantidad);
+            li.setAttribute("data-marca", prod.marca);
+
+            // Mostrar marca y evitar NaN
+            li.textContent = `${prod.nombre} - ${prod.codigoUnico} - $${parseFloat(prod.precioVenta).toFixed(2)} - ${prod.cantidad} unidades - Marca: ${prod.marca}`;
+
+            if (prod.cantidad == 0) {
+                li.classList.add("stock-rojo");
+                li.style.cursor = "not-allowed";
+            } else if (prod.cantidad <= 10) {
+                li.classList.add("stock-amarillo");
+            } else {
+                li.classList.add("stock-verde");
+            }
+
+            sugerenciasList.appendChild(li);
+        });
+    }
+
+    // Agregar producto al carrito
+    function agregarProducto(event) {
+        if (event.target.tagName !== "LI") return;
+        const estaAgotado = event.target.classList.contains("stock-rojo");
+        if (estaAgotado) {
+            alert("❌ Este producto está agotado.");
+            return;
+        }
+        const producto = event.target;
+        const id = producto.getAttribute("data-id");
+        const nombre = producto.getAttribute("data-nombre");
+        const codigo = producto.getAttribute("data-codigo");
+        const precioUSD = parseFloat(producto.getAttribute("data-precio"));
+        const cantidadDisponible = parseInt(producto.getAttribute("data-cantidad"));
+        const marca = producto.getAttribute("data-marca") || "Sin marca";
+
+        if (isNaN(precioUSD) || isNaN(cantidadDisponible)) {
+            alert("⚠️ Datos del producto incorrectos. No se puede agregar.");
+            return;
+        }
+
+        const nuevoProducto = {
+            id,
+            nombre,
+            codigo,
+            marca,
+            precioUSD,
+            cantidad: 1,
+            subtotalBs: (precioUSD * 1 * precioDolar).toFixed(2),
+            stockOriginal: cantidadDisponible
+        };
+
+        const index = productosSeleccionados.findIndex(p => p.id === id);
+        if (index >= 0) {
+            if (productosSeleccionados[index].cantidad + 1 > productosSeleccionados[index].stockOriginal) {
+                alert(`❌ Solo hay ${productosSeleccionados[index].stockOriginal} unidades disponibles.`);
+                return;
+            }
+            productosSeleccionados[index].cantidad += 1;
+            productosSeleccionados[index].subtotalBs = (
+                productosSeleccionados[index].precioUSD *
+                productosSeleccionados[index].cantidad *
+                precioDolar
+            ).toFixed(2);
+        } else {
+            productosSeleccionados.push(nuevoProducto);
+        }
+
+        renderizarTabla();
+    }
+
+    // Renderizar tabla de ventas
+    function renderizarTabla() {
+        const tbody = document.getElementById("ventasTableBody");
+        tbody.innerHTML = "";
+        let totalBs = 0;
+
+        productosSeleccionados.forEach(p => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+                <td>${p.id}</td>
+                <td>${p.nombre}</td>
+                <td>${p.codigo}</td>
+                <td>${p.marca}</td>
+                <td>$${parseFloat(p.precioUSD).toFixed(2)}</td>
+                <td>${(p.precioUSD * precioDolar).toFixed(2)} Bs</td>
+                <td><input type="number" min="1" max="${p.stockOriginal}" value="${p.cantidad}" onchange="actualizarCantidad('${p.id}', this.value)" /></td>
+                <td>${parseFloat(p.subtotalBs).toFixed(2)} Bs</td>
+                <td>$${(p.subtotalBs / precioDolar).toFixed(2)}</td>
+                <td><button class="btn-eliminar-fila" onclick="eliminarProducto('${p.id}')">Eliminar</button></td>
+            `;
+            tbody.appendChild(tr);
+            totalBs += parseFloat(p.subtotalBs);
+        });
+
+        const totalLabel = document.getElementById("totalLabel");
+        totalLabel.textContent = `${totalBs.toFixed(2)} Bs | ${(totalBs / precioDolar).toFixed(2)} $`;
+    }
+
+    // Actualizar cantidad
+    function actualizarCantidad(id, nuevaCantidad) {
+        const producto = productosSeleccionados.find(p => p.id === id);
+        if (!producto) return;
+        const nuevaCant = parseInt(nuevaCantidad);
+        if (nuevaCant <= 0) {
+            alert("⚠️ La cantidad debe ser mayor a cero.");
+            return;
+        }
+        if (nuevaCant > producto.stockOriginal) {
+            alert(`❌ La cantidad máxima disponible es ${producto.stockOriginal}`);
+            return;
+        }
+        producto.cantidad = nuevaCant;
+        producto.subtotalBs = (producto.precioUSD * nuevaCant * precioDolar).toFixed(2);
+        renderizarTabla();
+    }
+
+    // Eliminar producto del carrito
+    function eliminarProducto(id) {
+        if (!confirm("¿Quitar este producto del carrito?")) return;
+        productosSeleccionados = productosSeleccionados.filter(p => p.id !== id);
+        renderizarTabla();
+    }
+
+    // Confirmar venta → envía datos al backend
+    function confirmarVenta() {
+        if (productosSeleccionados.length === 0) {
+            alert("❌ No hay productos en la venta.");
+            return;
+        }
+        if (!confirm("¿Confirmar venta?")) return;
+
+        const csrfToken = document.querySelector("meta[name='_csrf']").getAttribute("content");
+        const csrfHeader = document.querySelector("meta[name='_csrf_header']").getAttribute("content");
+
+        fetch('/ventas/confirmar', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                [csrfHeader]: csrfToken
+            },
+            body: JSON.stringify(productosSeleccionados.map(p => ({
+                id: p.id,
+                cantidad: p.cantidad
+            })))
+        })
+        .then(response => {
+            if (!response.ok) throw new Error('Error en la respuesta del servidor');
+            return response.text();
+        })
+        .then(() => {
+            alert("✅ Venta confirmada. Stock actualizado.");
+            window.location.reload();
+        })
+        .catch(err => {
+            console.error("🚨 Error al vender:", err);
+            alert("Hubo un problema al confirmar la venta.");
+        });
+    }
+
+    // Limpiar carrito
+    function limpiarCarrito() {
+        if (!confirm("¿Limpiar todo el carrito?")) return;
+        productosSeleccionados = [];
+        renderizarTabla();
+    }
+</script>
+</body>
+</html>

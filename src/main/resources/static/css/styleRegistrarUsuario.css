@@ -1,0 +1,169 @@
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', sans-serif;
+    background-color: #F3F6F9;
+    margin: 0;
+    padding: 0;
+}
+
+/* Contenedor principal */
+.registro-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+.registro-box {
+    background-color: white;
+    padding: 30px;
+    width: 500px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    text-align: center;
+}
+
+.header h2 {
+    color: #5A5A5A;
+    margin-bottom: 10px;
+}
+.header p {
+    color: #888;
+    font-size: 14px;
+    margin-bottom: 30px;
+}
+
+/* Campos del formulario */
+.input-group {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 15px;
+}
+
+.input-group label {
+    font-weight: bold;
+    margin-bottom: 6px;
+    color: #444;
+}
+
+.input-group input[type="text"],
+.input-group input[type="password"],
+.input-group select {
+    padding: 12px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 14px;
+}
+
+.input-group input:focus,
+.input-group select:focus {
+    outline: none;
+    border-color: #AED9E0;
+}
+
+/* Botón registrar */
+.btn-registrar {
+    width: 100%;
+    padding: 12px;
+    background-color: #AED9E0;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+.btn-registrar:hover {
+    background-color: #96cfd6;
+}
+
+/* Tabla de usuarios */
+.modern-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+.modern-table thead {
+    background-color: #D9B3FF;
+    color: white;
+}
+
+.modern-table th,
+.modern-table td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+}
+
+.modern-table tr:hover {
+    background-color: #f1f1f1;
+}
+
+/* Botones de acción en tabla */
+.btn-editar {
+    background-color: #F4C2C2;
+    color: white;
+    padding: 6px 10px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: bold;
+    transition: background-color 0.3s ease;
+}
+.btn-editar:hover {
+    background-color: #e8a7a7;
+}
+
+.btn-eliminar {
+    background-color: #F4C2C2;
+    color: white;
+    padding: 6px 10px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: bold;
+    margin-left: 10px;
+    transition: background-color 0.3s ease;
+}
+.btn-eliminar:hover {
+    background-color: #e8a7a7;
+}
+
+/* Alertas */
+.alert {
+    padding: 12px;
+    border-left: 4px solid #ddd;
+    border-radius: 6px;
+    margin-bottom: 20px;
+    font-size: 14px;
+}
+.alert-success {
+    background-color: #DFF0D8;
+    color: #3C763D;
+    border-left: 4px solid #B6D7A8;
+}
+.alert-danger {
+    background-color: #F2DEDE;
+    color: #A94442;
+    border-left: 4px solid #F4C2C2;
+}
+
+/* Botón volver */
+.action-button {
+    margin-top: 30px;
+    text-align: center;
+}
+
+.btn-volver {
+    padding: 10px 20px;
+    background-color: #B6D7A8;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+.btn-volver:hover {
+    background-color: #a1c993;
+}

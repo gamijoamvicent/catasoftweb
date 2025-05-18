@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Agregar Producto</title>
+    <link rel="stylesheet" th:href="@{/css/styleAgregarProducto.css}">
+</head>
+<body>
+
+<div class="form-container">
+    <div class="header">
+        <h2>Agregar Nuevo Producto</h2>
+        <p>Completa los campos obligatorios para registrar un nuevo producto.</p>
+    </div>
+
+    <!-- Mensaje de éxito -->
+    <div th:if="${mensajeExito}" class="alert alert-success" role="alert">
+        <strong>Éxito:</strong> <span th:text="${mensajeExito}"></span>
+    </div>
+
+    <!-- Mensaje de error -->
+    <div th:if="${mensajeError}" class="alert alert-danger" role="alert">
+        <strong>Error:</strong> <span th:text="${mensajeError}"></span>
+    </div>
+
+    <!-- Formulario -->
+    <form id="productoForm" th:action="@{/producto/agregar}" method="post" th:object="${producto}" onsubmit="return validarFormulario(event)" autocomplete="off">
+        <!-- Grupo nombre -->
+        <div class="form-row">
+            <label for="nombre">Nombre del Producto</label>
+            <input type="text" id="nombre" name="nombre" th:field="*{nombre}" placeholder="Ej. Cuaderno universitario" autocomplete="off" required />
+        </div>
+
+        <!-- Grupo descripción -->
+        <div class="form-row">
+            <label for="descripcion">Descripción</label>
+            <input type="text" id="descripcion" name="descripcion" th:field="*{descripcion}" placeholder="Breve descripción del producto" autocomplete="off" />
+        </div>
+
+        <!-- Grupo código único -->
+        <div class="form-row">
+            <label for="codigoUnico">Código Único</label>
+            <input type="text" id="codigoUnico" name="codigoUnico" th:field="*{codigoUnico}" disabled autocomplete="off"/>
+        </div>
+
+        <!-- Precios -->
+        <div class="form-double">
+            <div class="form-col">
+                <label for="precioVenta">Precio de Venta ($)</label>
+                <input type="number" step="0.01" id="precioVenta" name="precioVenta" th:field="*{precioVenta}" placeholder="0.00" required autocomplete="off" />
+            </div>
+            <div class="form-col">
+                <label for="precioCosto">Precio de Costo ($)</label>
+                <input type="number" step="0.01" id="precioCosto" name="precioCosto" th:field="*{precioCosto}" placeholder="0.00" required autocomplete="off"/>
+            </div>
+        </div>
+
+        <!-- Categoría y Marca -->
+        <div class="form-double">
+            <div class="form-col">
+                <label for="categoria">Categoría</label>
+                <input type="text" id="categoria" name="categoria" th:field="*{categoria}" placeholder="Ej. Papelería" autocomplete="off" />
+            </div>
+            <div class="form-col">
+                <label for="marca">Marca</label>
+                <input type="text" id="marca" name="marca" th:field="*{marca}" placeholder="Ej. Norma" autocomplete="off" />
+            </div>
+        </div>
+
+        <!-- Proveedor y cantidad -->
+        <div class="form-double">
+            <div class="form-col">
+                <label for="proveedor">Proveedor</label>
+                <input type="text" id="proveedor" name="proveedor" th:field="*{proveedor}" placeholder="Nombre del proveedor" autocomplete="off" />
+            </div>
+            <div class="form-col">
+                <label for="cantidad">Cantidad</label>
+                <input type="number" id="cantidad" name="cantidad" th:field="*{cantidad}" placeholder="Unidades" required autocomplete="off" />
+            </div>
+        </div>
+
+        <!-- Campo de color -->
+        <div class="form-row">
+            <label>Color (Opcional)</label>
+            <div class="color-input-group">
+                <input type="text" id="color" placeholder="Ej. Azul pastel">
+                <button type="button" class="secondary-button" onclick="agregarColor()">Agregar Color</button>
+            </div>
+        </div>
+
+        <!-- Lista de colores -->
+        <div class="colors-list" id="coloresList"></div>
+
+        <!-- Campo oculto para enviar colores -->
+        <input type="hidden" id="coloresInput" name="colores" />
+
+        <!-- Botones -->
+        <div class="action-buttons">
+            <button type="submit" class="btn-submit">Guardar Producto</button>
+            <button type="button" class="btn-back" onclick="window.location.href='/'">Volver al Menú</button>
+        </div>
+    </form>
+</div>
+
+<!-- Script para agregar colores -->
+<script>
+    function agregarColor() {
+        const colorInput = document.getElementById('color');
+        const container = document.getElementById('coloresList');
+        const color = colorInput.value.trim();
+
+        if (color !== "") {
+            const badge = document.createElement('span');
+            badge.className = 'color-badge';
+            badge.textContent = color;
+            container.appendChild(badge);
+            colorInput.value = "";
+        }
+    }
+
+    function rellenarColores() {
+        const coloresDiv = document.getElementById('coloresList');
+        const spans = coloresDiv.getElementsByTagName('span');
+        let coloresArray = [];
+
+        for (let i = 0; i < spans.length; i++) {
+            coloresArray.push(spans[i].textContent.trim());
+        }
+
+        document.getElementById('coloresInput').value = coloresArray.join(",");
+    }
+</script>
+
+<!-- Validación antes de enviar -->
+<script>
+    function validarFormulario(event) {
+        event.preventDefault(); // Evitar envío automático
+
+        const nombre = document.getElementById("nombre").value.trim();
+        const precioVenta = document.getElementById("precioVenta").value.trim();
+        const precioCosto = document.getElementById("precioCosto").value.trim();
+        const cantidad = document.getElementById("cantidad").value.trim();
+
+        const errores = [];
+
+        if (!nombre) {
+            errores.push("El campo Nombre es obligatorio.");
+        }
+
+        if (!precioVenta || parseFloat(precioVenta) <= 0) {
+            errores.push("El Precio de Venta debe ser mayor a 0.");
+        }
+
+        if (!precioCosto || parseFloat(precioCosto) <= 0) {
+            errores.push("El Precio de Costo debe ser mayor a 0.");
+        }
+
+        if (!cantidad || parseInt(cantidad) < 0) {
+            errores.push("La Cantidad debe ser mayor o igual a 0.");
+        }
+
+        if (errores.length > 0) {
+            const mensajeError = errores.join("\n");
+            alert(mensajeError);
+            return false;
+        }
+
+        // Rellenar campo de colores
+        rellenarColores();
+
+        // Enviar formulario manualmente si todo está bien
+        document.getElementById("productoForm").submit();
+    }
+</script>
+
+</body>
+</html>
