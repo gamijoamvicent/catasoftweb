@@ -16,7 +16,6 @@
             border-radius: 8px;
             padding: 20px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            cursor: pointer;
             transition: transform 0.2s;
         }
         .licoreria-card:hover {
@@ -35,6 +34,43 @@
             opacity: 0.6;
             cursor: not-allowed;
         }
+        .card-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 15px;
+        }
+        .badge {
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.9em;
+        }
+        .badge-success {
+            background-color: #B6D7A8;
+            color: #2C3E50;
+        }
+        .badge-danger {
+            background-color: #F4C2C2;
+            color: #2C3E50;
+        }
+        .btn-seleccionar {
+            background-color: #AED9E0;
+            color: #2C3E50;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .btn-seleccionar:hover {
+            background-color: #96cfd6;
+            transform: translateY(-2px);
+        }
+        .btn-seleccionar:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
     </style>
 </head>
 <body>
@@ -44,35 +80,30 @@
             <p>Selecciona la licorería con la que deseas trabajar</p>
         </div>
 
-        <form th:action="@{/licorerias/seleccionar}" method="post" id="seleccionForm">
-            <input type="hidden" name="licoreriaId" id="licoreriaId">
+        <!-- Mensajes de error -->
+        <div th:if="${error}" class="alert alert-danger" role="alert" th:text="${error}"></div>
+
+        <form th:action="@{/licorerias/seleccionar}" method="post">
             <div class="licoreria-grid">
                 <div th:each="licoreria : ${licorerias}" 
-                     th:class="${licoreria.estado ? 'licoreria-card' : 'licoreria-card inactive'}"
-                     th:data-id="${licoreria.id}">
+                     th:class="${licoreria.estado ? 'licoreria-card' : 'licoreria-card inactive'}">
                     <h3 th:text="${licoreria.nombre}">Nombre Licorería</h3>
                     <p th:text="${licoreria.direccion}">Dirección</p>
                     <p th:text="${licoreria.telefono}">Teléfono</p>
                     <div class="card-footer">
                         <span th:class="${licoreria.estado ? 'badge badge-success' : 'badge badge-danger'}"
                               th:text="${licoreria.estado ? 'Activa' : 'Inactiva'}">Estado</span>
-                        <form th:if="${licoreria.estado}" th:action="@{/licorerias/seleccionar}" method="post" class="d-inline">
-                            <input type="hidden" name="licoreriaId" th:value="${licoreria.id}">
-                            <button type="submit" class="btn btn-primary btn-sm">Seleccionar</button>
-                        </form>
+                        <button type="submit" 
+                                name="licoreriaId" 
+                                th:value="${licoreria.id}"
+                                class="btn-seleccionar"
+                                th:disabled="${!licoreria.estado}">
+                            Seleccionar
+                        </button>
                     </div>
                 </div>
             </div>
         </form>
     </div>
-
-    <script>
-        function seleccionarLicoreria(element) {
-            if (element.getAttribute('data-activo') === 'true') {
-                document.getElementById('licoreriaId').value = element.getAttribute('data-id');
-                document.getElementById('seleccionForm').submit();
-            }
-        }
-    </script>
 </body>
 </html> 

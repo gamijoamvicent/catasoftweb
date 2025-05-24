@@ -6,6 +6,7 @@ import devforge.model.Usuario;
 import devforge.servicio.LicoreriaServicio;
 import devforge.servicio.UsuarioServicio;
 import jakarta.servlet.http.HttpSession;
+import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +15,8 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import java.io.IOException;
 
 @Controller
 @RequestMapping("/licorerias")
@@ -50,38 +53,37 @@ public class LicoreriaController {
     public String seleccionarLicoreria(@RequestParam Long licoreriaId, 
                                      RedirectAttributes redirectAttrs, 
                                      Authentication auth) {
+        String username = auth.getName();
+        Usuario usuario = usuarioServicio.obtenerPorUsername(username);
+        
         try {
-            String username = auth.getName();
-            logger.info("Usuario {} intentando seleccionar licorería ID: {}", username, licoreriaId);
-            
             Licoreria licoreria = licoreriaServicio.obtenerPorId(licoreriaId)
                 .orElseThrow(() -> new RuntimeException("Licorería no encontrada"));
-            
-            if (!licoreria.isEstado()) {
-                logger.warn("Intento de seleccionar licorería inactiva ID: {}", licoreriaId);
-                redirectAttrs.addFlashAttribute("mensajeError", "❌ No se puede seleccionar una licorería inactiva");
+
+            // Verificar que la licorería está activa
+            if (!licoreria.isActiva()) {
+                logger.warn("Usuario {} intentando seleccionar licorería inactiva: {}", 
+                    username, licoreria.getNombre());
+                redirectAttrs.addFlashAttribute("error", "La licorería seleccionada está inactiva");
                 return "redirect:/licorerias/seleccionar";
             }
-            
-            Usuario usuario = usuarioServicio.obtenerPorUsername(username);
+
+            // Verificar permisos de acceso
             if (usuario.getRol() != Usuario.Rol.SUPER_ADMIN && 
-                !usuario.getLicoreriaId().equals(licoreriaId)) {
-                logger.warn("Usuario {} intentando seleccionar licorería no asignada", username);
-                redirectAttrs.addFlashAttribute("mensajeError", "❌ No tienes permiso para seleccionar esta licorería");
-                return "redirect:/licorerias/seleccionar";
+                !usuario.getLicoreriaId().equals(licoreria.getId())) {
+                logger.warn("Usuario {} intentando acceder a licorería no asignada: {}", 
+                    username, licoreria.getNombre());
+                return "redirect:/acceso-denegado";
             }
-            
+
             // Establecer la licorería en el contexto
             licoreriaContext.setLicoreriaActual(licoreria);
+            logger.info("Usuario {} seleccionó licorería: {}", username, licoreria.getNombre());
             
-            logger.info("Licorería {} (ID: {}) seleccionada exitosamente para usuario {}", 
-                licoreria.getNombre(), licoreria.getId(), username);
-            
-            redirectAttrs.addFlashAttribute("mensajeExito", "✅ Licorería seleccionada: " + licoreria.getNombre());
             return "redirect:/dashboard";
         } catch (Exception e) {
-            logger.error("Error al seleccionar licorería: {}", e.getMessage(), e);
-            redirectAttrs.addFlashAttribute("mensajeError", "❌ Error al seleccionar la licorería: " + e.getMessage());
+            logger.error("Error al seleccionar licorería: {}", e.getMessage());
+            redirectAttrs.addFlashAttribute("error", "Error al seleccionar la licorería: " + e.getMessage());
             return "redirect:/licorerias/seleccionar";
         }
     }
@@ -131,4 +133,13 @@ public class LicoreriaController {
             return "ERROR";
         }
     }
-} 
+
+    // Método para verificar el acceso a las páginas que requieren licorería seleccionada
+    private boolean verificarAccesoLicoreria(HttpServletResponse response) throws IOException {
+        if (licoreriaContext.getLicoreriaActual() == null) {
+            response.sendRedirect("/licorerias/seleccionar");
+            return false;
+        }
+        return true;
+    }
+}
