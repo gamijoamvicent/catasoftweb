@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Gestionar Licorerías</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+    <style>
+        .form-container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .table-container {
+            margin-top: 20px;
+            overflow-x: auto;
+        }
+        .btn-action {
+            padding: 5px 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 5px;
+        }
+        .btn-activar {
+            background-color: #B6D7A8;
+            color: white;
+        }
+        .btn-desactivar {
+            background-color: #F4C2C2;
+            color: white;
+        }
+        .btn-eliminar {
+            background-color: #ff6b6b;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="page-container">
+        <div class="header">
+            <h2>Gestionar Licorerías</h2>
+            <p>Administra las licorerías del sistema</p>
+        </div>
+
+        <!-- Mensajes de éxito/error -->
+        <div th:if="${mensajeExito}" class="alert alert-success" th:text="${mensajeExito}"></div>
+        <div th:if="${mensajeError}" class="alert alert-danger" th:text="${mensajeError}"></div>
+
+        <!-- Formulario de nueva licorería -->
+        <div class="form-container">
+            <h3>Nueva Licorería</h3>
+            <form th:action="@{/licorerias/guardar}" method="post" th:object="${nuevaLicoreria}">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="nombre">Nombre</label>
+                        <input type="text" id="nombre" name="nombre" th:field="*{nombre}" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="direccion">Dirección</label>
+                        <input type="text" id="direccion" name="direccion" th:field="*{direccion}" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="telefono">Teléfono</label>
+                        <input type="text" id="telefono" name="telefono" th:field="*{telefono}">
+                    </div>
+                    <div class="form-group">
+                        <label for="ipLocal">IP Local</label>
+                        <input type="text" id="ipLocal" name="ipLocal" th:field="*{ipLocal}">
+                    </div>
+                    <div class="form-group">
+                        <label for="configuracionImpresora">Configuración Impresora</label>
+                        <input type="text" id="configuracionImpresora" name="configuracionImpresora" th:field="*{configuracionImpresora}">
+                    </div>
+                </div>
+                <button type="submit" class="btn-guardar">Guardar Licorería</button>
+            </form>
+        </div>
+
+        <!-- Tabla de licorerías -->
+        <div class="table-container">
+            <table class="modern-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nombre</th>
+                        <th>Dirección</th>
+                        <th>Teléfono</th>
+                        <th>IP Local</th>
+                        <th>Estado</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="licoreria : ${licorerias}">
+                        <td th:text="${licoreria.id}"></td>
+                        <td th:text="${licoreria.nombre}"></td>
+                        <td th:text="${licoreria.direccion}"></td>
+                        <td th:text="${licoreria.telefono}"></td>
+                        <td th:text="${licoreria.ipLocal}"></td>
+                        <td th:text="${licoreria.activo ? 'Activa' : 'Inactiva'}"></td>
+                        <td>
+                            <button th:if="${licoreria.activo}" 
+                                    class="btn-action btn-desactivar"
+                                    th:onclick="'cambiarEstado(' + ${licoreria.id} + ', false)'">
+                                Desactivar
+                            </button>
+                            <button th:unless="${licoreria.activo}" 
+                                    class="btn-action btn-activar"
+                                    th:onclick="'cambiarEstado(' + ${licoreria.id} + ', true)'">
+                                Activar
+                            </button>
+                            <button class="btn-action btn-eliminar"
+                                    th:onclick="'eliminarLicoreria(' + ${licoreria.id} + ')'">
+                                Eliminar
+                            </button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Botón volver -->
+        <div class="action-button">
+            <button class="btn-back" onclick="window.location.href='/'">Volver al Menú</button>
+        </div>
+    </div>
+
+    <script>
+        function cambiarEstado(id, activar) {
+            if (confirm('¿Estás seguro de ' + (activar ? 'activar' : 'desactivar') + ' esta licorería?')) {
+                fetch('/licorerias/' + id + '/cambiar-estado?activar=' + activar, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(response => response.text())
+                .then(result => {
+                    if (result === 'OK') {
+                        window.location.reload();
+                    } else {
+                        alert('Error al cambiar el estado');
+                    }
+                });
+            }
+        }
+
+        function eliminarLicoreria(id) {
+            if (confirm('¿Estás seguro de eliminar esta licorería? Esta acción no se puede deshacer.')) {
+                fetch('/licorerias/' + id + '/eliminar', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(response => response.text())
+                .then(result => {
+                    if (result === 'OK') {
+                        window.location.reload();
+                    } else {
+                        alert('Error al eliminar la licorería');
+                    }
+                });
+            }
+        }
+    </script>
+</body>
+</html> 

@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Acceso Denegado</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+    <style>
+        .error-container {
+            text-align: center;
+            padding: 40px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            max-width: 600px;
+            margin: 40px auto;
+        }
+        .error-icon {
+            font-size: 64px;
+            color: #ff6b6b;
+            margin-bottom: 20px;
+        }
+        .error-title {
+            color: #333;
+            margin-bottom: 15px;
+        }
+        .error-message {
+            color: #666;
+            margin-bottom: 30px;
+            line-height: 1.5;
+        }
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+        .btn-seleccionar {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            text-decoration: none;
+        }
+        .btn-seleccionar:hover {
+            background-color: #45a049;
+        }
+        .btn-logout {
+            background-color: #f44336;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            text-decoration: none;
+        }
+        .btn-logout:hover {
+            background-color: #da190b;
+        }
+    </style>
+</head>
+<body>
+    <div class="page-container">
+        <div class="error-container">
+            <div class="error-icon">⚠️</div>
+            <h1 class="error-title">Acceso Denegado</h1>
+            <p class="error-message">
+                No tienes permiso para acceder a esta licorería. 
+                Por favor, selecciona una licorería a la que tengas acceso o contacta al administrador del sistema.
+            </p>
+            <div class="action-buttons">
+                <a th:href="@{/licorerias/seleccionar}" class="btn-seleccionar">
+                    Seleccionar Otra Licorería
+                </a>
+                <form th:action="@{/logout}" method="post" style="display: inline;">
+                    <button type="submit" class="btn-logout">
+                        Cerrar Sesión
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</body>
+</html> 

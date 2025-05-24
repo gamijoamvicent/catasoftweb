@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Seleccionar Licorería</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+    <style>
+        .licoreria-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .licoreria-card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .licoreria-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+        .licoreria-card h3 {
+            margin: 0 0 10px 0;
+            color: #333;
+        }
+        .licoreria-card p {
+            margin: 5px 0;
+            color: #666;
+        }
+        .licoreria-card.inactive {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <div class="page-container">
+        <div class="header">
+            <h2>Seleccionar Licorería</h2>
+            <p>Selecciona la licorería con la que deseas trabajar</p>
+        </div>
+
+        <form th:action="@{/licorerias/seleccionar}" method="post" id="seleccionForm">
+            <input type="hidden" name="licoreriaId" id="licoreriaId">
+            <div class="licoreria-grid">
+                <div th:each="licoreria : ${licorerias}" 
+                     th:class="${licoreria.activo ? 'licoreria-card' : 'licoreria-card inactive'}"
+                     th:onclick="${licoreria.activo ? 'seleccionarLicoreria(' + licoreria.id + ')' : ''}">
+                    <h3 th:text="${licoreria.nombre}">Nombre Licorería</h3>
+                    <p th:text="${licoreria.direccion}">Dirección</p>
+                    <p th:text="${licoreria.telefono}">Teléfono</p>
+                    <p th:if="${!licoreria.activo}" style="color: red;">Inactiva</p>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        function seleccionarLicoreria(id) {
+            document.getElementById('licoreriaId').value = id;
+            document.getElementById('seleccionForm').submit();
+        }
+    </script>
+</body>
+</html> 
