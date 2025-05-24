@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Listar Productos</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+    <style>
+        .filtros-container {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px auto;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .filtros-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        .filtro-grupo {
+            display: flex;
+            flex-direction: column;
+        }
+        .filtro-grupo label {
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+        .filtro-grupo select, .filtro-grupo input {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            width: 100%;
+        }
+        .precio-range {
+            display: flex;
+            gap: 10px;
+        }
+        .precio-range input {
+            width: 100%;
+        }
+        .btn-filtrar {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .btn-filtrar:hover {
+            background-color: #0056b3;
+        }
+        .btn-limpiar {
+            background-color: #6c757d;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-left: 10px;
+            transition: background-color 0.3s;
+        }
+        .btn-limpiar:hover {
+            background-color: #545b62;
+        }
+        .botones-filtro {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="page-container">
+        <div class="header">
+            <h2>Lista de Productos</h2>
+            <p>Gestiona y visualiza todos los productos registrados.</p>
+            <div class="licoreria-info" th:if="${licoreriaActual != null}">
+                <p>Licorería actual: <strong th:text="${licoreriaActual.nombre}"></strong></p>
+            </div>
+        </div>
+
+        <!-- Mensajes de alerta -->
+        <div th:if="${mensajeExito}" class="alert alert-success" role="alert" th:text="${mensajeExito}"></div>
+        <div th:if="${mensajeError}" class="alert alert-danger" role="alert" th:text="${mensajeError}"></div>
+
+        <!-- Filtros -->
+        <div class="filtros-container">
+            <form th:action="@{/producto/listar}" method="get" id="filtrosForm">
+                <div class="filtros-grid">
+                    <div class="filtro-grupo">
+                        <label for="categoria">Categoría</label>
+                        <select id="categoria" name="categoria">
+                            <option value="">Todas las categorías</option>
+                            <option th:each="cat : ${categorias}"
+                                    th:value="${cat}"
+                                    th:text="${cat}"
+                                    th:selected="${cat == categoriaSeleccionada}">
+                            </option>
+                        </select>
+                    </div>
+
+                    <div class="filtro-grupo">
+                        <label for="marca">Marca</label>
+                        <select id="marca" name="marca">
+                            <option value="">Todas las marcas</option>
+                            <option th:each="m : ${marcas}"
+                                    th:value="${m}"
+                                    th:text="${m}"
+                                    th:selected="${m == marcaSeleccionada}">
+                            </option>
+                        </select>
+                    </div>
+
+                    <div class="filtro-grupo">
+                        <label for="proveedor">Proveedor</label>
+                        <select id="proveedor" name="proveedor">
+                            <option value="">Todos los proveedores</option>
+                            <option th:each="prov : ${proveedores}"
+                                    th:value="${prov}"
+                                    th:text="${prov}"
+                                    th:selected="${prov == proveedorSeleccionado}">
+                            </option>
+                        </select>
+                    </div>
+
+                    <div class="filtro-grupo">
+                        <label>Rango de Precio</label>
+                        <div class="precio-range">
+                            <input type="number" name="precioMin" th:value="${precioMin}" placeholder="Mín" step="0.01" min="0">
+                            <input type="number" name="precioMax" th:value="${precioMax}" placeholder="Máx" step="0.01" min="0">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="botones-filtro">
+                    <button type="submit" class="btn-filtrar">Aplicar Filtros</button>
+                    <button type="button" class="btn-limpiar" onclick="limpiarFiltros()">Limpiar Filtros</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Tabla de productos -->
+        <div class="table-container">
+            <table class="modern-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nombre</th>
+                        <th>Código</th>
+                        <th>Precio Venta</th>
+                        <th>Cantidad</th>
+                        <th>Categoría</th>
+                        <th>Marca</th>
+                        <th>Proveedor</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="producto : ${productos}">
+                        <td th:text="${producto.id}"></td>
+                        <td th:text="${producto.nombre}"></td>
+                        <td th:text="${producto.codigoUnico}"></td>
+                        <td th:text="${'$' + #numbers.formatDecimal(producto.precioVenta, 1, 2)}"></td>
+                        <td th:text="${producto.cantidad}"></td>
+                        <td th:text="${producto.categoria}"></td>
+                        <td th:text="${producto.marca}"></td>
+                        <td th:text="${producto.proveedor}"></td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(productos)}">
+                        <td colspan="8" style="text-align: center;">No se encontraron productos</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Botones de acción -->
+        <div class="action-buttons">
+            <button class="btn-submit" onclick="window.location.href='/producto/agregar'">Agregar Producto</button>
+            <button class="btn-back" onclick="window.location.href='/'">Volver al Menú</button>
+        </div>
+    </div>
+
+    <script>
+        function limpiarFiltros() {
+            document.getElementById('categoria').value = '';
+            document.getElementById('marca').value = '';
+            document.getElementById('proveedor').value = '';
+            document.querySelector('input[name="precioMin"]').value = '';
+            document.querySelector('input[name="precioMax"]').value = '';
+            document.getElementById('filtrosForm').submit();
+        }
+    </script>
+</body>
+</html> 

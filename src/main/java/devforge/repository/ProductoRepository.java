@@ -19,4 +19,7 @@ public interface ProductoRepository extends JpaRepository<Producto, Long> {
 
     @Override
     Optional<Producto> findById(Long id);
+
+    List<Producto> findByLicoreriaId(Long licoreriaId);
+    List<Producto> findByLicoreriaIdAndCategoria(Long licoreriaId, String categoria);
 }

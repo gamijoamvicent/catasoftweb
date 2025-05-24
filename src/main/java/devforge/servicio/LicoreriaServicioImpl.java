@@ -22,6 +22,9 @@ public class LicoreriaServicioImpl implements LicoreriaServicio {
 
     @Override
     public Licoreria guardar(Licoreria licoreria) {
+        if (licoreria.getId() == null) {
+            licoreria.setEstado(true);
+        }
         return licoreriaRepository.save(licoreria);
     }
 
@@ -32,7 +35,7 @@ public class LicoreriaServicioImpl implements LicoreriaServicio {
 
     @Override
     public List<Licoreria> listarActivas() {
-        return licoreriaRepository.findByActivoTrue();
+        return licoreriaRepository.findByEstadoTrue();
     }
 
     @Override
@@ -56,17 +59,9 @@ public class LicoreriaServicioImpl implements LicoreriaServicio {
     }
 
     @Override
-    public void desactivar(Long id) {
+    public void cambiarEstado(Long id, boolean estado) {
         licoreriaRepository.findById(id).ifPresent(licoreria -> {
-            licoreria.setActivo(false);
-            licoreriaRepository.save(licoreria);
-        });
-    }
-
-    @Override
-    public void activar(Long id) {
-        licoreriaRepository.findById(id).ifPresent(licoreria -> {
-            licoreria.setActivo(true);
+            licoreria.setEstado(estado);
             licoreriaRepository.save(licoreria);
         });
     }

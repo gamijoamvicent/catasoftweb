@@ -1,91 +1,262 @@
 <!DOCTYPE html>
-<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="UTF-8">
-    <title>Bienvenido - InventSoft</title>
-    <link rel="stylesheet" th:href="@{/css/stylesMain.css}">
+    <title>Menú Principal - InventSoft</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+    <style>
+        .dashboard-container {
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+        }
+
+        .licoreria-info {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+        }
+
+        .licoreria-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .licoreria-header h3 {
+            color: #2C3E50;
+            margin: 0;
+            font-size: 1.4em;
+        }
+
+        .licoreria-info p {
+            color: #666;
+            margin: 5px 0;
+            font-size: 0.95em;
+        }
+
+        .btn-cambiar-licoreria {
+            background-color: #AED9E0;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .btn-cambiar-licoreria:hover {
+            background-color: #96cfd6;
+            transform: translateY(-2px);
+        }
+
+        .menu-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 25px;
+            margin-top: 30px;
+        }
+
+        .menu-card {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            text-decoration: none;
+            color: #2C3E50;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            border: 1px solid #eee;
+        }
+
+        .menu-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+        }
+
+        .menu-card .menu-icon {
+            width: 40px;
+            height: 40px;
+            padding: 8px;
+            border-radius: 10px;
+            background-color: #f8f9fa;
+        }
+
+        .menu-card.ventas {
+            border-top: 4px solid #AED9E0;
+        }
+
+        .menu-card.inventario {
+            border-top: 4px solid #B6D7A8;
+        }
+
+        .menu-card.usuarios {
+            border-top: 4px solid #D9B3FF;
+        }
+
+        .menu-card.configuracion {
+            border-top: 4px solid #F4C2C2;
+        }
+
+        .alert {
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .alert-warning {
+            background-color: #fff3cd;
+            border-left: 4px solid #ffc107;
+            color: #856404;
+        }
+
+        .btn-seleccionar {
+            display: inline-block;
+            background-color: #AED9E0;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 500;
+            margin-top: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-seleccionar:hover {
+            background-color: #96cfd6;
+            transform: translateY(-2px);
+        }
+
+        .logout-container {
+            margin-top: 40px;
+            text-align: center;
+        }
+
+        .btn-logout {
+            background-color: #F4C2C2;
+            color: white;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-logout:hover {
+            background-color: #e8a7a7;
+            transform: translateY(-2px);
+        }
+    </style>
 </head>
 <body>
+    <div class="page-container">
+        <div class="dashboard-container">
+            <!-- Información de la licorería actual -->
+            <div class="licoreria-info" th:if="${licoreriaActual != null}">
+                <div class="licoreria-header">
+                    <h3>📋 Licorería Actual: <span th:text="${licoreriaActual.nombre}"></span></h3>
+                    <a th:href="@{/licorerias/seleccionar}" class="btn-cambiar-licoreria">
+                        🔄 Cambiar Licorería
+                    </a>
+                </div>
+                <p>📍 <span th:text="${licoreriaActual.direccion}"></span></p>
+                <p>📞 <span th:text="${licoreriaActual.telefono}"></span></p>
+            </div>
 
-<div class="page-container">
-    <div class="header">
-        <h2>Bienvenido a InventSoft</h2>
-        <p>Selecciona una opción del menú para comenzar.</p>
+            <!-- Mensaje si no hay licorería seleccionada -->
+            <div class="alert alert-warning" th:unless="${licoreriaActual != null}">
+                <span style="font-size: 24px;">⚠️</span>
+                <div>
+                    <p style="margin: 0 0 10px 0; font-weight: 600;">No hay licorería seleccionada</p>
+                    <p style="margin: 0;">Por favor, selecciona una licorería para continuar.</p>
+                    <a th:href="@{/licorerias/seleccionar}" class="btn-seleccionar">Seleccionar Licorería</a>
+                </div>
+            </div>
+
+            <!-- Menú de opciones -->
+            <div class="menu-container" th:if="${licoreriaActual != null}">
+                <!-- SUPER_ADMIN -->
+                <a class="menu-card configuracion"
+                   sec:authorize="hasRole('SUPER_ADMIN')"
+                   th:href="@{/licorerias/gestionar}">
+                    <img src="/icons/settings.png" alt="Licorerías" class="menu-icon">
+                    Gestionar Licorerías
+                </a>
+
+                <!-- ADMIN_LOCAL + SUPER_ADMIN -->
+                <a class="menu-card usuarios"
+                   sec:authorize="hasAnyRole('ADMIN_LOCAL', 'SUPER_ADMIN')"
+                   th:href="@{/usuarios/registrar}">
+                    <img src="/icons/users.png" alt="Usuarios" class="menu-icon">
+                    Gestionar Usuarios
+                </a>
+
+                <!-- ADMIN_LOCAL + SUPER_ADMIN -->
+                <a class="menu-card configuracion"
+                   sec:authorize="hasAnyRole('ADMIN_LOCAL', 'SUPER_ADMIN')"
+                   th:href="@{/dolar/actualizar}">
+                    <img src="/icons/dollar.png" alt="Dólar" class="menu-icon">
+                    Actualizar Precio Dólar
+                </a>
+
+                <!-- CAJERO + ADMIN_LOCAL + SUPER_ADMIN -->
+                <a class="menu-card ventas"
+                   sec:authorize="hasAnyRole('CAJERO', 'ADMIN_LOCAL', 'SUPER_ADMIN')"
+                   th:href="@{/ventas/nueva}">
+                    <img src="/icons/sales.png" alt="Venta" class="menu-icon">
+                    Registrar Venta
+                </a>
+
+                <!-- BODEGA + ADMIN_LOCAL + SUPER_ADMIN -->
+                <a class="menu-card inventario"
+                   sec:authorize="hasAnyRole('BODEGA', 'ADMIN_LOCAL', 'SUPER_ADMIN')"
+                   th:href="@{/producto/agregar}">
+                    <img src="/icons/add.png" alt="AgregarProducto" class="menu-icon">
+                    Agregar Producto
+                </a>
+
+                <!-- ADMIN_LOCAL + SUPER_ADMIN -->
+                <a class="menu-card inventario"
+                   sec:authorize="hasAnyRole('ADMIN_LOCAL', 'SUPER_ADMIN')"
+                   th:href="@{/producto/actualizar}">
+                    <img src="/icons/update.png" alt="Actualizar" class="menu-icon">
+                    Actualizar Producto
+                </a>
+
+                <!-- Todos los roles pueden ver el inventario -->
+                <a class="menu-card inventario"
+                   th:href="@{/inventario}">
+                    <img src="/icons/inventory.png" alt="Inventario" class="menu-icon">
+                    Ver Inventario
+                </a>
+
+                <!-- BODEGA + ADMIN_LOCAL + SUPER_ADMIN -->
+                <a class="menu-card inventario"
+                   sec:authorize="hasAnyRole('BODEGA', 'ADMIN_LOCAL', 'SUPER_ADMIN')"
+                   th:href="@{/producto/eliminar}">
+                    <img src="/icons/delete.png" alt="Eliminar" class="menu-icon">
+                    Eliminar Producto
+                </a>
+            </div>
+
+            <!-- Botón cerrar sesión -->
+            <div class="logout-container">
+                <form th:action="@{/logout}" method="post">
+                    <button type="submit" class="btn-logout">Cerrar Sesión</button>
+                </form>
+            </div>
+        </div>
     </div>
-
-    <!-- Mostrar quién está logueado -->
-    <div class="usuario-info" th:if="${#authentication != null and #authentication.isAuthenticated()}">
-        <span>👤 Usuario activo: <b th:text="${#authentication.name}"></b></span> |
-        <span>Rol: 
-            <b th:each="authority : ${#authentication.authorities}" 
-               th:text="${authority.authority.replace('ROLE_', '')}"></b>
-        </span>
-    </div>
-
-    <!-- Menú de opciones según rol -->
-    <div class="menu-container">
-
-        <!-- CAJERO + ADMIN -->
-        <a class="menu-card"
-           sec:authorize="hasRole('CAJERO') or hasRole('ADMIN')"
-           href="/ventas">
-            <img src="/icons/sales.png" alt="Venta" class="menu-icon">
-            Registrar Venta
-        </a>
-
-        <!-- BODEGA + ADMIN -->
-        <a class="menu-card"
-           sec:authorize="hasRole('BODEGA') or hasRole('ADMIN')"
-           href="/producto/agregar">
-            <img src="/icons/add.png" alt="AgregarProducto" class="menu-icon">
-            Agregar Producto
-        </a>
-
-        <!-- ADMIN -->
-        <a class="menu-card"
-           sec:authorize="hasRole('ADMIN')"
-           href="/producto/actualizar">
-            <img src="/icons/update.png" alt="Actualizar" class="menu-icon">
-            Actualizar Producto
-        </a>
-
-        <!-- Todos los roles pueden ver el inventario -->
-        <a class="menu-card"
-           href="/inventario">
-            <img src="/icons/inventory.png" alt="Inventario" class="menu-icon">
-            Ver Inventario
-        </a>
-
-        <!-- BODEGA + ADMIN -->
-        <a class="menu-card"
-           sec:authorize="hasRole('BODEGA') or hasRole('ADMIN')"
-           href="/producto/eliminar">
-            <img src="/icons/delete.png" alt="Eliminar" class="menu-icon">
-            Eliminar Producto
-        </a>
-
-        <!-- CAJERO + ADMIN -->
-        <a class="menu-card"
-           sec:authorize="hasRole('CAJERO') or hasRole('ADMIN')"
-           href="/configuracion/dolar">
-            <img src="/icons/settings.png" alt="PrecioDolar" class="menu-icon">
-            Configurar Dólar
-        </a>
-
-        <!-- Solo ADMIN -->
-        <a class="menu-card btn-admin"
-           sec:authorize="hasRole('ADMIN')"
-           th:href="@{/usuarios/registrar}">
-            <img src="/icons/icon_usuario.png" alt="Usuario" class="menu-icon">
-            Registrar nuevo usuario
-        </a>
-    </div>
-
-    <!-- Botón de cierre de sesión -->
-    <div class="action-button">
-        <a th:href="@{/logout}" class="btn-logout">Cerrar Sesión</a>
-    </div>
-</div>
-
 </body>
 </html>

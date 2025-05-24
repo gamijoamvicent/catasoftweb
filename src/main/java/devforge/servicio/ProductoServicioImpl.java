@@ -1,5 +1,6 @@
 package devforge.servicio;
 
+import devforge.config.LicoreriaContext;
 import devforge.model.ItemVentaDto;
 import devforge.model.Producto;
 import devforge.repository.PrecioDolarRepository;
@@ -20,9 +21,15 @@ public class ProductoServicioImpl implements ProductoServicio {
     @Autowired
     private PrecioDolarServicio repositorio;
 
+    @Autowired
+    private LicoreriaContext licoreriaContext;
+
     @Override
     public List<Producto> listarProductos() {
-        return productoRepository.findAll();
+        if (licoreriaContext.getLicoreriaId() == null) {
+            return List.of();
+        }
+        return productoRepository.findByLicoreriaId(licoreriaContext.getLicoreriaId());
     }
 
     @Override
@@ -61,13 +68,14 @@ public class ProductoServicioImpl implements ProductoServicio {
 
     @Override
     public List<Producto> buscarPorNombreOCodigo(String termino) {
-        List<Producto> todos = listarProductos();
+        if (licoreriaContext.getLicoreriaId() == null) {
+            return List.of();
+        }
+        List<Producto> productos = productoRepository.findByLicoreriaId(licoreriaContext.getLicoreriaId());
         String lowerTermino = termino.toLowerCase();
-        return todos.stream()
-                .filter(p
-                        -> p.getNombre().toLowerCase().contains(lowerTermino)
-                || (p.getCodigoUnico() != null && p.getCodigoUnico().toLowerCase().contains(lowerTermino))
-                )
+        return productos.stream()
+                .filter(p -> p.getNombre().toLowerCase().contains(lowerTermino)
+                        || (p.getCodigoUnico() != null && p.getCodigoUnico().toLowerCase().contains(lowerTermino)))
                 .toList();
     }
 
@@ -87,5 +95,15 @@ public class ProductoServicioImpl implements ProductoServicio {
             producto.setCantidad(nuevaCantidad);
             productoRepository.save(producto); // ✅ Guarda el cambio
         }
+    }
+
+    @Override
+    public List<Producto> listarProductosPorLicoreria(Long licoreriaId) {
+        return productoRepository.findByLicoreriaId(licoreriaId);
+    }
+
+    @Override
+    public List<Producto> listarProductosPorLicoreriaYCategoria(Long licoreriaId, String categoria) {
+        return productoRepository.findByLicoreriaIdAndCategoria(licoreriaId, categoria);
     }
 }

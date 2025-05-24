@@ -22,9 +22,38 @@
     <div class="split-container">
         <!-- Columna izquierda: Buscador -->
         <div class="buscador-column">
-            <div class="input-group">
-                <label for="buscarField">Buscar producto:</label>
-                <input type="text" id="buscarField" placeholder="Ej. Cuaderno" onkeyup="buscarProducto()" autocomplete="off">
+            <div class="filtros-busqueda">
+                <div class="input-group">
+                    <label for="buscarField">Buscar producto:</label>
+                    <input type="text" id="buscarField" placeholder="Ej. Cuaderno" onkeyup="buscarProducto()" autocomplete="off">
+                </div>
+
+                <!-- Filtros adicionales -->
+                <div class="filtros-adicionales">
+                    <div class="filtro-grupo">
+                        <label for="filtroCategoria">Categoría</label>
+                        <select id="filtroCategoria" onchange="aplicarFiltros()">
+                            <option value="">Todas las categorías</option>
+                            <option th:each="cat : ${categorias}" th:value="${cat}" th:text="${cat}"></option>
+                        </select>
+                    </div>
+
+                    <div class="filtro-grupo">
+                        <label for="filtroMarca">Marca</label>
+                        <select id="filtroMarca" onchange="aplicarFiltros()">
+                            <option value="">Todas las marcas</option>
+                            <option th:each="m : ${marcas}" th:value="${m}" th:text="${m}"></option>
+                        </select>
+                    </div>
+
+                    <div class="filtro-grupo">
+                        <label>Rango de Precio</label>
+                        <div class="precio-range">
+                            <input type="number" id="precioMin" placeholder="Mín" step="0.01" min="0" onchange="aplicarFiltros()">
+                            <input type="number" id="precioMax" placeholder="Máx" step="0.01" min="0" onchange="aplicarFiltros()">
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- Lista de resultados -->
@@ -93,6 +122,45 @@
     </li>
 </ul>
 
+<style>
+    .filtros-busqueda {
+        background: white;
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 15px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .filtros-adicionales {
+        margin-top: 15px;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 10px;
+    }
+    .filtro-grupo {
+        display: flex;
+        flex-direction: column;
+    }
+    .filtro-grupo label {
+        margin-bottom: 5px;
+        font-weight: bold;
+        color: #555;
+        font-size: 0.9em;
+    }
+    .filtro-grupo select, .filtro-grupo input {
+        padding: 6px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        width: 100%;
+    }
+    .precio-range {
+        display: flex;
+        gap: 5px;
+    }
+    .precio-range input {
+        width: 100%;
+    }
+</style>
+
 <script>
     let todosLosProductos = [];
 
@@ -125,18 +193,33 @@
     function buscarProducto() {
         const input = document.getElementById("buscarField");
         const valor = input.value.trim().toLowerCase();
+        aplicarFiltros(valor);
+    }
 
-        if (!valor) {
-            renderizarSugerencias(todosLosProductos);
-            return;
+    // Nueva función para aplicar todos los filtros
+    function aplicarFiltros(terminoBusqueda = null) {
+        if (terminoBusqueda === null) {
+            terminoBusqueda = document.getElementById("buscarField").value.trim().toLowerCase();
         }
 
-        const filtrados = todosLosProductos.filter(p =>
-            p.nombre.toLowerCase().includes(valor) ||
-            p.codigoUnico.toLowerCase().includes(valor) ||
-            p.categoria.toLowerCase().includes(valor) ||
-            p.marca.toLowerCase().includes(valor)
-        );
+        const categoria = document.getElementById("filtroCategoria").value.toLowerCase();
+        const marca = document.getElementById("filtroMarca").value.toLowerCase();
+        const precioMin = parseFloat(document.getElementById("precioMin").value) || 0;
+        const precioMax = parseFloat(document.getElementById("precioMax").value) || Infinity;
+
+        const filtrados = todosLosProductos.filter(p => {
+            const cumpleBusqueda = !terminoBusqueda || 
+                p.nombre.toLowerCase().includes(terminoBusqueda) ||
+                p.codigoUnico.toLowerCase().includes(terminoBusqueda) ||
+                p.categoria.toLowerCase().includes(terminoBusqueda) ||
+                p.marca.toLowerCase().includes(terminoBusqueda);
+
+            const cumpleCategoria = !categoria || p.categoria.toLowerCase() === categoria;
+            const cumpleMarca = !marca || p.marca.toLowerCase() === marca;
+            const cumplePrecio = p.precioVenta >= precioMin && p.precioVenta <= precioMax;
+
+            return cumpleBusqueda && cumpleCategoria && cumpleMarca && cumplePrecio;
+        });
 
         renderizarSugerencias(filtrados);
     }

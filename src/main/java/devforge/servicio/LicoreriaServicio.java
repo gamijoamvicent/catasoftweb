@@ -12,6 +12,5 @@ public interface LicoreriaServicio {
     Optional<Licoreria> obtenerPorNombre(String nombre);
     Optional<Licoreria> obtenerPorIpLocal(String ipLocal);
     void eliminar(Long id);
-    void desactivar(Long id);
-    void activar(Long id);
+    void cambiarEstado(Long id, boolean estado);
 } 

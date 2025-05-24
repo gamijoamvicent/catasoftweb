@@ -15,9 +15,4 @@ public class LoginController {
     public String cerrarSesion() {
         return "redirect:/login";
     }
-
-    @GetMapping("/acceso-denegado")
-    public String accesoDenegado() {
-        return "error/accesoDenegado";
-    }
 }

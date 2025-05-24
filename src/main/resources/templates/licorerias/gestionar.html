@@ -118,14 +118,14 @@
                         <td th:text="${licoreria.direccion}"></td>
                         <td th:text="${licoreria.telefono}"></td>
                         <td th:text="${licoreria.ipLocal}"></td>
-                        <td th:text="${licoreria.activo ? 'Activa' : 'Inactiva'}"></td>
+                        <td th:text="${licoreria.estado ? 'Activa' : 'Inactiva'}"></td>
                         <td>
-                            <button th:if="${licoreria.activo}" 
+                            <button th:if="${licoreria.estado}" 
                                     class="btn-action btn-desactivar"
                                     th:onclick="'cambiarEstado(' + ${licoreria.id} + ', false)'">
                                 Desactivar
                             </button>
-                            <button th:unless="${licoreria.activo}" 
+                            <button th:unless="${licoreria.estado}" 
                                     class="btn-action btn-activar"
                                     th:onclick="'cambiarEstado(' + ${licoreria.id} + ', true)'">
                                 Activar

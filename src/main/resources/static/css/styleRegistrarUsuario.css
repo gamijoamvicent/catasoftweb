@@ -6,147 +6,184 @@ body {
     font-family: 'Segoe UI', sans-serif;
     background-color: #F3F6F9;
     margin: 0;
-    padding: 0;
+    padding: 20px;
 }
 
 /* Contenedor principal */
 .registro-container {
     display: flex;
     justify-content: center;
-    align-items: center;
-    height: 100vh;
+    align-items: flex-start;
+    min-height: 100vh;
+    padding: 20px;
 }
 
 .registro-box {
     background-color: white;
     padding: 30px;
-    width: 500px;
+    width: 800px;
     border-radius: 12px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.registro-box h2 {
+    color: #2C3E50;
+    margin-bottom: 10px;
     text-align: center;
 }
 
-.header h2 {
-    color: #5A5A5A;
-    margin-bottom: 10px;
-}
-.header p {
-    color: #888;
+.registro-box p {
+    color: #7F8C8D;
     font-size: 14px;
     margin-bottom: 30px;
+    text-align: center;
 }
 
 /* Campos del formulario */
 .input-group {
     display: flex;
     flex-direction: column;
-    margin-bottom: 15px;
+    margin-bottom: 20px;
 }
 
 .input-group label {
-    font-weight: bold;
-    margin-bottom: 6px;
-    color: #444;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: #2C3E50;
 }
 
 .input-group input[type="text"],
 .input-group input[type="password"],
 .input-group select {
     padding: 12px;
-    border: 1px solid #ccc;
+    border: 1px solid #E0E0E0;
     border-radius: 6px;
     font-size: 14px;
+    transition: border-color 0.3s ease;
 }
 
 .input-group input:focus,
 .input-group select:focus {
     outline: none;
-    border-color: #AED9E0;
+    border-color: #3498DB;
+    box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+}
+
+.input-group .readonly-input {
+    background-color: #F8F9FA;
+    cursor: not-allowed;
 }
 
 /* Botón registrar */
 .btn-registrar {
     width: 100%;
     padding: 12px;
-    background-color: #AED9E0;
+    background-color: #3498DB;
     color: white;
     border: none;
     border-radius: 6px;
     cursor: pointer;
+    font-weight: 600;
     transition: background-color 0.3s ease;
 }
+
 .btn-registrar:hover {
-    background-color: #96cfd6;
+    background-color: #2980B9;
 }
 
 /* Tabla de usuarios */
+.tabla-usuarios {
+    margin-top: 40px;
+}
+
+.tabla-usuarios h3 {
+    color: #2C3E50;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
 .modern-table {
     width: 100%;
     border-collapse: collapse;
     margin-top: 20px;
+    background-color: white;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .modern-table thead {
-    background-color: #D9B3FF;
+    background-color: #3498DB;
     color: white;
 }
 
 .modern-table th,
 .modern-table td {
-    padding: 12px;
+    padding: 12px 15px;
     text-align: left;
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid #E0E0E0;
+}
+
+.modern-table th {
+    font-weight: 600;
 }
 
 .modern-table tr:hover {
-    background-color: #f1f1f1;
+    background-color: #F8F9FA;
 }
 
 /* Botones de acción en tabla */
-.btn-editar {
-    background-color: #F4C2C2;
-    color: white;
-    padding: 6px 10px;
-    border-radius: 6px;
+.btn-editar,
+.btn-eliminar {
+    padding: 6px 12px;
+    border-radius: 4px;
     text-decoration: none;
-    font-weight: bold;
+    font-weight: 500;
+    font-size: 13px;
+    margin-right: 8px;
     transition: background-color 0.3s ease;
 }
+
+.btn-editar {
+    background-color: #2ECC71;
+    color: white;
+}
+
 .btn-editar:hover {
-    background-color: #e8a7a7;
+    background-color: #27AE60;
 }
 
 .btn-eliminar {
-    background-color: #F4C2C2;
+    background-color: #E74C3C;
     color: white;
-    padding: 6px 10px;
-    border-radius: 6px;
-    text-decoration: none;
-    font-weight: bold;
-    margin-left: 10px;
-    transition: background-color 0.3s ease;
 }
+
 .btn-eliminar:hover {
-    background-color: #e8a7a7;
+    background-color: #C0392B;
 }
 
 /* Alertas */
 .alert {
-    padding: 12px;
-    border-left: 4px solid #ddd;
+    padding: 15px;
     border-radius: 6px;
     margin-bottom: 20px;
     font-size: 14px;
+    display: flex;
+    align-items: center;
 }
+
 .alert-success {
-    background-color: #DFF0D8;
-    color: #3C763D;
-    border-left: 4px solid #B6D7A8;
+    background-color: #D4EDDA;
+    color: #155724;
+    border-left: 4px solid #28A745;
 }
+
 .alert-danger {
-    background-color: #F2DEDE;
-    color: #A94442;
-    border-left: 4px solid #F4C2C2;
+    background-color: #F8D7DA;
+    color: #721C24;
+    border-left: 4px solid #DC3545;
+}
+
+.alert strong {
+    margin-right: 8px;
 }
 
 /* Botón volver */
@@ -157,13 +194,28 @@ body {
 
 .btn-volver {
     padding: 10px 20px;
-    background-color: #B6D7A8;
+    background-color: #95A5A6;
     color: white;
     border: none;
-    border-radius: 8px;
+    border-radius: 6px;
     cursor: pointer;
+    font-weight: 600;
     transition: background-color 0.3s ease;
 }
+
 .btn-volver:hover {
-    background-color: #a1c993;
+    background-color: #7F8C8D;
+}
+
+/* Responsive */
+@media (max-width: 850px) {
+    .registro-box {
+        width: 100%;
+        padding: 20px;
+    }
+
+    .modern-table {
+        display: block;
+        overflow-x: auto;
+    }
 }

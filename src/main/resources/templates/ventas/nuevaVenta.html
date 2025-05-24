@@ -277,36 +277,35 @@
     // Confirmar venta → envía datos al backend
     function confirmarVenta() {
         if (productosSeleccionados.length === 0) {
-            alert("❌ No hay productos en la venta.");
+            alert("❌ Agrega al menos un producto a la venta");
             return;
         }
-        if (!confirm("¿Confirmar venta?")) return;
 
-        const csrfToken = document.querySelector("meta[name='_csrf']").getAttribute("content");
-        const csrfHeader = document.querySelector("meta[name='_csrf_header']").getAttribute("content");
+        const items = productosSeleccionados.map(p => ({
+            id: p.id,
+            cantidad: p.cantidad
+        }));
 
         fetch('/ventas/confirmar', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                [csrfHeader]: csrfToken
+                'X-CSRF-TOKEN': document.querySelector('meta[name="_csrf"]').content
             },
-            body: JSON.stringify(productosSeleccionados.map(p => ({
-                id: p.id,
-                cantidad: p.cantidad
-            })))
+            body: JSON.stringify(items)
         })
-        .then(response => {
-            if (!response.ok) throw new Error('Error en la respuesta del servidor');
-            return response.text();
+        .then(response => response.text())
+        .then(result => {
+            if (result.includes("confirmada")) {
+                alert("✅ Venta registrada exitosamente");
+                window.location.reload();
+            } else {
+                alert("❌ Error: " + result);
+            }
         })
-        .then(() => {
-            alert("✅ Venta confirmada. Stock actualizado.");
-            window.location.reload();
-        })
-        .catch(err => {
-            console.error("🚨 Error al vender:", err);
-            alert("Hubo un problema al confirmar la venta.");
+        .catch(error => {
+            console.error('Error:', error);
+            alert("❌ Error al procesar la venta");
         });
     }
 

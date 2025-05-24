@@ -2,15 +2,15 @@ package devforge.model;
 
 import jakarta.persistence.*;
 import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
+import java.io.Serializable;
+import java.time.LocalDateTime;
 
+@Data
 @Entity
 @Table(name = "licorerias")
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-public class Licoreria {
+public class Licoreria implements Serializable {
+    private static final long serialVersionUID = 1L;
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -21,6 +21,7 @@ public class Licoreria {
     @Column(nullable = false)
     private String direccion;
 
+    @Column(nullable = false)
     private String telefono;
 
     @Column(name = "ip_local")
@@ -29,15 +30,14 @@ public class Licoreria {
     @Column(name = "configuracion_impresora")
     private String configuracionImpresora;
 
-    @Column(name = "estado")
-    private boolean activo = true;
+    @Column(nullable = false)
+    private boolean estado;
 
-    @Column(name = "fecha_creacion")
-    @Temporal(TemporalType.TIMESTAMP)
-    private java.util.Date fechaCreacion;
+    @Column(name = "fecha_creacion", nullable = false)
+    private LocalDateTime fechaCreacion;
 
     @PrePersist
     protected void onCreate() {
-        fechaCreacion = new java.util.Date();
+        fechaCreacion = LocalDateTime.now();
     }
 }

@@ -29,8 +29,12 @@ public class PrecioDolar {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id_precio_dolar")
     private Long idPrecioDolar;
+
+    @Column(name = "precio_dolar", nullable = false)
     private double precioDolar;
+
     @Column(name = "fecha_dolar")
     @Temporal(TemporalType.TIMESTAMP)
     private Date fechaDolar;

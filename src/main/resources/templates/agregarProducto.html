@@ -11,6 +11,10 @@
     <div class="header">
         <h2>Agregar Nuevo Producto</h2>
         <p>Completa los campos obligatorios para registrar un nuevo producto.</p>
+        <!-- Mostrar licorería actual -->
+        <div class="licoreria-info" th:if="${licoreriaActual != null}">
+            <p>Licorería actual: <strong th:text="${licoreriaActual.nombre}"></strong></p>
+        </div>
     </div>
 
     <!-- Mensaje de éxito -->

@@ -21,12 +21,13 @@ public class Usuario {
     @Column(nullable = false)
     private String password;
 
+    @Column(name = "nombre_completo")
     private String nombreCompleto;
 
     @Enumerated(EnumType.STRING)
     private Rol rol; // ADMIN, CAJERO, BODEGA
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "licoreria_id", nullable = false)
     private Licoreria licoreria;
 

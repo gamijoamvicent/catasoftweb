@@ -2,15 +2,16 @@
 <html lang="es" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Registrar Nuevo Usuario</title>
+    <title>Registrar Usuario</title>
     <link rel="stylesheet" th:href="@{/css/styleRegistrarUsuario.css}">
 </head>
 <body>
 
 <div class="registro-container">
     <div class="registro-box">
-        <h2>Registrar Nuevo Usuario</h2>
-        <p>Solo los administradores pueden crear nuevos usuarios.</p>
+        <h2>Registrar Usuario</h2>
+        <p th:if="${esSuperAdmin}">Como SUPER_ADMIN puedes crear usuarios para cualquier licorería.</p>
+        <p th:unless="${esSuperAdmin}">Puedes crear usuarios para la licorería actual.</p>
 
         <!-- Mensaje de éxito -->
         <div th:if="${mensajeExito}" class="alert alert-success" role="alert">
@@ -24,27 +25,53 @@
 
         <!-- Formulario de registro o edición -->
         <form th:action="@{/usuarios/registrar}" method="post" th:object="${usuarioNuevo}">
+            <input type="hidden" th:field="*{id}" />
+            
             <div class="input-group">
                 <label for="username">Nombre de usuario</label>
-                <input type="text" id="username" name="username" th:field="*{username}" placeholder="Ej. admin123" required autocomplete="off"/>
+                <input type="text" id="username" name="username" th:field="*{username}" 
+                       placeholder="Ej. admin123" required autocomplete="off"/>
             </div>
 
-            <div class="input-group">
+            <div class="input-group" th:unless="${usuarioNuevo.id != null}">
                 <label for="password">Contraseña</label>
-                <input type="password" id="password" name="password" th:field="*{password}" placeholder="Tu contraseña" required autocomplete="off"/>
+                <input type="password" id="password" name="password" th:field="*{password}" 
+                       placeholder="Tu contraseña" required autocomplete="off"/>
             </div>
 
             <div class="input-group">
                 <label for="rol">Rol</label>
                 <select id="rol" name="rol" th:field="*{rol}" required>
                     <option value="">-- Selecciona un rol --</option>
-                    <option value="ADMIN">Administrador</option>
+                    <option th:if="${esSuperAdmin}" value="SUPER_ADMIN">Super Administrador</option>
+                    <option th:if="${esSuperAdmin}" value="ADMIN_LOCAL">Administrador Local</option>
                     <option value="CAJERO">Cajero</option>
                     <option value="BODEGA">Bodega</option>
                 </select>
             </div>
 
-            <button type="submit" class="btn-registrar">Registrar Usuario</button>
+            <!-- Selección de licorería solo para SUPER_ADMIN -->
+            <div class="input-group" th:if="${esSuperAdmin}">
+                <label for="licoreriaId">Licorería</label>
+                <select id="licoreriaId" name="licoreriaId" required>
+                    <option value="">-- Selecciona una licorería --</option>
+                    <option th:each="licoreria : ${licorerias}"
+                            th:value="${licoreria.id}"
+                            th:text="${licoreria.nombre} + ' - ' + ${licoreria.direccion}">
+                    </option>
+                </select>
+            </div>
+
+            <!-- Mostrar licorería actual para otros roles -->
+            <div class="input-group" th:unless="${esSuperAdmin}">
+                <label>Licorería Actual</label>
+                <input type="text" th:value="${licoreriaActual.nombre} + ' - ' + ${licoreriaActual.direccion}" 
+                       readonly class="readonly-input"/>
+            </div>
+
+            <button type="submit" class="btn-registrar" th:text="${usuarioNuevo.id != null ? 'Actualizar Usuario' : 'Registrar Usuario'}">
+                Registrar Usuario
+            </button>
         </form>
 
         <!-- Tabla de usuarios registrados -->
@@ -56,6 +83,7 @@
                         <th>ID</th>
                         <th>Username</th>
                         <th>Rol</th>
+                        <th>Licorería</th>
                         <th>Acciones</th>
                     </tr>
                 </thead>
@@ -63,12 +91,16 @@
                     <tr th:each="usuario : ${usuarios}">
                         <td th:text="${usuario.id}">1</td>
                         <td th:text="${usuario.username}">admin</td>
-                        <td th:text="${usuario.rol}">ADMIN</td>
+                        <td th:text="${usuario.rol.name()}">ADMIN</td>
+                        <td th:text="${usuario.licoreria?.nombre ?: 'Sin licorería'}">Licorería</td>
                         <td>
-                            <!--<a th:href="@{/usuarios/editar/{id}(id=${usuario.id})}" class="btn-editar">Editar</a>-->
+                            <a th:href="@{/usuarios/editar/{id}(id=${usuario.id})}" 
+                               class="btn-editar"
+                               th:unless="${usuario.rol.name() == 'SUPER_ADMIN'}">Editar</a>
                             <a th:href="@{/usuarios/eliminar/{id}(id=${usuario.id})}"
                                class="btn-eliminar"
-                               onclick="return confirm('¿Estás seguro de eliminar este usuario?')">Eliminar</a> 
+                               th:unless="${usuario.rol.name() == 'SUPER_ADMIN'}"
+                               onclick="return confirm('¿Estás seguro de eliminar este usuario?')">Eliminar</a>
                         </td>
                     </tr>
                 </tbody>

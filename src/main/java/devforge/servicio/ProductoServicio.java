@@ -27,4 +27,7 @@ public interface ProductoServicio {
     void descontarStockk(List<ItemVentaDto> items);
   
     double obtenerPrecioActual();
+    
+    List<Producto> listarProductosPorLicoreria(Long licoreriaId);
+    List<Producto> listarProductosPorLicoreriaYCategoria(Long licoreriaId, String categoria);
 }
