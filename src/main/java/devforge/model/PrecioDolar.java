@@ -6,12 +6,15 @@ package devforge.model;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.JoinColumn;
 import java.util.Date;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -31,4 +34,14 @@ public class PrecioDolar {
     @Column(name = "fecha_dolar")
     @Temporal(TemporalType.TIMESTAMP)
     private Date fechaDolar;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "licoreria_id", nullable = false)
+    private Licoreria licoreria;
+
+    @Column(name = "licoreria_id", insertable = false, updatable = false)
+    private Long licoreriaId;
+
+    @Column(name = "tipo_tasa")
+    private String tipoTasa; // BCV, INTERNA1, INTERNA2
 }

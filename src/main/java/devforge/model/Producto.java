@@ -2,11 +2,13 @@ package devforge.model;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.JoinColumn;
 import lombok.Data;
 
 @Entity
@@ -32,4 +34,11 @@ public class Producto {
     @Column(name = "cantidad")
     private int cantidad;
     private String color;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "licoreria_id", nullable = false)
+    private Licoreria licoreria;
+
+    @Column(name = "licoreria_id", insertable = false, updatable = false)
+    private Long licoreriaId;
 }
