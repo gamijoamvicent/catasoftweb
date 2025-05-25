@@ -10,6 +10,7 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @Service
 @Transactional
@@ -49,5 +50,10 @@ public class VentaServicioImpl implements VentaServicio {
         }
         
         return ventasPorMetodo;
+    }
+
+    @Override
+    public Optional<Venta> buscarPorId(Long id) {
+        return ventaRepository.findById(id);
     }
 } 

@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/layout}">
+<head>
+    <title>Gestión de Créditos</title>
+</head>
+<body>
+    <div layout:fragment="content">
+        <div class="container-fluid px-4">
+            <h1 class="mt-4">Gestión de Créditos</h1>
+            
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="card shadow">
+                        <div class="card-header bg-white py-3">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">Lista de Créditos</h5>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Cliente</th>
+                                            <th>Fecha Venta</th>
+                                            <th>Monto Total</th>
+                                            <th>Pagado</th>
+                                            <th>Pendiente</th>
+                                            <th>Fecha Límite</th>
+                                            <th>Estado</th>
+                                            <th>Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr th:if="${#lists.isEmpty(creditos)}">
+                                            <td colspan="8" class="text-center">No hay créditos registrados</td>
+                                        </tr>
+                                        <tr th:each="credito : ${creditos}">
+                                            <td>
+                                                <div>
+                                                    <strong th:text="${credito.cliente.nombre + ' ' + credito.cliente.apellido}"></strong>
+                                                    <br>
+                                                    <small class="text-muted" th:text="${'CI: ' + credito.cliente.cedula}"></small>
+                                                </div>
+                                            </td>
+                                            <td th:text="${#temporals.format(credito.venta.fechaVenta, 'dd/MM/yyyy HH:mm')}"></td>
+                                            <td>
+                                                <span class="text-primary" th:text="${'$' + #numbers.formatDecimal(credito.montoTotal, 1, 2, 'POINT')}"></span>
+                                            </td>
+                                            <td>
+                                                <span class="text-success" th:text="${'$' + #numbers.formatDecimal(credito.montoPagado, 1, 2, 'POINT')}"></span>
+                                            </td>
+                                            <td>
+                                                <span class="text-danger" th:text="${'$' + #numbers.formatDecimal(credito.saldoPendiente, 1, 2, 'POINT')}"></span>
+                                            </td>
+                                            <td>
+                                                <span th:text="${#temporals.format(credito.fechaLimitePago, 'dd/MM/yyyy')}"
+                                                      th:class="${credito.fechaLimitePago.isBefore(#temporals.createNow()) && credito.estado != 'PAGADO_TOTAL'} ? 'text-danger fw-bold' : ''">
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <span th:class="${'badge ' + 
+                                                    (credito.estado == 'PAGADO_TOTAL' ? 'bg-success' : 
+                                                    (credito.estado == 'PAGADO_PARCIAL' ? 'bg-warning' : 
+                                                    (credito.estado == 'VENCIDO' ? 'bg-danger' : 'bg-info')))}"
+                                                    th:text="${credito.estado}">
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <a th:href="@{/creditos/cliente/{id}(id=${credito.cliente.id})}" 
+                                                   class="btn btn-sm btn-primary">
+                                                    <i class="fas fa-eye"></i> Ver Detalles
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html> 

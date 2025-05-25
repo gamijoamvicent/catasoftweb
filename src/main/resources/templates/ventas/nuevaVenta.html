@@ -66,10 +66,32 @@
                         <option value="PAGO_MOVIL">Pago Móvil</option>
                     </select>
                 </div>
+                
+                <!-- Agregar aquí el selector de tipo de venta -->
+                <div class="tipo-venta">
+                    <label for="tipoVenta" class="form-label">Tipo de Venta:</label>
+                    <select class="form-select" id="tipoVenta" onchange="toggleClienteSelector()">
+                        <option value="CONTADO">Contado</option>
+                        <option value="CREDITO">Crédito</option>
+                    </select>
+                </div>
+
                 <div class="resumen-total">
                     <span class="label-info">Total:</span>
                     <span class="total-label" id="totalLabel">0.00 Bs | $0.00</span>
                 </div>
+            </div>
+
+            <!-- Agregar el selector de cliente después del resumen-venta -->
+            <div id="clienteSelector" style="display: none;" class="cliente-selector">
+                <div class="input-group">
+                    <label for="buscarCliente">Buscar Cliente</label>
+                    <input type="text" id="buscarCliente" placeholder="Nombre o cédula del cliente" onkeyup="buscarClientes()"/>
+                </div>
+                <ul id="clientesList" class="sugerencias-list">
+                    <!-- Los clientes aparecerán aquí -->
+                </ul>
+                <input type="hidden" id="clienteId" name="clienteId"/>
             </div>
 
             <!-- Botones de acción -->
@@ -151,6 +173,50 @@
 
     .btn-limpiar:hover {
         background-color: #c82333;
+    }
+
+    .cliente-selector {
+        margin-top: 15px;
+        padding: 15px;
+        background-color: #f8f9fa;
+        border-radius: 8px;
+    }
+
+    .cliente-selector .input-group {
+        margin-bottom: 10px;
+    }
+
+    .cliente-selector label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+    }
+
+    .cliente-selector input {
+        width: 100%;
+        padding: 8px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+    }
+
+    .cliente-selector .sugerencias-list {
+        max-height: 200px;
+        overflow-y: auto;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        padding: 0;
+        margin: 0;
+        list-style: none;
+    }
+
+    .cliente-selector .sugerencias-list li {
+        padding: 8px;
+        cursor: pointer;
+        border-bottom: 1px solid #eee;
+    }
+
+    .cliente-selector .sugerencias-list li:hover {
+        background-color: #f0f0f0;
     }
 </style>
 
@@ -349,7 +415,48 @@
         renderizarTabla();
     }
 
-    // Confirmar venta → envía datos al backend
+    // Funciones para manejo de clientes
+    function toggleClienteSelector() {
+        const tipoVenta = document.getElementById('tipoVenta').value;
+        const clienteSelector = document.getElementById('clienteSelector');
+        clienteSelector.style.display = tipoVenta === 'CREDITO' ? 'block' : 'none';
+        if (tipoVenta === 'CONTADO') {
+            document.getElementById('clienteId').value = '';
+            document.getElementById('buscarCliente').value = '';
+        }
+    }
+
+    function buscarClientes() {
+        const input = document.getElementById('buscarCliente');
+        const termino = input.value.trim();
+        if (!termino) {
+            document.getElementById('clientesList').innerHTML = '';
+            return;
+        }
+
+        fetch(`/clientes/buscar?termino=${encodeURIComponent(termino)}`)
+            .then(response => response.json())
+            .then(clientes => {
+                const lista = document.getElementById('clientesList');
+                lista.innerHTML = '';
+                clientes.forEach(cliente => {
+                    const li = document.createElement('li');
+                    li.textContent = `${cliente.nombre} ${cliente.apellido} - ${cliente.cedula}`;
+                    li.onclick = () => seleccionarCliente(cliente);
+                    lista.appendChild(li);
+                });
+            })
+            .catch(error => console.error('Error:', error));
+    }
+
+    function seleccionarCliente(cliente) {
+        document.getElementById('clienteId').value = cliente.id;
+        document.getElementById('buscarCliente').value = 
+            `${cliente.nombre} ${cliente.apellido} - ${cliente.cedula}`;
+        document.getElementById('clientesList').innerHTML = '';
+    }
+
+    // Modificar la función confirmarVenta existente
     function confirmarVenta() {
         if (productosSeleccionados.length === 0) {
             alert("❌ El carrito está vacío");
@@ -357,8 +464,16 @@
         }
 
         const metodoPago = document.getElementById('metodoPago').value;
+        const tipoVenta = document.getElementById('tipoVenta').value;
+        const clienteId = document.getElementById('clienteId').value;
+
         if (!metodoPago) {
             alert("❌ Por favor seleccione un método de pago");
+            return;
+        }
+
+        if (tipoVenta === 'CREDITO' && !clienteId) {
+            alert("❌ Debe seleccionar un cliente para ventas a crédito");
             return;
         }
 
@@ -374,7 +489,9 @@
             },
             body: JSON.stringify({
                 items: items,
-                metodoPago: metodoPago
+                metodoPago: metodoPago,
+                tipoVenta: tipoVenta,
+                clienteId: clienteId || null
             })
         })
         .then(response => response.json())

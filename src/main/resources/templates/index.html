@@ -157,6 +157,14 @@
             background-color: #e8a7a7;
             transform: translateY(-2px);
         }
+
+        .menu-card.clientes {
+            border-top: 4px solid #FFB366;
+        }
+
+        .menu-card.creditos {
+            border-top: 4px solid #66B2FF;
+        }
     </style>
 </head>
 <body>
@@ -192,6 +200,22 @@
                    th:href="@{/licorerias/gestionar}">
                     <img src="/icons/settings.png" alt="Licorerías" class="menu-icon">
                     Gestionar Licorerías
+                </a>
+
+                <!-- Gestión de Clientes -->
+                <a class="menu-card clientes"
+                   sec:authorize="hasAnyRole('ADMIN_LOCAL', 'SUPER_ADMIN', 'VENDEDOR')"
+                   th:href="@{/clientes}">
+                    <img src="/icons/users.png" alt="Clientes" class="menu-icon">
+                    Gestionar Clientes
+                </a>
+
+                <!-- Gestión de Créditos -->
+                <a class="menu-card creditos"
+                   sec:authorize="hasAnyRole('ADMIN_LOCAL', 'SUPER_ADMIN', 'VENDEDOR')"
+                   th:href="@{/creditos}">
+                    <img src="/icons/credit.png" alt="Créditos" class="menu-icon">
+                    Gestionar Créditos
                 </a>
 
                 <!-- ADMIN_LOCAL + SUPER_ADMIN -->

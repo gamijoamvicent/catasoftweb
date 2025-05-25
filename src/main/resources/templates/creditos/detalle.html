@@ -1,0 +1,35 @@
+<!-- Agregar esta sección después de la información del crédito -->
+<div class="card shadow mt-4">
+    <div class="card-header bg-white py-3">
+        <h5 class="mb-0">Historial de Pagos</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead class="table-light">
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Monto</th>
+                        <th>Método de Pago</th>
+                        <th>Referencia</th>
+                        <th>Observaciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:if="${#lists.isEmpty(pagos)}">
+                        <td colspan="5" class="text-center">No hay pagos registrados</td>
+                    </tr>
+                    <tr th:each="pago : ${pagos}">
+                        <td th:text="${#temporals.format(pago.fechaPago, 'dd/MM/yyyy HH:mm')}"></td>
+                        <td>
+                            <span class="text-success" th:text="${'$' + #numbers.formatDecimal(pago.monto, 1, 2, 'POINT')}"></span>
+                        </td>
+                        <td th:text="${pago.metodoPago}"></td>
+                        <td th:text="${pago.referencia ?: '-'}"></td>
+                        <td th:text="${pago.observaciones ?: '-'}"></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div> 

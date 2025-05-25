@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/layout}">
+<head>
+    <title>Gestión de Clientes</title>
+</head>
+<body>
+    <div layout:fragment="content">
+        <div class="container-fluid px-4">
+            <h1 class="mt-4">Gestión de Clientes</h1>
+            
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="card shadow">
+                        <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+                            <div class="d-flex align-items-center">
+                                <h5 class="mb-0 me-3">Lista de Clientes</h5>
+                                <div class="input-group" style="width: 300px;">
+                                    <input type="text" id="searchInput" class="form-control" placeholder="Buscar cliente...">
+                                    <button class="btn btn-outline-secondary" type="button">
+                                        <i class="fas fa-search"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <a th:href="@{/clientes/nuevo}" class="btn btn-primary">
+                                <i class="fas fa-plus me-1"></i> Nuevo Cliente
+                            </a>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Cédula</th>
+                                            <th>Nombre</th>
+                                            <th>Apellido</th>
+                                            <th>Teléfono</th>
+                                            <th>Crédito Máximo</th>
+                                            <th>Crédito Disponible</th>
+                                            <th>Estado</th>
+                                            <th>Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr th:each="cliente : ${clientes}">
+                                            <td th:text="${cliente.cedula}"></td>
+                                            <td th:text="${cliente.nombre}"></td>
+                                            <td th:text="${cliente.apellido}"></td>
+                                            <td th:text="${cliente.telefono}"></td>
+                                            <td>
+                                                <span class="text-nowrap">$
+                                                    <span th:text="${#numbers.formatDecimal(cliente.creditoMaximo, 1, 2)}"></span>
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <span class="text-nowrap">$
+                                                    <span th:text="${#numbers.formatDecimal(cliente.creditoDisponible, 1, 2)}"></span>
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <span th:if="${cliente.estado}" class="badge bg-success">Activo</span>
+                                                <span th:unless="${cliente.estado}" class="badge bg-danger">Inactivo</span>
+                                            </td>
+                                            <td>
+                                                <div class="btn-group">
+                                                    <a th:href="@{/clientes/editar/{id}(id=${cliente.id})}" 
+                                                       class="btn btn-sm btn-outline-primary" title="Editar">
+                                                        <i class="fas fa-edit"></i>
+                                                    </a>
+                                                    <button type="button" class="btn btn-sm btn-outline-danger" 
+                                                            th:onclick="'cambiarEstado(' + ${cliente.id} + ', ' + ${!cliente.estado} + ')'"
+                                                            th:title="${cliente.estado ? 'Desactivar' : 'Activar'}">
+                                                        <i class="fas fa-power-off"></i>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <tr th:if="${#lists.isEmpty(clientes)}">
+                                            <td colspan="8" class="text-center">No hay clientes registrados</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <th:block layout:fragment="scripts">
+        <script th:inline="javascript">
+            function cambiarEstado(id, estado) {
+                if (confirm('¿Está seguro de cambiar el estado del cliente?')) {
+                    const form = document.createElement('form');
+                    form.method = 'POST';
+                    form.action = `/clientes/cambiar-estado/${id}?estado=${estado}`;
+                    
+                    const csrfToken = document.querySelector("meta[name='_csrf']").content;
+                    const csrfHeader = document.querySelector("meta[name='_csrf_header']").content;
+                    
+                    const csrfInput = document.createElement('input');
+                    csrfInput.type = 'hidden';
+                    csrfInput.name = csrfHeader;
+                    csrfInput.value = csrfToken;
+                    
+                    form.appendChild(csrfInput);
+                    document.body.appendChild(form);
+                    form.submit();
+                }
+            }
+
+            // Funcionalidad de búsqueda en tiempo real
+            document.getElementById('searchInput').addEventListener('input', function(e) {
+                const searchTerm = e.target.value.toLowerCase();
+                const rows = document.querySelectorAll('tbody tr');
+                
+                rows.forEach(row => {
+                    if (row.cells.length > 1) { // Ignorar la fila de "No hay clientes registrados"
+                        const text = row.textContent.toLowerCase();
+                        row.style.display = text.includes(searchTerm) ? '' : 'none';
+                    }
+                });
+            });
+        </script>
+    </th:block>
+</body>
+</html> 
