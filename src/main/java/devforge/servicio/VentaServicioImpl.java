@@ -16,8 +16,12 @@ import java.util.Optional;
 @Transactional
 public class VentaServicioImpl implements VentaServicio {
 
+    private final VentaRepository ventaRepository;
+
     @Autowired
-    private VentaRepository ventaRepository;
+    public VentaServicioImpl(VentaRepository ventaRepository) {
+        this.ventaRepository = ventaRepository;
+    }
 
     @Override
     public Venta guardar(Venta venta) {
@@ -44,7 +48,7 @@ public class VentaServicioImpl implements VentaServicio {
         
         Map<String, Double> ventasPorMetodo = new HashMap<>();
         for (Map<String, Object> resultado : resultados) {
-            String metodo = ((Venta.MetodoPago) resultado.get("metodo")).name();
+            String metodo = ((devforge.model.Venta.MetodoPago) resultado.get("metodo")).name();
             Double total = ((Number) resultado.get("total")).doubleValue();
             ventasPorMetodo.put(metodo, total);
         }

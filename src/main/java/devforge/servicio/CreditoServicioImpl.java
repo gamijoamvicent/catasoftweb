@@ -12,7 +12,10 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.HashMap;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -111,5 +114,44 @@ public class CreditoServicioImpl implements CreditoServicio {
     @Override
     public List<Credito> listarCreditosPorLicoreria(Long licoreriaId) {
         return creditoRepository.findByLicoreriaId(licoreriaId);
+    }
+
+    @Override
+    public Map<String, Double> obtenerEstadisticasCreditos(Long licoreriaId, LocalDateTime fechaInicio, LocalDateTime fechaFin) {
+        List<Credito> creditos = creditoRepository.findByLicoreriaId(licoreriaId).stream()
+            .filter(credito -> {
+                LocalDateTime fechaVenta = credito.getVenta().getFechaVenta();
+                return !fechaVenta.isBefore(fechaInicio) && !fechaVenta.isAfter(fechaFin);
+            })
+            .collect(Collectors.toList());
+
+        Map<String, Double> estadisticas = new HashMap<>();
+        
+        // Total de créditos otorgados
+        double totalCreditos = creditos.stream()
+            .mapToDouble(c -> c.getMontoTotal().doubleValue())
+            .sum();
+        estadisticas.put("Total Créditos", totalCreditos);
+
+        // Total pagado
+        double totalPagado = creditos.stream()
+            .mapToDouble(c -> c.getMontoPagado().doubleValue())
+            .sum();
+        estadisticas.put("Total Pagado", totalPagado);
+
+        // Total pendiente
+        double totalPendiente = creditos.stream()
+            .mapToDouble(c -> c.getSaldoPendiente().doubleValue())
+            .sum();
+        estadisticas.put("Total Pendiente", totalPendiente);
+
+        // Créditos vencidos
+        double totalVencido = creditos.stream()
+            .filter(c -> c.getEstado() == Credito.EstadoCredito.VENCIDO)
+            .mapToDouble(c -> c.getSaldoPendiente().doubleValue())
+            .sum();
+        estadisticas.put("Total Vencido", totalVencido);
+
+        return estadisticas;
     }
 } 

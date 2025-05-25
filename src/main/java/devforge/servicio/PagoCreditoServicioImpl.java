@@ -54,27 +54,27 @@ public class PagoCreditoServicioImpl implements PagoCreditoServicio {
         
         // Actualizar el estado del crédito
         if (credito.getSaldoPendiente().compareTo(BigDecimal.ZERO) == 0) {
-            credito.setEstado(Credito.Estado.PAGADO);
+            credito.setEstado(Credito.EstadoCredito.PAGADO_TOTAL);
+        } else {
+            credito.setEstado(Credito.EstadoCredito.PAGADO_PARCIAL);
         }
         
+        creditoRepository.save(credito);
         return pagoCreditoRepository.save(pago);
     }
 
     @Override
     public List<PagoCredito> listarPagosPorCredito(Long creditoId) {
-        // Implementation needed
-        throw new UnsupportedOperationException("Method not implemented");
+        return pagoCreditoRepository.findByCreditoId(creditoId);
     }
 
     @Override
     public List<PagoCredito> listarPagosPorLicoreria(Long licoreriaId) {
-        // Implementation needed
-        throw new UnsupportedOperationException("Method not implemented");
+        return pagoCreditoRepository.findByLicoreriaId(licoreriaId);
     }
 
     @Override
     public List<PagoCredito> listarPagosPorFecha(Long licoreriaId, LocalDateTime fechaInicio, LocalDateTime fechaFin) {
-        // Implementation needed
-        throw new UnsupportedOperationException("Method not implemented");
+        return pagoCreditoRepository.findByLicoreriaIdAndFechaPagoBetween(licoreriaId, fechaInicio, fechaFin);
     }
 } 
