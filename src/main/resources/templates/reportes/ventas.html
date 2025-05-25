@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <title>Reporte de Ventas - InventSoft</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .reporte-container {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+        }
+
+        .filtros-container {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 25px;
+            align-items: flex-end;
+        }
+
+        .filtro-grupo {
+            flex: 1;
+        }
+
+        .filtro-grupo label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #444;
+        }
+
+        .filtro-grupo input[type="date"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .btn-filtrar {
+            padding: 10px 20px;
+            background-color: #AED9E0;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background-color 0.3s ease;
+        }
+
+        .btn-filtrar:hover {
+            background-color: #96cfd6;
+        }
+
+        .graficos-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+            margin-top: 30px;
+        }
+
+        .grafico-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .resumen-total {
+            text-align: center;
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            font-size: 1.2em;
+            font-weight: 600;
+            color: #2C3E50;
+        }
+
+        .resumen-total .monto {
+            color: #27AE60;
+            font-size: 1.4em;
+        }
+
+        @media (max-width: 768px) {
+            .graficos-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .filtros-container {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="page-container">
+        <div class="header">
+            <h2>Reporte de Ventas</h2>
+            <p>Análisis de ventas por método de pago</p>
+        </div>
+
+        <div class="reporte-container">
+            <!-- Filtros de fecha -->
+            <form th:action="@{/reportes/ventas}" method="get" class="filtros-container">
+                <div class="filtro-grupo">
+                    <label for="fechaInicio">Fecha Inicio:</label>
+                    <input type="date" id="fechaInicio" name="fechaInicio" 
+                           th:value="${#temporals.format(fechaInicio, 'yyyy-MM-dd')}">
+                </div>
+                <div class="filtro-grupo">
+                    <label for="fechaFin">Fecha Fin:</label>
+                    <input type="date" id="fechaFin" name="fechaFin" 
+                           th:value="${#temporals.format(fechaFin, 'yyyy-MM-dd')}">
+                </div>
+                <button type="submit" class="btn-filtrar">Filtrar</button>
+            </form>
+
+            <!-- Resumen total -->
+            <div class="resumen-total">
+                Total de Ventas: <span class="monto">$<span th:text="${#numbers.formatDecimal(totalVentas, 1, 2)}">0.00</span></span>
+            </div>
+
+            <!-- Gráficos -->
+            <div class="graficos-container">
+                <div class="grafico-card">
+                    <canvas id="graficoMetodoPago"></canvas>
+                </div>
+                <div class="grafico-card">
+                    <canvas id="graficoBarras"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Botón volver -->
+        <div class="action-button">
+            <a th:href="@{/dashboard}" class="btn-back">Volver al Dashboard</a>
+        </div>
+    </div>
+
+    <script th:inline="javascript">
+        // Datos para los gráficos
+        const ventasPorMetodoPago = /*[[${ventasPorMetodoPago}]]*/ {};
+        const labels = Object.keys(ventasPorMetodoPago);
+        const data = Object.values(ventasPorMetodoPago);
+        
+        // Colores para el gráfico
+        const colores = [
+            '#AED9E0', // Azul claro
+            '#B6D7A8', // Verde claro
+            '#D9B3FF', // Morado claro
+            '#F4C2C2', // Rosa claro
+            '#FFD580'  // Naranja claro
+        ];
+
+        // Gráfico de torta
+        new Chart(document.getElementById('graficoMetodoPago'), {
+            type: 'pie',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: data,
+                    backgroundColor: colores,
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'right'
+                    },
+                    title: {
+                        display: true,
+                        text: 'Distribución por Método de Pago',
+                        font: {
+                            size: 16
+                        }
+                    }
+                }
+            }
+        });
+
+        // Gráfico de barras
+        new Chart(document.getElementById('graficoBarras'), {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Monto en $',
+                    data: data,
+                    backgroundColor: colores,
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    title: {
+                        display: true,
+                        text: 'Ventas por Método de Pago',
+                        font: {
+                            size: 16
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return '$' + value.toFixed(2);
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html> 

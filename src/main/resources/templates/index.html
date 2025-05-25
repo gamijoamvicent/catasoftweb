@@ -210,6 +210,14 @@
                     Actualizar Precio Dólar
                 </a>
 
+                <!-- ADMIN_LOCAL + SUPER_ADMIN -->
+                <a class="menu-card ventas"
+                   sec:authorize="hasAnyRole('ADMIN_LOCAL', 'SUPER_ADMIN')"
+                   th:href="@{/reportes/ventas}">
+                    <img src="/icons/chart.png" alt="Reportes" class="menu-icon">
+                    Reportes de Ventas
+                </a>
+
                 <!-- CAJERO + ADMIN_LOCAL + SUPER_ADMIN -->
                 <a class="menu-card ventas"
                    sec:authorize="hasAnyRole('CAJERO', 'ADMIN_LOCAL', 'SUPER_ADMIN')"

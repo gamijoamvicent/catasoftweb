@@ -55,20 +55,27 @@
                 </tbody>
             </table>
 
-            <!-- Total general -->
-            <div class="resumen-total">
-                <span class="label-info">Total:</span>
-                <span class="total-label" id="totalLabel">0.00 Bs | $0.00</span>
+            <!-- Método de pago y total -->
+            <div class="resumen-venta">
+                <div class="metodo-pago">
+                    <label for="metodoPago" class="form-label">Método de Pago:</label>
+                    <select class="form-select" id="metodoPago" required>
+                        <option value="EFECTIVO">Efectivo</option>
+                        <option value="TRANSFERENCIA">Transferencia</option>
+                        <option value="PUNTO_VENTA">Punto de Venta</option>
+                        <option value="PAGO_MOVIL">Pago Móvil</option>
+                    </select>
+                </div>
+                <div class="resumen-total">
+                    <span class="label-info">Total:</span>
+                    <span class="total-label" id="totalLabel">0.00 Bs | $0.00</span>
+                </div>
             </div>
 
-            <!-- Botón confirmar -->
-            <div class="action-button">
+            <!-- Botones de acción -->
+            <div class="action-buttons">
                 <button class="btn-confirmar" onclick="confirmarVenta()">Confirmar Venta</button>
-            </div>
-
-            <!-- Botón limpiar carrito -->
-            <div class="limpiar-button">
-                <button class="btn-confirmar" onclick="limpiarCarrito()">Limpiar Carrito</button>
+                <button class="btn-limpiar" onclick="limpiarCarrito()">Limpiar Carrito</button>
             </div>
         </div>
     </div>
@@ -78,6 +85,74 @@
         <button class="btn-back" onclick="window.location.href='/'">Volver al Menú</button>
     </div>
 </div>
+
+<style>
+    /* Estilos para el resumen de venta */
+    .resumen-venta {
+        margin-top: 20px;
+        padding: 15px;
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .metodo-pago {
+        flex: 1;
+        margin-right: 20px;
+    }
+
+    .metodo-pago label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+    }
+
+    .metodo-pago select {
+        width: 100%;
+        padding: 8px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+    }
+
+    .resumen-total {
+        text-align: right;
+    }
+
+    .action-buttons {
+        margin-top: 15px;
+        display: flex;
+        gap: 10px;
+        justify-content: flex-end;
+    }
+
+    .btn-confirmar, .btn-limpiar {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-weight: bold;
+    }
+
+    .btn-confirmar {
+        background-color: #28a745;
+        color: white;
+    }
+
+    .btn-limpiar {
+        background-color: #dc3545;
+        color: white;
+    }
+
+    .btn-confirmar:hover {
+        background-color: #218838;
+    }
+
+    .btn-limpiar:hover {
+        background-color: #c82333;
+    }
+</style>
 
 <!-- Datos ocultos con Thymeleaf -->
 <ul id="productosData" style="display: none;">
@@ -277,7 +352,13 @@
     // Confirmar venta → envía datos al backend
     function confirmarVenta() {
         if (productosSeleccionados.length === 0) {
-            alert("❌ Agrega al menos un producto a la venta");
+            alert("❌ El carrito está vacío");
+            return;
+        }
+
+        const metodoPago = document.getElementById('metodoPago').value;
+        if (!metodoPago) {
+            alert("❌ Por favor seleccione un método de pago");
             return;
         }
 
@@ -290,17 +371,19 @@
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="_csrf"]').content
             },
-            body: JSON.stringify(items)
+            body: JSON.stringify({
+                items: items,
+                metodoPago: metodoPago
+            })
         })
-        .then(response => response.text())
+        .then(response => response.json())
         .then(result => {
-            if (result.includes("confirmada")) {
+            if (result.mensaje && result.mensaje.includes("registrada")) {
                 alert("✅ Venta registrada exitosamente");
                 window.location.reload();
             } else {
-                alert("❌ Error: " + result);
+                alert("❌ Error: " + (result.error || "Error desconocido"));
             }
         })
         .catch(error => {
