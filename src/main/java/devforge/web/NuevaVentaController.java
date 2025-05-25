@@ -39,7 +39,7 @@ public class NuevaVentaController {
         }
         List<Producto> productos = productoServicio.listarProductos();
         model.addAttribute("productos", productos);
-        model.addAttribute("precioDolar", precioDolarServicio.obtenerPrecioActual());
+        model.addAttribute("precioDolar", precioDolarServicio.obtenerPrecioActual(licoreriaContext.getLicoreriaId()));
         model.addAttribute("licoreriaActual", licoreriaContext.getLicoreriaActual());
         return "ventas/nuevaVenta";
     }

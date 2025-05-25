@@ -26,7 +26,7 @@ public class PrecioDolarController {
         if (licoreriaContext.getLicoreriaActual() == null) {
             return "redirect:/licorerias/seleccionar";
         }
-        PrecioDolar ultimoPrecio = servicio.obtenerUltimoPrecio();
+        PrecioDolar ultimoPrecio = servicio.obtenerUltimoPrecio(licoreriaContext.getLicoreriaId());
         model.addAttribute("ultimoPrecio", ultimoPrecio);
         return "dolar/actualizar";
     }

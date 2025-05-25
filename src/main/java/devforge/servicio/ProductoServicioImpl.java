@@ -19,7 +19,7 @@ public class ProductoServicioImpl implements ProductoServicio {
     private ProductoRepository productoRepository;
 
     @Autowired
-    private PrecioDolarServicio repositorio;
+    private PrecioDolarServicio precioDolarServicio;
 
     @Autowired
     private LicoreriaContext licoreriaContext;
@@ -34,7 +34,10 @@ public class ProductoServicioImpl implements ProductoServicio {
 
     @Override
     public double obtenerPrecioActual() {
-        return repositorio.obtenerPrecioActual(); // Puedes cambiar por llamada al servicio del dólar
+        if (licoreriaContext.getLicoreriaId() == null) {
+            return 1.0; // Valor por defecto si no hay licorería seleccionada
+        }
+        return precioDolarServicio.obtenerPrecioActual(licoreriaContext.getLicoreriaId());
     }
 
     @Override

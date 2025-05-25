@@ -15,36 +15,32 @@ public class PrecioDolarServicioImpl implements PrecioDolarServicio {
     private PrecioDolarRepository repositorio;
 
     @Override
-    public PrecioDolar obtenerUltimoPrecio() {
-        List<PrecioDolar> precios = repositorio.findAll();
+    public PrecioDolar obtenerUltimoPrecio(Long licoreriaId) {
+        List<PrecioDolar> precios = repositorio.findByLicoreriaIdOrderByFechaDolarDesc(licoreriaId);
 
         if (precios == null || precios.isEmpty()) {
             return new PrecioDolar();
         }
 
-        // Ordena la lista por fecha descendente
-        return precios.stream()
-                .max(Comparator.comparing(PrecioDolar::getFechaDolar))
-                .orElse(new PrecioDolar());
+        return precios.get(0);
     }
 
     @Override
     public void guardar(PrecioDolar precio) {
         if (precio.getFechaDolar() == null) {
-            precio.setFechaDolar(new Date()); // Asignamos la fecha actual si no viene
+            precio.setFechaDolar(new Date());
         }
         repositorio.save(precio);
     }
 
     @Override
-    public double obtenerPrecioActual() {
-        List<PrecioDolar> precios = repositorio.findAll();
+    public double obtenerPrecioActual(Long licoreriaId) {
+        List<PrecioDolar> precios = repositorio.findByLicoreriaIdOrderByFechaDolarDesc(licoreriaId);
 
         if (precios == null || precios.isEmpty()) {
             return 1; // Valor por defecto
         }
 
-        // Devuelve el último precio guardado
-        return precios.get(precios.size() - 1).getPrecioDolar();
+        return precios.get(0).getPrecioDolar();
     }
 }
