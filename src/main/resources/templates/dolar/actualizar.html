@@ -2,41 +2,210 @@
 <html lang="es" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Actualizar Precio del Dólar</title>
-    <link rel="stylesheet" th:href="@{/css/styles.css}">
+    <title>Actualizar Precio del Dólar - InventSoft</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}"> 
     <style>
+        /* Re-using the serious color palette from the dashboard */
+        :root {
+            --primary-dark: #2C3E50; /* Azul oscuro para elementos principales y texto fuerte */
+            --primary-medium: #34495E; /* Azul grisáceo para fondos de tarjetas/secciones */
+            --primary-light: #ECF0F1; /* Gris muy claro para el fondo general */
+            --accent-green: #27AE60; /* Verde para acciones positivas/éxito */
+            --accent-red: #E74C3C; /* Rojo para acciones negativas/peligro */
+            --text-dark: #2C3E50;
+            --text-light: #FFFFFF;
+            --border-color: #BDC3C7; /* Gris claro para bordes sutiles */
+            --shadow-light: 0 4px 12px rgba(0, 0, 0, 0.08); /* Sombra suave */
+            --shadow-hover: 0 6px 20px rgba(0, 0, 0, 0.15); /* Sombra al pasar el ratón */
+            --input-bg: #F8F9F9; /* Fondo claro para inputs */
+        }
+
+        body {
+            background: var(--primary-light);
+            color: var(--text-dark); /* Changed to dark text for contrast on light background */
+            font-family: 'Roboto', 'Segoe UI', Arial, sans-serif;
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center; /* Center content vertically */
+            padding: 20px; /* Overall padding */
+            box-sizing: border-box;
+        }
+
+        .page-container {
+            max-width: 550px; /* Slightly wider for better form layout */
+            width: 100%;
+            padding: 0; /* No extra padding here as body has it */
+            box-shadow: var(--shadow-hover); /* More prominent shadow for the whole page block */
+            border-radius: 12px;
+            overflow: hidden; /* Ensures border-radius applies correctly */
+        }
+
+        .header {
+            background: var(--primary-dark);
+            color: var(--text-light);
+            padding: 30px 35px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .header h2 {
+            margin: 0 0 8px 0;
+            font-size: 1.8rem; /* Slightly smaller for a form header */
+            font-weight: 600;
+        }
+        .header p {
+            color: rgba(255, 255, 255, 0.8);
+            margin: 0;
+            font-size: 0.95rem;
+        }
+
         .form-container {
-            background: white;
+            background: var(--text-light); /* White background for the form itself */
+            color: var(--text-dark);
+            padding: 35px;
+            display: flex;
+            flex-direction: column;
+            gap: 25px; /* Spacing between form groups and alerts */
+        }
+
+        .precio-actual {
+            background: var(--input-bg); /* Use the input background for current price block */
             padding: 20px;
             border-radius: 8px;
-            margin: 20px auto;
-            max-width: 500px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            text-align: center;
+            border: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
         }
+        .precio-actual strong {
+            color: var(--accent-green); /* Use success green for the actual price */
+            font-size: 1.6em; /* Larger price text */
+            font-weight: 700;
+        }
+        .precio-actual p {
+            color: var(--text-dark); /* Dark text for clarity */
+            margin: 0;
+            font-size: 0.9em;
+        }
+        .precio-actual p:first-child {
+            font-weight: 500;
+            color: var(--primary-dark); /* Stronger color for "Precio actual" label */
+        }
+
         .form-group {
-            margin-bottom: 20px;
+            margin-bottom: 0; /* Removed margin-bottom here as gap handles spacing */
         }
         .form-group label {
             display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
+            margin-bottom: 8px;
+            font-weight: 500; /* Slightly less bold */
+            color: var(--text-dark); /* Ensure dark text for labels */
+            font-size: 0.95rem;
         }
         .form-group input {
             width: 100%;
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
+            padding: 12px 15px; /* Increased padding for better usability */
+            border: 1px solid var(--border-color);
+            border-radius: 6px; /* Slightly smaller radius */
+            font-size: 1rem;
+            background: var(--input-bg); /* Light background for inputs */
+            color: var(--text-dark);
+            transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+            box-sizing: border-box; /* Include padding and border in the element's total width and height */
         }
-        .precio-actual {
-            background: #f8f9fa;
-            padding: 15px;
-            border-radius: 4px;
-            margin-bottom: 20px;
-            text-align: center;
+        .form-group input:focus {
+            border-color: var(--primary-dark);
+            box-shadow: 0 0 0 3px rgba(44, 62, 80, 0.2); /* Subtle focus ring */
+            outline: none;
         }
-        .precio-actual strong {
-            color: #28a745;
-            font-size: 1.2em;
+        .form-group input::placeholder {
+            color: #A6ACAF; /* Lighter placeholder text */
+        }
+
+        /* Alert styles - consistent with dashboard, but on light background */
+        .alert {
+            border-radius: 8px;
+            padding: 18px 25px;
+            margin-bottom: 0; /* Handled by form-container gap */
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            font-size: 0.95rem;
+            border-width: 1px;
+            border-style: solid;
+        }
+        .alert-success {
+            background: #D4EDDA; /* Light green background */
+            color: #155724; /* Dark green text */
+            border-color: #C3E6CB; /* Green border */
+        }
+        .alert-danger {
+            background: #F8D7DA; /* Light red background */
+            color: #721C24; /* Dark red text */
+            border-color: #F5C6CB; /* Red border */
+        }
+        .alert strong {
+            font-weight: 600;
+        }
+
+        /* Action buttons - consistent with dashboard buttons */
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: flex-end;
+            margin-top: 15px; /* Spacing after form fields */
+        }
+        .btn { /* Re-using general btn styles */
+            padding: 12px 28px;
+            border-radius: 6px;
+            font-weight: 500;
+            border: none;
+            cursor: pointer;
+            transition: background 0.2s ease-in-out, box-shadow 0.2s ease-in-out, transform 0.2s ease-in-out;
+            font-size: 0.95rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-submit {
+            background: var(--primary-dark);
+            color: var(--text-light);
+            box-shadow: 0 2px 8px rgba(44, 62, 80, 0.1);
+        }
+        .btn-submit:hover {
+            background: var(--primary-medium);
+            box-shadow: 0 4px 12px rgba(44, 62, 80, 0.2);
+            transform: translateY(-1px);
+        }
+        .btn-back {
+            background: #7F8C8D; /* Gray for 'Volver' button */
+            color: var(--text-light);
+            box-shadow: 0 2px 8px rgba(127, 140, 141, 0.1);
+        }
+        .btn-back:hover {
+            background: #6C7A89; /* Slightly darker gray on hover */
+            box-shadow: 0 4px 12px rgba(127, 140, 141, 0.2);
+            transform: translateY(-1px);
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 600px) {
+            .page-container {
+                border-radius: 0; /* No border-radius on small screens for full width */
+                box-shadow: none;
+            }
+            .header, .form-container {
+                padding: 25px 20px;
+            }
+            .action-buttons {
+                flex-direction: column;
+                gap: 10px;
+            }
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
         }
     </style>
 </head>
@@ -44,47 +213,47 @@
     <div class="page-container">
         <div class="header">
             <h2>Actualizar Precio del Dólar</h2>
-            <p>Ingresa el nuevo precio del dólar en bolívares.</p>
-        </div>
-
-        <!-- Mensaje de éxito -->
-        <div th:if="${mensajeExito}" class="alert alert-success" role="alert">
-            <strong>Éxito:</strong> <span th:text="${mensajeExito}"></span>
-        </div>
-
-        <!-- Mensaje de error -->
-        <div th:if="${mensajeError}" class="alert alert-danger" role="alert">
-            <strong>Error:</strong> <span th:text="${mensajeError}"></span>
+            <p>Ingresa el nuevo precio del dólar en bolívares para mantener los registros al día.</p>
         </div>
 
         <div class="form-container">
-            <!-- Mostrar precio actual -->
-            <div class="precio-actual" th:if="${ultimoPrecio != null}">
-                <p>Precio actual del dólar:</p>
-                <strong th:text="${ultimoPrecio.precioDolar} + ' Bs'">0.00 Bs</strong>
-                <p th:text="${#dates.format(ultimoPrecio.fechaDolar, 'dd/MM/yyyy HH:mm')}">Fecha</p>
+            <div th:if="${mensajeExito}" class="alert alert-success" role="alert">
+                <strong><span class="icon">✅</span> Éxito:</strong> <span th:text="${mensajeExito}"></span>
             </div>
 
-            <!-- Formulario para actualizar precio -->
+            <div th:if="${mensajeError}" class="alert alert-danger" role="alert">
+                <strong><span class="icon">❌</span> Error:</strong> <span th:text="${mensajeError}"></span>
+            </div>
+
+            <div class="precio-actual" th:if="${ultimoPrecio != null}">
+                <p>Precio actual del dólar:</p>
+                <strong th:text="${#numbers.formatDecimal(ultimoPrecio.precioDolar, 0, 'POINT', 2, 'COMMA') + ' Bs'}">0.00 Bs</strong>
+                <p>Última actualización: <span th:text="${#dates.format(ultimoPrecio.fechaDolar, 'dd/MM/yyyy HH:mm')}">Fecha</span></p>
+            </div>
+
             <form th:action="@{/dolar/actualizar}" method="post">
                 <div class="form-group">
                     <label for="precioDolar">Nuevo Precio del Dólar (Bs)</label>
-                    <input type="number" 
-                           id="precioDolar" 
-                           name="precioDolar" 
-                           step="0.01" 
-                           min="0.01" 
-                           required 
+                    <input type="number"
+                           id="precioDolar"
+                           name="precioDolar"
+                           step="0.01"
+                           min="0.01"
+                           required
                            placeholder="Ej. 35.50"
                            autocomplete="off">
                 </div>
 
                 <div class="action-buttons">
-                    <button type="submit" class="btn-submit">Actualizar Precio</button>
-                    <button type="button" class="btn-back" onclick="window.location.href='/'">Volver al Menú</button>
+                    <button type="submit" class="btn btn-submit">
+                        <span class="icon">⬆️</span> Actualizar Precio
+                    </button>
+                    <button type="button" class="btn btn-back" onclick="window.location.href='/'">
+                        <span class="icon">⬅️</span> Volver al Menú
+                    </button>
                 </div>
             </form>
         </div>
     </div>
 </body>
-</html> 
+</html>

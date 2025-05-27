@@ -2,33 +2,187 @@
 <html lang="es" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Iniciar Sesión</title>
-    <link rel="stylesheet" th:href="@{/css/styleLogin.css}">
+    <title>Iniciar Sesión - InventSoft</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+    <style>
+        /* Paleta de colores seria y profesional, consistente con los diseños anteriores */
+        :root {
+            --primary-dark: #2C3E50; /* Azul oscuro para elementos principales y texto fuerte */
+            --primary-medium: #34495E; /* Azul grisáceo para fondos de tarjetas/secciones */
+            --primary-light: #ECF0F1; /* Gris muy claro para el fondo general */
+            --accent-green: #27AE60; /* Verde para acciones positivas/éxito */
+            --accent-red: #E74C3C; /* Rojo para acciones negativas/peligro */
+            --text-dark: #2C3E50;
+            --text-light: #FFFFFF;
+            --border-color: #BDC3C7; /* Gris claro para bordes sutiles */
+            --shadow-light: 0 4px 12px rgba(0, 0, 0, 0.08); /* Sombra suave */
+            --shadow-hover: 0 6px 20px rgba(0, 0, 0, 0.15); /* Sombra al pasar el ratón */
+            --input-bg: #F8F9F9; /* Fondo claro para inputs */
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Roboto', 'Segoe UI', Arial, sans-serif;
+            background: var(--primary-dark); /* Fondo oscuro para la página de login */
+            color: var(--text-dark);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .login-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%; /* Asegura que el contenedor ocupe el ancho disponible */
+        }
+
+        .login-box {
+            background-color: var(--text-light); /* Caja de login blanca */
+            padding: 40px; /* Más padding para una sensación premium */
+            width: 100%;
+            max-width: 400px; /* Ancho máximo para la caja de login */
+            border-radius: 12px; /* Bordes más suaves */
+            box-shadow: var(--shadow-hover); /* Sombra más pronunciada */
+            text-align: center;
+        }
+
+        .login-box h2 {
+            color: var(--primary-dark);
+            margin-bottom: 10px;
+            font-size: 1.8rem; /* Tamaño de fuente más grande para el título */
+            font-weight: 600;
+        }
+
+        .login-box p {
+            color: #7F8C8D; /* Un gris más suave para el subtítulo */
+            margin-bottom: 30px; /* Más espacio debajo del subtítulo */
+            font-size: 0.95rem;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 20px; /* Más espacio entre grupos de input */
+            text-align: left; /* Alinear etiquetas a la izquierda */
+        }
+
+        .input-group label {
+            font-weight: 500; /* Menos negrita que el original, más profesional */
+            margin-bottom: 8px; /* Más espacio entre label y input */
+            color: var(--text-dark);
+            font-size: 0.95rem;
+        }
+
+        .input-group input {
+            padding: 14px 15px; /* Más padding para inputs */
+            border: 1px solid var(--border-color); /* Borde sutil */
+            border-radius: 8px; /* Bordes redondeados */
+            font-size: 1rem;
+            color: var(--text-dark);
+            background-color: var(--input-bg); /* Fondo de input ligeramente gris */
+            transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        }
+        .input-group input:focus {
+            outline: none;
+            border-color: var(--primary-dark);
+            box-shadow: 0 0 0 3px rgba(44, 62, 80, 0.2); /* Sombra al enfocar */
+        }
+        .input-group input::placeholder {
+            color: #A6ACAF; /* Color más suave para el placeholder */
+        }
+
+        .btn-login {
+            width: 100%;
+            padding: 15px; /* Más padding para el botón */
+            background-color: var(--accent-green); /* Verde para la acción principal */
+            color: var(--text-light);
+            border: none;
+            border-radius: 8px; /* Bordes redondeados */
+            cursor: pointer;
+            font-size: 1.1rem; /* Tamaño de fuente más grande */
+            font-weight: 600; /* Negrita */
+            transition: background-color 0.3s ease, box-shadow 0.3s ease, transform 0.2s ease;
+            box-shadow: 0 4px 10px rgba(39, 174, 96, 0.2); /* Sombra suave */
+        }
+        .btn-login:hover {
+            background-color: #229A53; /* Verde más oscuro al pasar el ratón */
+            box-shadow: 0 6px 15px rgba(39, 174, 96, 0.3); /* Sombra más pronunciada */
+            transform: translateY(-2px); /* Ligero levantamiento */
+        }
+        .btn-login:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 5px rgba(39, 174, 96, 0.2);
+        }
+
+        .mensaje-error {
+            color: var(--accent-red); /* Rojo de la paleta */
+            margin-top: 25px; /* Más espacio encima del mensaje de error */
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            background-color: #F8D7DA; /* Fondo suave para el mensaje de error */
+            border: 1px solid #F5C6CB;
+            padding: 12px 15px;
+            border-radius: 8px;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 480px) {
+            .login-box {
+                padding: 30px 25px; /* Menos padding en pantallas pequeñas */
+                margin: 0 15px; /* Margen horizontal para no pegarse a los bordes */
+                border-radius: 8px;
+            }
+            .login-box h2 {
+                font-size: 1.5rem;
+            }
+            .login-box p {
+                margin-bottom: 20px;
+            }
+            .input-group input,
+            .btn-login {
+                padding: 12px; /* Reducir padding en inputs y botón */
+                font-size: 0.95rem;
+            }
+            .mensaje-error {
+                padding: 10px 12px;
+                font-size: 0.9rem;
+            }
+        }
+    </style>
 </head>
 <body>
 
 <div class="login-container">
     <div class="login-box">
         <h2>InventSoft - Iniciar Sesión</h2>
-        <p>Ingresa tus credenciales para acceder al sistema.</p>
+        <p>Accede a tu gestión de inventario de bebidas.</p>
 
-        <!-- Formulario de inicio -->
         <form th:action="@{/login}" method="post">
             <div class="input-group">
                 <label for="username">Nombre de usuario</label>
-                <input type="text" id="username" name="username" placeholder="Tu nombre de usuario" required autocomplete="off" />
+                <input type="text" id="username" name="username" placeholder="Tu usuario" required autocomplete="username" />
             </div>
 
             <div class="input-group">
                 <label for="password">Contraseña</label>
-                <input type="password" id="password" name="password" placeholder="Tu contraseña" required />
+                <input type="password" id="password" name="password" placeholder="Tu contraseña" required autocomplete="current-password" />
             </div>
 
-            <button type="submit" class="btn-login">Iniciar Sesión</button>
+            <button type="submit" class="btn-login">
+                <span class="icon">➡️</span> Iniciar Sesión
+            </button>
         </form>
 
-        <!-- Mostrar mensaje de error -->
-        <p class="mensaje-error" th:if="${param.error}">❌ Nombre o contraseña incorrectos</p>
+        <p class="mensaje-error" th:if="${param.error}">
+            <span class="icon">❌</span> Nombre de usuario o contraseña incorrectos.
+        </p>
     </div>
 </div>
 

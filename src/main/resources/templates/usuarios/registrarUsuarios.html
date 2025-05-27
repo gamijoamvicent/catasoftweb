@@ -4,6 +4,207 @@
     <meta charset="UTF-8">
     <title>Registrar Usuario</title>
     <link rel="stylesheet" th:href="@{/css/styleRegistrarUsuario.css}">
+    <style>
+        :root {
+            --background-dark: #181A1B;
+            --surface: #F8F9FA;
+            --card: #FFFFFF;
+            --primary: #1565C0;
+            --primary-dark: #0D47A1;
+            --accent: #00B8D9;
+            --danger: #D32F2F;
+            --text-main: #181A1B;
+            --text-invert: #FFFFFF;
+            --text-muted: #6C757D;
+            --border: #E0E3E7;
+            --shadow: 0 4px 24px rgba(21, 101, 192, 0.08);
+            --success: #43A047;
+            --warning: #FFD600;
+        }
+        body {
+            background: var(--background-dark);
+            color: var(--text-invert);
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            margin: 0;
+            min-height: 100vh;
+        }
+        .registro-container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 40px 16px 32px 16px;
+        }
+        .registro-box {
+            background: var(--card);
+            color: var(--text-main);
+            border-radius: 18px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+            padding: 32px 28px 24px 28px;
+        }
+        .registro-box h2 {
+            color: var(--primary);
+            margin-bottom: 8px;
+            font-size: 2rem;
+            font-weight: 700;
+        }
+        .registro-box p {
+            color: var(--text-muted);
+            margin-top: 0;
+        }
+        .alert-success {
+            background: #23272B;
+            color: var(--success);
+            border-radius: 14px;
+            border: 1px solid #43A04733;
+            padding: 18px 24px;
+            margin-bottom: 18px;
+        }
+        .alert-danger {
+            background: #23272B;
+            color: var(--danger);
+            border-radius: 14px;
+            border: 1px solid #D32F2F33;
+            padding: 18px 24px;
+            margin-bottom: 18px;
+        }
+        form {
+            margin-bottom: 32px;
+        }
+        .input-group {
+            margin-bottom: 18px;
+        }
+        .input-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 600;
+            color: var(--primary-dark);
+        }
+        .input-group input,
+        .input-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1.5px solid var(--border);
+            border-radius: 8px;
+            font-size: 1rem;
+            background: var(--surface);
+            color: var(--text-main);
+            transition: border 0.2s;
+        }
+        .input-group input:focus,
+        .input-group select:focus {
+            border: 1.5px solid var(--primary);
+            outline: none;
+        }
+        .readonly-input {
+            background: #f0f0f0;
+            color: #888;
+        }
+        .btn-registrar {
+            background: var(--primary);
+            color: var(--text-invert);
+            padding: 12px 32px;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 1rem;
+            border: none;
+            margin-top: 8px;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(21,101,192,0.08);
+            transition: background 0.2s, box-shadow 0.2s, transform 0.2s;
+        }
+        .btn-registrar:hover {
+            background: var(--primary-dark);
+            box-shadow: 0 4px 16px rgba(21,101,192,0.18);
+            transform: translateY(-2px) scale(1.03);
+        }
+        .tabla-usuarios {
+            margin-top: 32px;
+        }
+        .tabla-usuarios h3 {
+            color: var(--primary-dark);
+            margin-bottom: 12px;
+            font-size: 1.2rem;
+            font-weight: 700;
+        }
+        .modern-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            background: var(--card);
+            color: var(--text-main);
+            border-radius: 14px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+        .modern-table th, .modern-table td {
+            padding: 14px 12px;
+            text-align: left;
+        }
+        .modern-table th {
+            background: var(--primary);
+            color: var(--text-invert);
+            font-weight: 700;
+            border-bottom: 2px solid var(--border);
+        }
+        .modern-table tr:nth-child(even) {
+            background: #F0F6FF;
+        }
+        .modern-table tr:nth-child(odd) {
+            background: var(--card);
+        }
+        .modern-table td {
+            border-bottom: 1px solid var(--border);
+        }
+        .btn-editar, .btn-eliminar {
+            padding: 7px 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.98rem;
+            margin-right: 5px;
+            transition: background 0.2s, box-shadow 0.2s, transform 0.2s;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .btn-editar {
+            background: var(--accent);
+            color: var(--text-invert);
+        }
+        .btn-editar:hover {
+            background: var(--primary);
+            transform: translateY(-2px) scale(1.03);
+        }
+        .btn-eliminar {
+            background: var(--danger);
+            color: var(--text-invert);
+        }
+        .btn-eliminar:hover {
+            background: #B71C1C;
+            transform: translateY(-2px) scale(1.03);
+        }
+        .action-button {
+            margin-top: 32px;
+            text-align: center;
+        }
+        .btn-volver {
+            background: var(--primary);
+            color: var(--text-invert);
+            padding: 12px 32px;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 1rem;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(21,101,192,0.08);
+            transition: background 0.2s, box-shadow 0.2s, transform 0.2s;
+        }
+        .btn-volver:hover {
+            background: var(--primary-dark);
+            box-shadow: 0 4px 16px rgba(21,101,192,0.18);
+            transform: translateY(-2px) scale(1.03);
+        }
+    </style>
 </head>
 <body>
 

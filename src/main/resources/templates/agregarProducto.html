@@ -2,140 +2,311 @@
 <html lang="es" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Agregar Producto</title>
-    <link rel="stylesheet" th:href="@{/css/styleAgregarProducto.css}">
+    <title>Agregar Producto - InventSoft</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+    <style>
+        /* Paleta de colores seria y profesional, consistente con los diseños anteriores */
+        :root {
+            --primary-dark: #2C3E50; /* Azul oscuro para elementos principales y texto fuerte */
+            --primary-medium: #34495E; /* Azul grisáceo para fondos de tarjetas/secciones */
+            --primary-light: #ECF0F1; /* Gris muy claro para el fondo general */
+            --accent-green: #27AE60; /* Verde para acciones positivas/éxito */
+            --accent-red: #E74C3C; /* Rojo para acciones negativas/peligro */
+            --text-dark: #2C3E50;
+            --text-light: #FFFFFF;
+            --border-color: #BDC3C7; /* Gris claro para bordes sutiles */
+            --shadow-light: 0 4px 12px rgba(0, 0, 0, 0.08); /* Sombra suave */
+            --shadow-hover: 0 6px 20px rgba(0, 0, 0, 0.15); /* Sombra al pasar el ratón */
+            --input-bg: #F8F9F9; /* Fondo claro para inputs */
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Roboto', 'Segoe UI', Arial, sans-serif; /* Fuente más seria y legible */
+            background: var(--primary-light); /* Fondo general claro */
+            color: var(--text-dark); /* Color de texto principal */
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center; /* Centrar el formulario verticalmente */
+            padding: 20px; /* Espaciado general alrededor del formulario */
+            box-sizing: border-box;
+        }
+
+        /* Contenedor principal del formulario */
+        .page-container { /* Usamos page-container para englobar todo, similar a los otros diseños */
+            max-width: 650px; /* Ajuste para el formulario */
+            width: 100%;
+            box-shadow: var(--shadow-hover);
+            border-radius: 12px;
+            overflow: hidden; /* Asegura que el radio de borde se aplique bien */
+        }
+
+        /* Encabezado */
+        .header {
+            background: var(--primary-dark); /* Fondo oscuro para el encabezado */
+            color: var(--text-light); /* Texto claro en el encabezado */
+            padding: 30px 35px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            text-align: left; /* Alineado a la izquierda */
+        }
+        .header h2 {
+            margin: 0 0 8px 0;
+            font-size: 1.8rem;
+            font-weight: 600;
+        }
+        .header p {
+            color: rgba(255, 255, 255, 0.8);
+            margin: 0;
+            font-size: 0.95rem;
+        }
+        .licoreria-info {
+            margin-top: 15px;
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.9);
+        }
+        .licoreria-info strong {
+            color: var(--accent-green); /* Destacar el nombre de la licorería */
+            font-weight: 600;
+        }
+
+        /* Contenedor del formulario principal */
+        .form-container {
+            background: var(--text-light); /* Fondo blanco para el cuerpo del formulario */
+            color: var(--text-dark);
+            padding: 35px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px; /* Espaciado entre elementos principales del formulario */
+        }
+
+        /* Alertas */
+        .alert {
+            padding: 18px 25px;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            border-width: 1px;
+            border-style: solid;
+        }
+        .alert strong {
+            font-weight: 600;
+        }
+        .alert-success {
+            background: #D4EDDA; /* Verde claro de éxito */
+            color: #155724; /* Texto verde oscuro */
+            border-color: #C3E6CB;
+        }
+        .alert-danger {
+            background: #F8D7DA; /* Rojo claro de peligro */
+            color: #721C24; /* Texto rojo oscuro */
+            border-color: #F5C6CB;
+        }
+
+        /* Filas de formulario con 1 o 2 columnas */
+        .form-row {
+            margin-bottom: 0; /* Eliminamos el margin-bottom ya que el gap lo maneja */
+        }
+        .form-row:not(.form-double) { /* Para filas individuales */
+            display: block;
+        }
+        .form-double {
+            display: flex;
+            gap: 20px; /* Espacio entre columnas */
+            margin-bottom: 0;
+        }
+        .form-col {
+            flex: 1; /* Permite que las columnas ocupen el espacio disponible */
+        }
+
+        /* Grupos de formulario (label + input/select) */
+        .form-group {
+            margin-bottom: 0; /* Resetear el margen */
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500; /* Menos negrita que el original */
+            color: var(--text-dark);
+            font-size: 0.95rem;
+        }
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px; /* Bordes ligeramente más suaves */
+            font-size: 1rem;
+            background: var(--input-bg);
+            color: var(--text-dark);
+            transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+            box-sizing: border-box; /* Incluye padding y border en el ancho/alto total */
+            appearance: none; /* Eliminar estilos predeterminados del select */
+        }
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--primary-dark);
+            box-shadow: 0 0 0 3px rgba(44, 62, 80, 0.2); /* Sombra sutil al enfocar */
+        }
+        .form-group input::placeholder {
+            color: #A6ACAF; /* Color de placeholder más suave */
+        }
+
+        /* Estilo para el campo select con flecha personalizada */
+        .form-group select {
+            background-image: url('data:image/svg+xml;utf8,<svg fill="%232C3E50" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/><path d="M0 0h24v24H0z" fill="none"/></svg>');
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            background-size: 20px;
+            padding-right: 40px; /* Espacio para la flecha */
+        }
+
+        /* Botones de acción */
+        .action-buttons {
+            display: flex;
+            gap: 15px; /* Espacio entre botones */
+            justify-content: flex-end; /* Alinear a la derecha */
+            margin-top: 25px; /* Espaciado superior */
+        }
+
+        .btn { /* Clase base para todos los botones de acción */
+            padding: 12px 28px;
+            border-radius: 6px;
+            font-weight: 500;
+            border: none;
+            cursor: pointer;
+            transition: background 0.2s ease-in-out, box-shadow 0.2s ease-in-out, transform 0.2s ease-in-out;
+            font-size: 0.95rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px; /* Espacio entre icono y texto */
+        }
+
+        .btn-submit {
+            background: var(--primary-dark);
+            color: var(--text-light);
+            box-shadow: 0 2px 8px rgba(44, 62, 80, 0.1);
+        }
+        .btn-submit:hover {
+            background: var(--primary-medium);
+            box-shadow: 0 4px 12px rgba(44, 62, 80, 0.2);
+            transform: translateY(-1px);
+        }
+
+        .btn-back {
+            background: #7F8C8D; /* Gris neutro para "Volver" */
+            color: var(--text-light);
+            box-shadow: 0 2px 8px rgba(127, 140, 141, 0.1);
+        }
+        .btn-back:hover {
+            background: #6C7A89;
+            box-shadow: 0 4px 12px rgba(127, 140, 141, 0.2);
+            transform: translateY(-1px);
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 600px) {
+            .page-container {
+                border-radius: 0; /* Sin bordes redondeados en móviles para ocupar todo el ancho */
+                box-shadow: none;
+            }
+            .header, .form-container {
+                padding: 25px 20px;
+            }
+            .form-double {
+                flex-direction: column; /* Apilar columnas en pantallas pequeñas */
+                gap: 15px;
+            }
+            .action-buttons {
+                flex-direction: column;
+                gap: 10px;
+            }
+            .btn {
+                width: 100%;
+                justify-content: center; /* Centrar el texto en botones apilados */
+            }
+        }
+    </style>
 </head>
 <body>
 
-<div class="form-container">
+<div class="page-container">
     <div class="header">
         <h2>Agregar Nuevo Producto</h2>
         <p>Completa los campos obligatorios para registrar un nuevo producto.</p>
-        <!-- Mostrar licorería actual -->
         <div class="licoreria-info" th:if="${licoreriaActual != null}">
             <p>Licorería actual: <strong th:text="${licoreriaActual.nombre}"></strong></p>
         </div>
     </div>
 
-    <!-- Mensaje de éxito -->
-    <div th:if="${mensajeExito}" class="alert alert-success" role="alert">
-        <strong>Éxito:</strong> <span th:text="${mensajeExito}"></span>
+    <div class="form-container">
+        <div th:if="${mensajeExito}" class="alert alert-success" role="alert">
+            <strong><span class="icon">✅</span> Éxito:</strong> <span th:text="${mensajeExito}"></span>
+        </div>
+
+        <div th:if="${mensajeError}" class="alert alert-danger" role="alert">
+            <strong><span class="icon">❌</span> Error:</strong> <span th:text="${mensajeError}"></span>
+        </div>
+
+        <form id="productoForm" th:action="@{/producto/agregar}" method="post" th:object="${producto}" onsubmit="return validarFormulario(event)" autocomplete="off">
+            <div class="form-group">
+                <label for="nombre">Nombre del Producto</label>
+                <input type="text" id="nombre" name="nombre" th:field="*{nombre}" placeholder="Ej. Ron Añejo, Cerveza Lager, Vino Tinto" autocomplete="off" required />
+            </div>
+
+            <div class="form-group">
+                <label for="descripcion">Descripción (Opcional)</label>
+                <input type="text" id="descripcion" name="descripcion" th:field="*{descripcion}" placeholder="Ej. Bebida espirituosa de alta calidad, Cerveza refrescante" autocomplete="off" />
+            </div>
+
+            <div class="form-double">
+                <div class="form-col form-group">
+                    <label for="precioVenta">Precio de Venta ($)</label>
+                    <input type="number" step="0.01" id="precioVenta" name="precioVenta" th:field="*{precioVenta}" placeholder="Ej. 15.50" required autocomplete="off" />
+                </div>
+                <div class="form-col form-group">
+                    <label for="precioCosto">Precio de Costo ($)</label>
+                    <input type="number" step="0.01" id="precioCosto" name="precioCosto" th:field="*{precioCosto}" placeholder="Ej. 10.25" required autocomplete="off"/>
+                </div>
+            </div>
+
+            <div class="form-double">
+                <div class="form-col form-group">
+                    <label for="categoria">Categoría</label>
+                    <input type="text" id="categoria" name="categoria" th:field="*{categoria}" placeholder="Ej. Rones, Cervezas, Vinos" autocomplete="off" />
+                </div>
+                <div class="form-col form-group">
+                    <label for="marca">Marca</label>
+                    <input type="text" id="marca" name="marca" th:field="*{marca}" placeholder="Ej. Pampero, Polar, Santa Elena" autocomplete="off" />
+                </div>
+            </div>
+
+            <div class="form-double">
+                <div class="form-col form-group">
+                    <label for="proveedor">Proveedor</label>
+                    <input type="text" id="proveedor" name="proveedor" th:field="*{proveedor}" placeholder="Ej. Distribuidora Elixir" autocomplete="off" />
+                </div>
+                <div class="form-col form-group">
+                    <label for="cantidad">Cantidad</label>
+                    <input type="number" id="cantidad" name="cantidad" th:field="*{cantidad}" placeholder="Ej. 24 unidades" required autocomplete="off" />
+                </div>
+            </div>
+
+            <div class="action-buttons">
+                <button type="submit" class="btn btn-submit">
+                    <span class="icon">➕</span> Guardar Producto
+                </button>
+                <button type="button" class="btn btn-back" onclick="window.location.href='/'">
+                    <span class="icon">⬅️</span> Volver al Menú
+                </button>
+            </div>
+        </form>
     </div>
-
-    <!-- Mensaje de error -->
-    <div th:if="${mensajeError}" class="alert alert-danger" role="alert">
-        <strong>Error:</strong> <span th:text="${mensajeError}"></span>
-    </div>
-
-    <!-- Formulario -->
-    <form id="productoForm" th:action="@{/producto/agregar}" method="post" th:object="${producto}" onsubmit="return validarFormulario(event)" autocomplete="off">
-        <!-- Grupo nombre -->
-        <div class="form-row">
-            <label for="nombre">Nombre del Producto</label>
-            <input type="text" id="nombre" name="nombre" th:field="*{nombre}" placeholder="Ej. Cuaderno universitario" autocomplete="off" required />
-        </div>
-
-        <!-- Grupo descripción -->
-        <div class="form-row">
-            <label for="descripcion">Descripción</label>
-            <input type="text" id="descripcion" name="descripcion" th:field="*{descripcion}" placeholder="Breve descripción del producto" autocomplete="off" />
-        </div>
-
-        <!-- Grupo código único -->
-        <div class="form-row">
-            <label for="codigoUnico">Código Único</label>
-            <input type="text" id="codigoUnico" name="codigoUnico" th:field="*{codigoUnico}" disabled autocomplete="off"/>
-        </div>
-
-        <!-- Precios -->
-        <div class="form-double">
-            <div class="form-col">
-                <label for="precioVenta">Precio de Venta ($)</label>
-                <input type="number" step="0.01" id="precioVenta" name="precioVenta" th:field="*{precioVenta}" placeholder="0.00" required autocomplete="off" />
-            </div>
-            <div class="form-col">
-                <label for="precioCosto">Precio de Costo ($)</label>
-                <input type="number" step="0.01" id="precioCosto" name="precioCosto" th:field="*{precioCosto}" placeholder="0.00" required autocomplete="off"/>
-            </div>
-        </div>
-
-        <!-- Categoría y Marca -->
-        <div class="form-double">
-            <div class="form-col">
-                <label for="categoria">Categoría</label>
-                <input type="text" id="categoria" name="categoria" th:field="*{categoria}" placeholder="Ej. Papelería" autocomplete="off" />
-            </div>
-            <div class="form-col">
-                <label for="marca">Marca</label>
-                <input type="text" id="marca" name="marca" th:field="*{marca}" placeholder="Ej. Norma" autocomplete="off" />
-            </div>
-        </div>
-
-        <!-- Proveedor y cantidad -->
-        <div class="form-double">
-            <div class="form-col">
-                <label for="proveedor">Proveedor</label>
-                <input type="text" id="proveedor" name="proveedor" th:field="*{proveedor}" placeholder="Nombre del proveedor" autocomplete="off" />
-            </div>
-            <div class="form-col">
-                <label for="cantidad">Cantidad</label>
-                <input type="number" id="cantidad" name="cantidad" th:field="*{cantidad}" placeholder="Unidades" required autocomplete="off" />
-            </div>
-        </div>
-
-        <!-- Campo de color -->
-        <div class="form-row">
-            <label>Color (Opcional)</label>
-            <div class="color-input-group">
-                <input type="text" id="color" placeholder="Ej. Azul pastel">
-                <button type="button" class="secondary-button" onclick="agregarColor()">Agregar Color</button>
-            </div>
-        </div>
-
-        <!-- Lista de colores -->
-        <div class="colors-list" id="coloresList"></div>
-
-        <!-- Campo oculto para enviar colores -->
-        <input type="hidden" id="coloresInput" name="colores" />
-
-        <!-- Botones -->
-        <div class="action-buttons">
-            <button type="submit" class="btn-submit">Guardar Producto</button>
-            <button type="button" class="btn-back" onclick="window.location.href='/'">Volver al Menú</button>
-        </div>
-    </form>
 </div>
 
-<!-- Script para agregar colores -->
-<script>
-    function agregarColor() {
-        const colorInput = document.getElementById('color');
-        const container = document.getElementById('coloresList');
-        const color = colorInput.value.trim();
-
-        if (color !== "") {
-            const badge = document.createElement('span');
-            badge.className = 'color-badge';
-            badge.textContent = color;
-            container.appendChild(badge);
-            colorInput.value = "";
-        }
-    }
-
-    function rellenarColores() {
-        const coloresDiv = document.getElementById('coloresList');
-        const spans = coloresDiv.getElementsByTagName('span');
-        let coloresArray = [];
-
-        for (let i = 0; i < spans.length; i++) {
-            coloresArray.push(spans[i].textContent.trim());
-        }
-
-        document.getElementById('coloresInput').value = coloresArray.join(",");
-    }
-</script>
-
-<!-- Validación antes de enviar -->
 <script>
     function validarFormulario(event) {
         event.preventDefault(); // Evitar envío automático
@@ -165,12 +336,9 @@
 
         if (errores.length > 0) {
             const mensajeError = errores.join("\n");
-            alert(mensajeError);
+            alert(mensajeError); // Puedes reemplazar esto por un mensaje en el DOM
             return false;
         }
-
-        // Rellenar campo de colores
-        rellenarColores();
 
         // Enviar formulario manualmente si todo está bien
         document.getElementById("productoForm").submit();

@@ -2,8 +2,265 @@
 <html lang="es" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Eliminar Producto</title>
-    <link rel="stylesheet" th:href="@{/css/styleEliminarProducto.css}">
+    <title>Eliminar Producto - InventSoft</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+    <style>
+        /* Paleta de colores seria y profesional, consistente con los diseños anteriores */
+        :root {
+            --primary-dark: #2C3E50; /* Azul oscuro para elementos principales y texto fuerte */
+            --primary-medium: #34495E; /* Azul grisáceo para fondos de tarjetas/secciones */
+            --primary-light: #ECF0F1; /* Gris muy claro para el fondo general */
+            --accent-green: #27AE60; /* Verde para acciones positivas/éxito */
+            --accent-red: #E74C3C; /* Rojo para acciones negativas/peligro */
+            --text-dark: #2C3E50;
+            --text-light: #FFFFFF;
+            --border-color: #BDC3C7; /* Gris claro para bordes sutiles */
+            --shadow-light: 0 4px 12px rgba(0, 0, 0, 0.08); /* Sombra suave */
+            --shadow-hover: 0 6px 20px rgba(0, 0, 0, 0.15); /* Sombra al pasar el ratón */
+            --input-bg: #F8F9F9; /* Fondo claro para inputs */
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Roboto', 'Segoe UI', Arial, sans-serif;
+            background: var(--primary-light);
+            color: var(--text-dark);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .page-container {
+            max-width: 900px; /* Ancho ajustado para la tabla */
+            width: 100%;
+            box-shadow: var(--shadow-hover);
+            border-radius: 12px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background: var(--primary-dark);
+            color: var(--text-light);
+            padding: 30px 35px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            text-align: left;
+        }
+        .header h2 {
+            margin: 0 0 8px 0;
+            font-size: 1.8rem;
+            font-weight: 600;
+        }
+        .header p {
+            color: rgba(255, 255, 255, 0.8);
+            margin: 0;
+            font-size: 0.95rem;
+        }
+
+        .content-wrapper { /* Contenedor para el buscador, tabla y botón de volver */
+            background: var(--text-light);
+            padding: 35px;
+            display: flex;
+            flex-direction: column;
+            gap: 25px; /* Espacio entre secciones */
+        }
+
+        /* Alertas */
+        .alert {
+            padding: 18px 25px;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            border-width: 1px;
+            border-style: solid;
+        }
+        .alert strong {
+            font-weight: 600;
+        }
+        .alert-success {
+            background: #D4EDDA;
+            color: #155724;
+            border-color: #C3E6CB;
+        }
+        .alert-danger {
+            background: #F8D7DA;
+            color: #721C24;
+            border-color: #F5C6CB;
+        }
+
+        /* Campo de búsqueda */
+        .buscador-container {
+            background: var(--input-bg);
+            padding: 20px 25px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            border: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .buscador-container label {
+            display: block;
+            font-weight: 500;
+            color: var(--text-dark);
+            font-size: 0.95rem;
+        }
+        .buscador-container input[type="text"] {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            background: var(--text-light);
+            font-size: 1rem;
+            color: var(--text-dark);
+            transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+            box-sizing: border-box;
+        }
+        .buscador-container input[type="text"]:focus {
+            outline: none;
+            border-color: var(--primary-dark);
+            box-shadow: 0 0 0 3px rgba(44, 62, 80, 0.2);
+        }
+        .buscador-container input::placeholder {
+            color: #A6ACAF;
+        }
+
+        /* Contenedor de tabla con scroll */
+        .table-container {
+            background: var(--input-bg);
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            border: 1px solid var(--border-color);
+            overflow-x: auto; /* Permite scroll horizontal si la tabla es muy ancha */
+            max-height: 400px; /* **Altura máxima para el scroll vertical** */
+            overflow-y: auto; /* **Habilita el scroll vertical** */
+            position: relative; /* Necesario para thead con sticky */
+        }
+        .modern-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+            min-width: 700px; /* Ancho mínimo para la tabla en pantallas pequeñas */
+        }
+        .modern-table thead {
+            position: sticky; /* Encabezado fijo al hacer scroll */
+            top: 0;
+            z-index: 10; /* Asegura que esté por encima del contenido de la tabla */
+            background-color: var(--primary-medium); /* Asegura que el fondo del thead sticky sea visible */
+        }
+        .modern-table thead th {
+            background-color: var(--primary-medium);
+            color: var(--text-light);
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 2px solid var(--primary-dark);
+            font-weight: 600;
+        }
+        .modern-table tbody tr {
+            border-bottom: 1px solid #eee;
+            transition: background-color 0.2s ease;
+        }
+        .modern-table tbody tr:hover {
+            background-color: #F0F4F8; /* Un gris muy suave al pasar el ratón */
+        }
+        .modern-table tbody td {
+            padding: 10px 15px;
+            color: var(--text-dark);
+            vertical-align: middle;
+        }
+        .modern-table tbody tr:last-child {
+            border-bottom: none;
+        }
+
+        /* Botón de eliminar dentro de la tabla */
+        .btn-delete {
+            padding: 8px 15px;
+            background-color: var(--accent-red);
+            color: var(--text-light);
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 500;
+            transition: background-color 0.2s ease, transform 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .btn-delete:hover {
+            background-color: #C0392B; /* Rojo más oscuro al pasar el ratón */
+            transform: translateY(-1px);
+        }
+
+        /* Botones de acción general (Volver al Menú) */
+        .action-buttons {
+            display: flex;
+            justify-content: flex-start; /* Alinear a la izquierda para el botón de volver */
+            margin-top: 10px; /* Espaciado con la tabla */
+        }
+        .btn { /* Clase base para todos los botones de acción */
+            padding: 12px 28px;
+            border-radius: 6px;
+            font-weight: 500;
+            border: none;
+            cursor: pointer;
+            transition: background 0.2s ease-in-out, box-shadow 0.2s ease-in-out, transform 0.2s ease-in-out;
+            font-size: 0.95rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-back {
+            background: #7F8C8D; /* Gris neutro para "Volver" */
+            color: var(--text-light);
+            box-shadow: 0 2px 8px rgba(127, 140, 141, 0.1);
+        }
+        .btn-back:hover {
+            background: #6C7A89;
+            box-shadow: 0 4px 12px rgba(127, 140, 141, 0.2);
+            transform: translateY(-1px);
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .page-container {
+                border-radius: 0;
+                box-shadow: none;
+                padding: 0;
+            }
+            .header, .content-wrapper {
+                padding: 25px 20px;
+            }
+            .buscador-container {
+                padding: 15px 20px;
+            }
+            .table-container {
+                padding: 15px 10px;
+            }
+            .modern-table thead th,
+            .modern-table tbody td {
+                padding: 10px; /* Menos padding en celdas para pantallas pequeñas */
+                font-size: 0.8rem;
+            }
+            .btn-delete {
+                padding: 6px 10px;
+                font-size: 0.75rem;
+            }
+            .action-buttons {
+                justify-content: center; /* Centrar el botón de volver en móviles */
+            }
+            .btn-back {
+                width: 100%; /* Ocupar todo el ancho */
+            }
+        }
+    </style>
 </head>
 <body>
 
@@ -13,16 +270,23 @@
         <p>Selecciona un producto de la lista y confirma su eliminación.</p>
     </div>
 
-    <!-- Campo de búsqueda -->
-    <div class="buscador-container">
-        <label for="buscarField">Buscar producto:</label>
-        <input type="text" id="buscarField" placeholder="Ej. Cuaderno" onkeyup="buscarProducto()" autocomplete="off" />
-    </div>
+    <div class="content-wrapper">
+        <div th:if="${mensajeExito}" class="alert alert-success" role="alert">
+            <strong><span class="icon">✅</span> Éxito:</strong> <span th:text="${mensajeExito}"></span>
+        </div>
 
-    <!-- Tabla de productos -->
-    <div class="table-container">
-        <table class="modern-table">
-            <thead>
+        <div th:if="${mensajeError}" class="alert alert-danger" role="alert">
+            <strong><span class="icon">❌</span> Error:</strong> <span th:text="${mensajeError}"></span>
+        </div>
+
+        <div class="buscador-container">
+            <label for="buscarField">Buscar producto:</label>
+            <input type="text" id="buscarField" placeholder="Ej. Vodka, Tequila, Ginebra" onkeyup="buscarProducto()" autocomplete="off" />
+        </div>
+
+        <div class="table-container">
+            <table class="modern-table">
+                <thead>
                 <tr>
                     <th>ID</th>
                     <th>Nombre</th>
@@ -33,20 +297,25 @@
                     <th>Marca</th>
                     <th>Acción</th>
                 </tr>
-            </thead>
-            <tbody id="tablaProductos">
-                <!-- Productos aparecerán aquí dinámicamente -->
-            </tbody>
-        </table>
-    </div>
+                </thead>
+                <tbody id="tablaProductos">
+                <tr>
+                    <td colspan="8" style="text-align: center; padding: 20px; color: #999;">
+                        Cargando productos...
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
 
-    <!-- Botón volver -->
-    <div class="action-button">
-        <button class="btn-submit" onclick="window.location.href='/'">Volver al Menú</button>
+        <div class="action-buttons">
+            <button class="btn btn-back" onclick="window.location.href='/'">
+                <span class="icon">⬅️</span> Volver al Menú
+            </button>
+        </div>
     </div>
 </div>
 
-<!-- Datos ocultos desde Thymeleaf -->
 <ul id="productosData" style="display: none;">
     <li th:each="producto : ${productos}"
         th:data-id="${producto.id}"
@@ -65,20 +334,26 @@
     // Cargar productos al inicio desde Thymeleaf
     window.onload = () => {
         const dataProductos = document.querySelectorAll("#productosData li");
+        const tbody = document.getElementById("tablaProductos");
 
         if (dataProductos.length === 0) {
             console.warn("⚠️ No hay productos disponibles.");
+            tbody.innerHTML = `<tr>
+                                    <td colspan="8" style="text-align: center; padding: 20px; color: var(--accent-red); font-style: italic;">
+                                        No hay productos registrados en el sistema.
+                                    </td>
+                                </tr>`;
             return;
         }
 
         todosLosProductos = Array.from(dataProductos).map(li => ({
             id: li.getAttribute("data-id"),
-            nombre: li.getAttribute("data-nombre") || "Sin nombre",
-            codigoUnico: li.getAttribute("data-codigo") || "Sin código",
+            nombre: li.getAttribute("data-nombre") || "N/A",
+            codigoUnico: li.getAttribute("data-codigo") || "N/A",
             precioVenta: parseFloat(li.getAttribute("data-precio")) || 0,
             cantidad: parseInt(li.getAttribute("data-cantidad")) || 0,
-            categoria: li.getAttribute("data-categoria") || "Sin categoría",
-            marca: li.getAttribute("data-marca") || "Sin marca"
+            categoria: li.getAttribute("data-categoria") || "N/A",
+            marca: li.getAttribute("data-marca") || "N/A"
         }));
 
         renderizarTabla(todosLosProductos);
@@ -96,7 +371,9 @@
 
         const filtrados = todosLosProductos.filter(p =>
             p.nombre.toLowerCase().includes(valor) ||
-            p.codigoUnico.toLowerCase().includes(valor)
+            p.codigoUnico.toLowerCase().includes(valor) ||
+            p.categoria.toLowerCase().includes(valor) || /* Incluir búsqueda por categoría */
+            p.marca.toLowerCase().includes(valor)         /* Incluir búsqueda por marca */
         );
 
         renderizarTabla(filtrados);
@@ -111,10 +388,11 @@
             const tr = document.createElement("tr");
             const td = document.createElement("td");
             td.colSpan = 8;
-            td.textContent = "❌ No se encontraron productos";
+            td.textContent = "❌ No se encontraron productos con esos criterios.";
             td.style.textAlign = "center";
             td.style.padding = "20px";
-            td.style.color = "#999";
+            td.style.color = "var(--accent-red)";
+            td.style.fontStyle = "italic";
             tr.appendChild(td);
             tbody.appendChild(tr);
             return;
@@ -130,7 +408,11 @@
                 <td>${prod.cantidad}</td>
                 <td>${prod.categoria}</td>
                 <td>${prod.marca}</td>
-                <td><button class="btn-delete" onclick="confirmarEliminar(${prod.id})">Eliminar</button></td>
+                <td>
+                    <button class="btn-delete" onclick="confirmarEliminar(${prod.id})">
+                        <span class="icon">🗑️</span> Eliminar
+                    </button>
+                </td>
             `;
             tbody.appendChild(tr);
         });
@@ -138,7 +420,7 @@
 
     // Confirmar eliminación
     function confirmarEliminar(id) {
-        if (confirm("¿Estás seguro de eliminar este producto?")) {
+        if (confirm("¿Estás seguro de que quieres eliminar este producto de forma permanente? Esta acción no se puede deshacer.")) {
             window.location.href = '/producto/eliminar/' + id;
         }
     }

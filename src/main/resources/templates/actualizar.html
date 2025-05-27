@@ -2,8 +2,313 @@
 <html lang="es" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Actualizar Producto</title>
-    <link rel="stylesheet" th:href="@{/css/styleActualizarProducto.css}">
+    <title>Actualizar Producto - InventSoft</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+    <style>
+        /* Paleta de colores seria y profesional, consistente con los diseños anteriores */
+        :root {
+            --primary-dark: #2C3E50; /* Azul oscuro para elementos principales y texto fuerte */
+            --primary-medium: #34495E; /* Azul grisáceo para fondos de tarjetas/secciones */
+            --primary-light: #ECF0F1; /* Gris muy claro para el fondo general */
+            --accent-green: #27AE60; /* Verde para acciones positivas/éxito */
+            --accent-red: #E74C3C; /* Rojo para acciones negativas/peligro */
+            --text-dark: #2C3E50;
+            --text-light: #FFFFFF;
+            --border-color: #BDC3C7; /* Gris claro para bordes sutiles */
+            --shadow-light: 0 4px 12px rgba(0, 0, 0, 0.08); /* Sombra suave */
+            --shadow-hover: 0 6px 20px rgba(0, 0, 0, 0.15); /* Sombra al pasar el ratón */
+            --input-bg: #F8F9F9; /* Fondo claro para inputs */
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Roboto', 'Segoe UI', Arial, sans-serif;
+            background: var(--primary-light);
+            color: var(--text-dark);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .page-container {
+            max-width: 1050px; /* Ancho ligeramente mayor para las dos columnas */
+            width: 100%;
+            box-shadow: var(--shadow-hover);
+            border-radius: 12px;
+            overflow: hidden;
+            display: flex; /* Usamos flexbox para el page-container para alinear el header con el contenido */
+            flex-direction: column;
+        }
+
+        .header {
+            background: var(--primary-dark);
+            color: var(--text-light);
+            padding: 30px 35px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            text-align: left;
+        }
+        .header h2 {
+            margin: 0 0 8px 0;
+            font-size: 1.8rem;
+            font-weight: 600;
+        }
+        .header p {
+            color: rgba(255, 255, 255, 0.8);
+            margin: 0;
+            font-size: 0.95rem;
+        }
+
+        .content-wrapper { /* Nuevo contenedor para split-container y action-button */
+            background: var(--text-light); /* Fondo blanco para todo el contenido principal */
+            padding: 35px;
+            display: flex;
+            flex-direction: column;
+            gap: 25px; /* Espacio entre secciones como alertas, split-container, y botón de volver */
+        }
+
+        /* Alertas */
+        .alert {
+            padding: 18px 25px;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            border-width: 1px;
+            border-style: solid;
+        }
+        .alert strong {
+            font-weight: 600;
+        }
+        .alert-success {
+            background: #D4EDDA;
+            color: #155724;
+            border-color: #C3E6CB;
+        }
+        .alert-danger {
+            background: #F8D7DA;
+            color: #721C24;
+            border-color: #F5C6CB;
+        }
+
+        /* Contenedor dividido para buscador y formulario */
+        .split-container {
+            display: flex;
+            gap: 30px;
+            flex-wrap: wrap; /* Permite que las columnas se envuelvan en pantallas pequeñas */
+        }
+
+        .buscador-column,
+        .form-column {
+            background-color: var(--input-bg); /* Fondo para las columnas, más claro que blanco */
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05); /* Sombra más sutil para los paneles internos */
+            border: 1px solid var(--border-color); /* Borde sutil */
+        }
+
+        .buscador-column {
+            flex: 1;
+            min-width: 320px; /* Ancho mínimo para el buscador */
+            max-width: 40%; /* Limita el ancho del buscador en pantallas grandes */
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-column {
+            flex: 2;
+            min-width: 400px; /* Ancho mínimo para el formulario */
+        }
+
+        /* Filtros de búsqueda */
+        .filtros-busqueda {
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border-color); /* Separador */
+        }
+        .filtros-busqueda .input-group {
+            margin-bottom: 15px;
+        }
+        .input-group label,
+        .filtro-grupo label,
+        .form-column label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--text-dark);
+            font-size: 0.95rem;
+        }
+        .input-group input[type="text"],
+        .filtro-grupo select,
+        .filtro-grupo input,
+        .form-column input[type="text"],
+        .form-column input[type="number"] {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            background: var(--text-light); /* Inputs blancos */
+            font-size: 1rem;
+            color: var(--text-dark);
+            transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+            box-sizing: border-box;
+            appearance: none; /* Para select */
+        }
+        .input-group input:focus,
+        .filtro-grupo select:focus,
+        .filtro-grupo input:focus,
+        .form-column input:focus {
+            outline: none;
+            border-color: var(--primary-dark);
+            box-shadow: 0 0 0 3px rgba(44, 62, 80, 0.2);
+        }
+        /* Flecha para select */
+        .filtro-grupo select {
+            background-image: url('data:image/svg+xml;utf8,<svg fill="%232C3E50" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/><path d="M0 0h24v24H0z" fill="none"/></svg>');
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            background-size: 20px;
+            padding-right: 40px;
+        }
+
+        .filtros-adicionales {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 15px;
+        }
+        .precio-range {
+            display: flex;
+            gap: 10px;
+        }
+        .precio-range input {
+            padding: 10px 12px; /* Ligeramente más pequeño para ajustarse */
+            font-size: 0.95rem;
+        }
+
+
+        /* Lista de sugerencias */
+        .sugerencias-list {
+            list-style: none;
+            padding: 0;
+            margin: 0; /* Resetea el margen para el flexbox */
+            max-height: 400px; /* Altura máxima para la lista */
+            overflow-y: auto;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background-color: var(--text-light);
+            flex-grow: 1; /* Permite que la lista crezca y ocupe el espacio restante */
+        }
+
+        .sugerencias-list li {
+            padding: 12px 15px;
+            cursor: pointer;
+            border-bottom: 1px solid #eee;
+            transition: background-color 0.2s ease;
+            font-size: 0.9rem;
+            color: var(--text-dark);
+        }
+        .sugerencias-list li:last-child {
+            border-bottom: none;
+        }
+        .sugerencias-list li:hover {
+            background-color: var(--input-bg); /* Un tono más claro al pasar el ratón */
+        }
+        .sugerencias-list li.selected { /* Para resaltar el seleccionado si lo deseas */
+            background-color: var(--primary-light);
+            font-weight: 600;
+        }
+
+        /* Formulario de edición */
+        .form-column h3 {
+            color: var(--primary-dark);
+            margin-top: 0;
+            margin-bottom: 25px;
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+        .form-column form {
+            display: flex;
+            flex-direction: column;
+            gap: 18px; /* Espacio entre los campos del formulario */
+        }
+
+
+        /* Botones de acción */
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: flex-end;
+            margin-top: 25px; /* Espaciado superior para el botón de actualizar */
+        }
+
+        .btn { /* Clase base para todos los botones de acción */
+            padding: 12px 28px;
+            border-radius: 6px;
+            font-weight: 500;
+            border: none;
+            cursor: pointer;
+            transition: background 0.2s ease-in-out, box-shadow 0.2s ease-in-out, transform 0.2s ease-in-out;
+            font-size: 0.95rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-submit {
+            background: var(--primary-dark);
+            color: var(--text-light);
+            box-shadow: 0 2px 8px rgba(44, 62, 80, 0.1);
+        }
+        .btn-submit:hover {
+            background: var(--primary-medium);
+            box-shadow: 0 4px 12px rgba(44, 62, 80, 0.2);
+            transform: translateY(-1px);
+        }
+
+        .btn-back {
+            background: #7F8C8D; /* Gris neutro para "Volver" */
+            color: var(--text-light);
+            box-shadow: 0 2px 8px rgba(127, 140, 141, 0.1);
+        }
+        .btn-back:hover {
+            background: #6C7A89;
+            box-shadow: 0 4px 12px rgba(127, 140, 141, 0.2);
+            transform: translateY(-1px);
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 850px) {
+            .split-container {
+                flex-direction: column; /* Apilar columnas en pantallas más pequeñas */
+                gap: 25px;
+            }
+            .buscador-column,
+            .form-column {
+                min-width: unset; /* Quitar min-width para que ocupen todo el ancho */
+                max-width: unset;
+                width: 100%;
+            }
+            .action-buttons {
+                flex-direction: column;
+                gap: 10px;
+            }
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+            .page-container {
+                border-radius: 0;
+                box-shadow: none;
+                padding: 0; /* Eliminar padding del contenedor principal en móvil */
+            }
+            .header, .content-wrapper {
+                padding: 25px 20px; /* Ajustar padding interno */
+            }
+        }
+    </style>
 </head>
 <body>
 
@@ -13,100 +318,105 @@
         <p>Busca, selecciona y edita los datos de los productos.</p>
     </div>
 
-    <!-- Mensaje de éxito -->
-    <div th:if="${mensajeExito}" class="alert alert-success" role="alert" th:text="${mensajeExito}"></div>
+    <div class="content-wrapper">
+        <div th:if="${mensajeExito}" class="alert alert-success" role="alert">
+            <strong><span class="icon">✅</span> Éxito:</strong> <span th:text="${mensajeExito}"></span>
+        </div>
 
-    <!-- Mensaje de error -->
-    <div th:if="${mensajeError}" class="alert alert-danger" role="alert" th:text="${mensajeError}"></div>
+        <div th:if="${mensajeError}" class="alert alert-danger" role="alert">
+            <strong><span class="icon">❌</span> Error:</strong> <span th:text="${mensajeError}"></span>
+        </div>
 
-    <div class="split-container">
-        <!-- Columna izquierda: Buscador -->
-        <div class="buscador-column">
-            <div class="filtros-busqueda">
-                <div class="input-group">
-                    <label for="buscarField">Buscar producto:</label>
-                    <input type="text" id="buscarField" placeholder="Ej. Cuaderno" onkeyup="buscarProducto()" autocomplete="off">
-                </div>
-
-                <!-- Filtros adicionales -->
-                <div class="filtros-adicionales">
-                    <div class="filtro-grupo">
-                        <label for="filtroCategoria">Categoría</label>
-                        <select id="filtroCategoria" onchange="aplicarFiltros()">
-                            <option value="">Todas las categorías</option>
-                            <option th:each="cat : ${categorias}" th:value="${cat}" th:text="${cat}"></option>
-                        </select>
+        <div class="split-container">
+            <div class="buscador-column">
+                <div class="filtros-busqueda">
+                    <div class="input-group">
+                        <label for="buscarField">Buscar producto:</label>
+                        <input type="text" id="buscarField" placeholder="Ej. Ron Añejo, Cerveza" onkeyup="buscarProducto()" autocomplete="off">
                     </div>
 
-                    <div class="filtro-grupo">
-                        <label for="filtroMarca">Marca</label>
-                        <select id="filtroMarca" onchange="aplicarFiltros()">
-                            <option value="">Todas las marcas</option>
-                            <option th:each="m : ${marcas}" th:value="${m}" th:text="${m}"></option>
-                        </select>
-                    </div>
+                    <div class="filtros-adicionales">
+                        <div class="filtro-grupo">
+                            <label for="filtroCategoria">Categoría</label>
+                            <select id="filtroCategoria" onchange="aplicarFiltros()">
+                                <option value="">Todas las categorías</option>
+                                <option th:each="cat : ${categorias}" th:value="${cat}" th:text="${cat}"></option>
+                            </select>
+                        </div>
 
-                    <div class="filtro-grupo">
-                        <label>Rango de Precio</label>
-                        <div class="precio-range">
-                            <input type="number" id="precioMin" placeholder="Mín" step="0.01" min="0" onchange="aplicarFiltros()">
-                            <input type="number" id="precioMax" placeholder="Máx" step="0.01" min="0" onchange="aplicarFiltros()">
+                        <div class="filtro-grupo">
+                            <label for="filtroMarca">Marca</label>
+                            <select id="filtroMarca" onchange="aplicarFiltros()">
+                                <option value="">Todas las marcas</option>
+                                <option th:each="m : ${marcas}" th:value="${m}" th:text="${m}"></option>
+                            </select>
+                        </div>
+
+                        <div class="filtro-grupo">
+                            <label>Rango de Precio ($)</label>
+                            <div class="precio-range">
+                                <input type="number" id="precioMin" placeholder="Mín" step="0.01" min="0" onchange="aplicarFiltros()">
+                                <input type="number" id="precioMax" placeholder="Máx" step="0.01" min="0" onchange="aplicarFiltros()">
+                            </div>
                         </div>
                     </div>
                 </div>
+
+                <ul id="sugerenciasList" class="sugerencias-list" onclick="seleccionarProducto(event)">
+                    <li style="text-align: center; color: #999; font-style: italic; padding: 12px 15px;">
+                        Busca un producto para empezar
+                    </li>
+                </ul>
             </div>
 
-            <!-- Lista de resultados -->
-            <ul id="sugerenciasList" class="sugerencias-list" onclick="seleccionarProducto(event)">
-                <!-- Productos aparecerán aquí dinámicamente -->
-            </ul>
+            <div class="form-column">
+                <h3>Editar Datos del Producto</h3>
+                <form th:action="@{/producto/actualizar}" method="post" th:object="${producto}">
+                    <input type="hidden" id="idInput" name="id">
+
+                    <label for="nombreInput">Nombre</label>
+                    <input type="text" id="nombreInput" name="nombre" placeholder="Ej. Ron Añejo" required autocomplete="off">
+
+                    <label for="descripcionInput">Descripción (Opcional)</label>
+                    <input type="text" id="descripcionInput" name="descripcion" placeholder="Ej. Bebida espirituosa de alta calidad" autocomplete="off">
+
+                    <label for="codigoInput">Código Único</label>
+                    <input type="text" autocomplete="off" id="codigoInput" name="codigoUnico" placeholder="Generado automáticamente" readonly>
+
+                    <label for="precioVentaInput">Precio de Venta ($)</label>
+                    <input type="number" autocomplete="off" step="0.01" id="precioVentaInput" name="precioVenta" placeholder="Ej. 15.50" required>
+
+                    <label for="precioCostoInput">Precio de Costo ($)</label>
+                    <input type="number" autocomplete="off" step="0.01" id="precioCostoInput" name="precioCosto" placeholder="Ej. 10.25" required>
+
+                    <label for="categoriaInput">Categoría</label>
+                    <input type="text" autocomplete="off" id="categoriaInput" name="categoria" placeholder="Ej. Rones, Cervezas">
+
+                    <label for="marcaInput">Marca</label>
+                    <input type="text" autocomplete="off" id="marcaInput" name="marca" placeholder="Ej. Pampero, Polar">
+
+                    <label for="proveedorInput">Proveedor (Opcional)</label>
+                    <input type="text" autocomplete="off" id="proveedorInput" name="proveedor" placeholder="Ej. Distribuidora Elixir">
+
+                    <label for="cantidadInput">Cantidad</label>
+                    <input type="number" autocomplete="off" id="cantidadInput" name="cantidad" placeholder="Ej. 24 unidades" required>
+
+                    <div class="action-buttons">
+                        <button type="submit" class="btn btn-submit">
+                            <span class="icon">💾</span> Actualizar Producto
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
 
-        <!-- Columna derecha: Formulario -->
-        <div class="form-column">
-            <h3>Editar Datos</h3>
-            <form th:action="@{/producto/actualizar}" method="post" th:object="${producto}">
-                <input type="hidden" id="idInput" name="id">
-
-                <label for="nombreInput">Nombre</label>
-                <input type="text" id="nombreInput" name="nombre" placeholder="Nombre del producto" required autocomplete="off">
-
-                <label for="descripcionInput">Descripción</label>
-                <input type="text" id="descripcionInput" name="descripcion" placeholder="Breve descripción" autocomplete="off">
-
-                <label for="codigoInput">Código Único</label>
-                <input type="text" autocomplete="off" id="codigoInput" name="codigoUnico" placeholder="Código único" readonly>
-
-                <label for="precioVentaInput">Precio Venta ($)</label>
-                <input type="number" autocomplete="off" step="0.01" id="precioVentaInput" name="precioVenta" placeholder="0.00" required>
-
-                <label for="precioCostoInput">Precio Costo ($)</label>
-                <input type="number" autocomplete="off" step="0.01" id="precioCostoInput" name="precioCosto" placeholder="0.00" required>
-
-                <label for="categoriaInput">Categoría</label>
-                <input type="text" autocomplete="off" id="categoriaInput" name="categoria" placeholder="Ej. Papelería">
-
-                <label for="marcaInput">Marca</label>
-                <input type="text" autocomplete="off" id="marcaInput" name="marca" placeholder="Ej. Norma">
-
-                <label for="proveedorInput">Proveedor</label>
-                <input type="text" autocomplete="off" id="proveedorInput" name="proveedor" placeholder="Nombre del proveedor">
-
-                <label for="cantidadInput">Cantidad</label>
-                <input type="number" autocomplete="off" id="cantidadInput" name="cantidad" placeholder="Unidades" required>
-
-                <button type="submit" class="btn-submit">Actualizar Producto</button>
-            </form>
+        <div class="action-buttons justify-content-start"> <button class="btn btn-back" onclick="window.location.href='/'">
+            <span class="icon">⬅️</span> Volver al Menú
+        </button>
         </div>
-    </div>
-
-    <!-- Botón volver -->
-    <div class="action-button">
-        <button class="btn-back" onclick="window.location.href='/'">Volver al Menú</button>
     </div>
 </div>
 
-<!-- Datos ocultos desde Thymeleaf -->
 <ul id="productosData" style="display: none;">
     <li th:each="producto : ${productos}"
         th:data-id="${producto.id}"
@@ -122,45 +432,6 @@
     </li>
 </ul>
 
-<style>
-    .filtros-busqueda {
-        background: white;
-        padding: 15px;
-        border-radius: 8px;
-        margin-bottom: 15px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-    .filtros-adicionales {
-        margin-top: 15px;
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-        gap: 10px;
-    }
-    .filtro-grupo {
-        display: flex;
-        flex-direction: column;
-    }
-    .filtro-grupo label {
-        margin-bottom: 5px;
-        font-weight: bold;
-        color: #555;
-        font-size: 0.9em;
-    }
-    .filtro-grupo select, .filtro-grupo input {
-        padding: 6px;
-        border: 1px solid #ddd;
-        border-radius: 4px;
-        width: 100%;
-    }
-    .precio-range {
-        display: flex;
-        gap: 5px;
-    }
-    .precio-range input {
-        width: 100%;
-    }
-</style>
-
 <script>
     let todosLosProductos = [];
 
@@ -170,6 +441,11 @@
 
         if (dataProductos.length === 0) {
             console.warn("⚠️ No se encontraron productos.");
+            // Actualizar el mensaje de la lista si no hay productos
+            const sugerenciasList = document.getElementById("sugerenciasList");
+            sugerenciasList.innerHTML = `<li style="text-align: center; color: #E74C3C; font-style: italic; padding: 12px 15px;">
+                                            No hay productos cargados.
+                                         </li>`;
             return;
         }
 
@@ -186,33 +462,29 @@
             cantidad: parseInt(li.getAttribute("data-cantidad")) || 0
         }));
 
-        renderizarSugerencias(todosLosProductos);
+        renderizarSugerencias(todosLosProductos); // Renderiza todos los productos al inicio
     };
 
     // Buscar productos en tiempo real
     function buscarProducto() {
-        const input = document.getElementById("buscarField");
-        const valor = input.value.trim().toLowerCase();
-        aplicarFiltros(valor);
+        aplicarFiltros();
     }
 
     // Nueva función para aplicar todos los filtros
-    function aplicarFiltros(terminoBusqueda = null) {
-        if (terminoBusqueda === null) {
-            terminoBusqueda = document.getElementById("buscarField").value.trim().toLowerCase();
-        }
-
+    function aplicarFiltros() {
+        const terminoBusqueda = document.getElementById("buscarField").value.trim().toLowerCase();
         const categoria = document.getElementById("filtroCategoria").value.toLowerCase();
         const marca = document.getElementById("filtroMarca").value.toLowerCase();
         const precioMin = parseFloat(document.getElementById("precioMin").value) || 0;
         const precioMax = parseFloat(document.getElementById("precioMax").value) || Infinity;
 
         const filtrados = todosLosProductos.filter(p => {
-            const cumpleBusqueda = !terminoBusqueda || 
+            const cumpleBusqueda = !terminoBusqueda ||
                 p.nombre.toLowerCase().includes(terminoBusqueda) ||
                 p.codigoUnico.toLowerCase().includes(terminoBusqueda) ||
                 p.categoria.toLowerCase().includes(terminoBusqueda) ||
-                p.marca.toLowerCase().includes(terminoBusqueda);
+                p.marca.toLowerCase().includes(terminoBusqueda) ||
+                p.descripcion.toLowerCase().includes(terminoBusqueda); // También buscar en descripción
 
             const cumpleCategoria = !categoria || p.categoria.toLowerCase() === categoria;
             const cumpleMarca = !marca || p.marca.toLowerCase() === marca;
@@ -231,9 +503,9 @@
 
         if (productos.length === 0) {
             const li = document.createElement("li");
-            li.textContent = "❌ No se encontraron productos";
+            li.textContent = "❌ No se encontraron productos con esos filtros.";
             li.style.textAlign = "center";
-            li.style.color = "#999";
+            li.style.color = "#E74C3C"; /* Color rojo para "no encontrado" */
             li.style.fontStyle = "italic";
             sugerenciasList.appendChild(li);
             return;
@@ -252,7 +524,10 @@
             li.setAttribute("data-proveedor", prod.proveedor);
             li.setAttribute("data-cantidad", prod.cantidad);
 
-            li.textContent = `${prod.nombre} - ${prod.codigoUnico} - $${parseFloat(prod.precioVenta).toFixed(2)} - Marca: ${prod.marca || 'Sin marca'} - ${prod.cantidad} unidades`;
+            // Mostrar el nombre del producto y el código único en la lista
+            li.innerHTML = `<strong>${prod.nombre}</strong> <br>
+                            <small>Código: ${prod.codigoUnico}</small> <br>
+                            <small>Precio: $${parseFloat(prod.precioVenta).toFixed(2)} | Stock: ${prod.cantidad}</small>`;
 
             sugerenciasList.appendChild(li);
         });
@@ -260,9 +535,20 @@
 
     // Seleccionar producto y llenar formulario
     function seleccionarProducto(event) {
-        if (event.target.tagName !== "LI") return;
+        let targetLi = event.target;
+        // Asegurarse de que el elemento clicado o su padre sea el LI
+        while (targetLi && targetLi.tagName !== 'LI') {
+            targetLi = targetLi.parentNode;
+        }
+        if (!targetLi || !targetLi.dataset.id) return; // Si no es un LI válido, salir
 
-        const producto = event.target;
+        // Remover la clase 'selected' de todos los elementos y agregarla al clicado
+        document.querySelectorAll('.sugerencias-list li').forEach(li => {
+            li.classList.remove('selected');
+        });
+        targetLi.classList.add('selected');
+
+        const producto = targetLi; // Ahora targetLi es el elemento LI
 
         document.getElementById("idInput").value = producto.getAttribute("data-id");
         document.getElementById("nombreInput").value = producto.getAttribute("data-nombre");

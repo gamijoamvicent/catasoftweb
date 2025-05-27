@@ -5,196 +5,252 @@
     <title>Menú Principal - InventSoft</title>
     <link rel="stylesheet" th:href="@{/css/styles.css}">
     <style>
-        .dashboard-container {
-            display: flex;
-            flex-direction: column;
-            gap: 30px;
+        /* Paleta de colores seria y profesional */
+        :root {
+            --primary-dark: #2C3E50; /* Azul oscuro para elementos principales y texto fuerte */
+            --primary-medium: #34495E; /* Azul grisáceo para fondos de tarjetas/secciones */
+            --primary-light: #ECF0F1; /* Gris muy claro para el fondo general */
+            --accent-green: #27AE60; /* Verde para acciones positivas/éxito */
+            --accent-red: #E74C3C; /* Rojo para acciones negativas/peligro */
+            --text-dark: #2C3E50;
+            --text-light: #FFFFFF;
+            --border-color: #BDC3C7; /* Gris claro para bordes sutiles */
+            --shadow-light: 0 4px 12px rgba(0, 0, 0, 0.08); /* Sombra suave */
+            --shadow-hover: 0 6px 20px rgba(0, 0, 0, 0.15); /* Sombra al pasar el ratón */
         }
 
-        .licoreria-info {
-            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-            margin-bottom: 20px;
+        body {
+            background: var(--primary-light);
+            color: var(--text-dark);
+            font-family: 'Roboto', 'Segoe UI', Arial, sans-serif; /* Fuente más seria */
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start; /* Alinea al inicio del contenedor */
+            padding: 40px 0; /* Espaciado superior e inferior para el contenido */
+            box-sizing: border-box;
+        }
+
+        .dashboard-container {
+            max-width: 1000px; /* Ancho máximo un poco más reducido */
+            width: 100%;
+            margin: 0 auto;
+            padding: 0 20px; /* Padding horizontal */
+            display: flex;
+            flex-direction: column;
+            gap: 30px; /* Espaciado entre secciones */
+        }
+
+        /* Estilos para la información de la licorería */
+        .licoreria-info, .alert {
+            background: var(--text-light);
+            border-radius: 8px;
+            box-shadow: var(--shadow-light);
+            border: 1px solid var(--border-color);
+            padding: 25px 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
         }
 
         .licoreria-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 15px;
+            flex-wrap: wrap; /* Permite que los elementos se envuelvan en pantallas pequeñas */
+            gap: 15px; /* Espacio entre el título y el botón */
+            margin-bottom: 10px;
         }
-
         .licoreria-header h3 {
-            color: #2C3E50;
+            color: var(--primary-dark);
             margin: 0;
-            font-size: 1.4em;
-        }
-
-        .licoreria-info p {
-            color: #666;
-            margin: 5px 0;
-            font-size: 0.95em;
-        }
-
-        .btn-cambiar-licoreria {
-            background-color: #AED9E0;
-            color: white;
-            padding: 8px 16px;
-            border-radius: 6px;
-            text-decoration: none;
-            font-weight: 500;
-            transition: all 0.3s ease;
-        }
-
-        .btn-cambiar-licoreria:hover {
-            background-color: #96cfd6;
-            transform: translateY(-2px);
-        }
-
-        .menu-container {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-            gap: 25px;
-            margin-top: 30px;
-        }
-
-        .menu-card {
-            background: white;
-            border-radius: 12px;
-            padding: 25px;
-            text-decoration: none;
-            color: #2C3E50;
+            font-size: 1.4rem;
             font-weight: 600;
-            transition: all 0.3s ease;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 15px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-            border: 1px solid #eee;
+        }
+        .licoreria-info p {
+            color: var(--text-dark);
+            margin: 0;
+            font-size: 0.95rem;
+            line-height: 1.4;
+        }
+        .licoreria-info p strong {
+            font-weight: 500;
         }
 
-        .menu-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 15px rgba(0,0,0,0.1);
-        }
-
-        .menu-card .menu-icon {
-            width: 40px;
-            height: 40px;
-            padding: 8px;
-            border-radius: 10px;
-            background-color: #f8f9fa;
-        }
-
-        .menu-card.ventas {
-            border-top: 4px solid #AED9E0;
-        }
-
-        .menu-card.inventario {
-            border-top: 4px solid #B6D7A8;
-        }
-
-        .menu-card.usuarios {
-            border-top: 4px solid #D9B3FF;
-        }
-
-        .menu-card.configuracion {
-            border-top: 4px solid #F4C2C2;
-        }
-
-        .alert {
-            padding: 20px;
-            border-radius: 12px;
-            margin-bottom: 25px;
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .alert-warning {
-            background-color: #fff3cd;
-            border-left: 4px solid #ffc107;
-            color: #856404;
-        }
-
-        .btn-seleccionar {
-            display: inline-block;
-            background-color: #AED9E0;
-            color: white;
+        /* Estilos de botones generales */
+        .btn {
             padding: 10px 20px;
             border-radius: 6px;
             text-decoration: none;
             font-weight: 500;
-            margin-top: 15px;
-            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+            transition: background 0.2s ease-in-out, box-shadow 0.2s ease-in-out, transform 0.2s ease-in-out;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.95rem;
         }
 
-        .btn-seleccionar:hover {
-            background-color: #96cfd6;
-            transform: translateY(-2px);
+        .btn-primary {
+            background: var(--primary-dark);
+            color: var(--text-light);
+            box-shadow: 0 2px 8px rgba(44, 62, 80, 0.1);
+        }
+        .btn-primary:hover {
+            background: var(--primary-medium);
+            box-shadow: 0 4px 12px rgba(44, 62, 80, 0.2);
+            transform: translateY(-1px);
         }
 
+        .btn-danger {
+            background: var(--accent-red);
+            color: var(--text-light);
+            box-shadow: 0 2px 8px rgba(231, 76, 60, 0.1);
+        }
+        .btn-danger:hover {
+            background: #C0392B; /* Rojo más oscuro */
+            box-shadow: 0 4px 12px rgba(231, 76, 60, 0.2);
+            transform: translateY(-1px);
+        }
+
+        /* Alertas */
+        .alert {
+            flex-direction: row; /* Para alinear ícono y texto horizontalmente */
+            align-items: center;
+            background: #F8F9F9; /* Fondo más claro para la alerta */
+            border-color: #D7DBDD;
+            padding: 20px 25px;
+        }
+        .alert-warning .icon {
+            font-size: 28px;
+            color: #F39C12; /* Naranja para la advertencia */
+        }
+        .alert p {
+            margin: 0;
+            color: var(--text-dark);
+        }
+        .alert p strong {
+            color: var(--primary-dark);
+        }
+        .alert-content {
+            flex-grow: 1; /* Permite que el contenido tome el espacio disponible */
+            padding-right: 20px;
+        }
+
+        /* Contenedor del menú */
+        .menu-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); /* Botones un poco más pequeños */
+            gap: 25px; /* Espacio entre los módulos */
+        }
+        .menu-card {
+            background: var(--text-light);
+            color: var(--text-dark);
+            border-radius: 8px;
+            box-shadow: var(--shadow-light);
+            border: 1px solid var(--border-color);
+            padding: 25px 15px; /* Padding reducido */
+            text-decoration: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center; /* Centrar contenido verticalmente */
+            gap: 12px; /* Espaciado entre ícono y texto */
+            font-weight: 500;
+            font-size: 1rem; /* Tamaño de fuente ligeramente menor */
+            text-align: center;
+            transition: box-shadow 0.2s ease-in-out, border-color 0.2s ease-in-out, transform 0.2s ease-in-out;
+            position: relative;
+            min-height: 120px; /* Altura mínima para uniformidad */
+        }
+        .menu-card:hover {
+            box-shadow: var(--shadow-hover);
+            border-color: var(--primary-dark);
+            transform: translateY(-3px);
+        }
+        .menu-card .menu-icon {
+            width: 40px; /* Tamaño del ícono */
+            height: 40px;
+            object-fit: contain; /* Asegura que el ícono se ajuste */
+            filter: grayscale(100%) brightness(50%) sepia(100%) hue-rotate(180deg) saturate(200%); /* Efecto para que los íconos se vean uniformes */
+            transition: filter 0.2s ease-in-out;
+        }
+        .menu-card:hover .menu-icon {
+            filter: none; /* Eliminar el filtro al pasar el ratón para mostrar el color original */
+        }
+
+        /* Pequeño borde superior para diferenciar módulos (opcional) */
+        .menu-card.ventas { border-top: 4px solid var(--accent-green); }
+        .menu-card.inventario { border-top: 4px solid #3498DB; /* Azul para inventario */ }
+        .menu-card.usuarios { border-top: 4px solid #9B59B6; /* Morado para usuarios */ }
+        .menu-card.configuracion { border-top: 4px solid #F1C40F; /* Amarillo para configuración */ }
+        .menu-card.clientes { border-top: 4px solid #1ABC9C; /* Turquesa para clientes */ }
+        .menu-card.creditos { border-top: 4px solid #E67E22; /* Naranja para créditos */ }
+
+        /* Contenedor del botón de cerrar sesión */
         .logout-container {
-            margin-top: 40px;
+            margin-top: 30px;
             text-align: center;
         }
 
-        .btn-logout {
-            background-color: #F4C2C2;
-            color: white;
-            padding: 12px 25px;
-            border: none;
-            border-radius: 8px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .dashboard-container {
+                padding: 0 15px;
+            }
+            .licoreria-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .btn-cambiar-licoreria {
+                width: 100%; /* Botón de cambio de licorería a ancho completo */
+                text-align: center;
+                margin-top: 10px;
+            }
+            .menu-container {
+                grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); /* Botones más pequeños en móvil */
+                gap: 15px;
+            }
+            .menu-card {
+                padding: 20px 10px;
+            }
         }
 
-        .btn-logout:hover {
-            background-color: #e8a7a7;
-            transform: translateY(-2px);
-        }
-
-        .menu-card.clientes {
-            border-top: 4px solid #FFB366;
-        }
-
-        .menu-card.creditos {
-            border-top: 4px solid #66B2FF;
+        @media (max-width: 480px) {
+            .menu-container {
+                grid-template-columns: 1fr; /* Una columna en pantallas muy pequeñas */
+            }
         }
     </style>
 </head>
 <body>
     <div class="page-container">
         <div class="dashboard-container">
-            <!-- Información de la licorería actual -->
             <div class="licoreria-info" th:if="${licoreriaActual != null}">
                 <div class="licoreria-header">
-                    <h3>📋 Licorería Actual: <span th:text="${licoreriaActual.nombre}"></span></h3>
-                    <a th:href="@{/licorerias/seleccionar}" class="btn-cambiar-licoreria">
-                        🔄 Cambiar Licorería
+                    <h3><span class="icon">🏢</span> Licorería Actual: <span th:text="${licoreriaActual.nombre}"></span></h3>
+                    <a th:href="@{/licorerias/seleccionar}" class="btn btn-primary">
+                        <span class="icon">🔄</span> Cambiar Licorería
                     </a>
                 </div>
-                <p>📍 <span th:text="${licoreriaActual.direccion}"></span></p>
-                <p>📞 <span th:text="${licoreriaActual.telefono}"></span></p>
+                <p><strong>Ubicación:</strong> <span th:text="${licoreriaActual.direccion}"></span></p>
+                <p><strong>Teléfono:</strong> <span th:text="${licoreriaActual.telefono}"></span></p>
             </div>
 
-            <!-- Mensaje si no hay licorería seleccionada -->
             <div class="alert alert-warning" th:unless="${licoreriaActual != null}">
-                <span style="font-size: 24px;">⚠️</span>
-                <div>
-                    <p style="margin: 0 0 10px 0; font-weight: 600;">No hay licorería seleccionada</p>
-                    <p style="margin: 0;">Por favor, selecciona una licorería para continuar.</p>
-                    <a th:href="@{/licorerias/seleccionar}" class="btn-seleccionar">Seleccionar Licorería</a>
+                <span class="icon">⚠️</span>
+                <div class="alert-content">
+                    <p style="margin-bottom: 8px;"><strong>Atención:</strong> No hay licorería seleccionada</p>
+                    <p>Por favor, selecciona una licorería para acceder a las funciones del sistema.</p>
                 </div>
+                <a th:href="@{/licorerias/seleccionar}" class="btn btn-primary">
+                    Seleccionar Licorería
+                </a>
             </div>
 
-            <!-- Menú de opciones -->
             <div class="menu-container" th:if="${licoreriaActual != null}">
-                <!-- SUPER_ADMIN -->
                 <a class="menu-card configuracion"
                    sec:authorize="hasRole('SUPER_ADMIN')"
                    th:href="@{/licorerias/gestionar}">
@@ -202,7 +258,6 @@
                     Gestionar Licorerías
                 </a>
 
-                <!-- Gestión de Clientes -->
                 <a class="menu-card clientes"
                    sec:authorize="hasAnyRole('ADMIN_LOCAL', 'SUPER_ADMIN', 'VENDEDOR')"
                    th:href="@{/clientes}">
@@ -210,7 +265,6 @@
                     Gestionar Clientes
                 </a>
 
-                <!-- Gestión de Créditos -->
                 <a class="menu-card creditos"
                    sec:authorize="hasAnyRole('ADMIN_LOCAL', 'SUPER_ADMIN', 'VENDEDOR')"
                    th:href="@{/creditos}">
@@ -218,7 +272,6 @@
                     Gestionar Créditos
                 </a>
 
-                <!-- ADMIN_LOCAL + SUPER_ADMIN -->
                 <a class="menu-card usuarios"
                    sec:authorize="hasAnyRole('ADMIN_LOCAL', 'SUPER_ADMIN')"
                    th:href="@{/usuarios/registrar}">
@@ -226,7 +279,6 @@
                     Gestionar Usuarios
                 </a>
 
-                <!-- ADMIN_LOCAL + SUPER_ADMIN -->
                 <a class="menu-card configuracion"
                    sec:authorize="hasAnyRole('ADMIN_LOCAL', 'SUPER_ADMIN')"
                    th:href="@{/dolar/actualizar}">
@@ -234,7 +286,6 @@
                     Actualizar Precio Dólar
                 </a>
 
-                <!-- ADMIN_LOCAL + SUPER_ADMIN -->
                 <a class="menu-card ventas"
                    sec:authorize="hasAnyRole('ADMIN_LOCAL', 'SUPER_ADMIN')"
                    th:href="@{/reportes/ventas}">
@@ -242,7 +293,6 @@
                     Reportes de Ventas
                 </a>
 
-                <!-- CAJERO + ADMIN_LOCAL + SUPER_ADMIN -->
                 <a class="menu-card ventas"
                    sec:authorize="hasAnyRole('CAJERO', 'ADMIN_LOCAL', 'SUPER_ADMIN')"
                    th:href="@{/ventas/nueva}">
@@ -250,7 +300,6 @@
                     Registrar Venta
                 </a>
 
-                <!-- BODEGA + ADMIN_LOCAL + SUPER_ADMIN -->
                 <a class="menu-card inventario"
                    sec:authorize="hasAnyRole('BODEGA', 'ADMIN_LOCAL', 'SUPER_ADMIN')"
                    th:href="@{/producto/agregar}">
@@ -258,7 +307,6 @@
                     Agregar Producto
                 </a>
 
-                <!-- ADMIN_LOCAL + SUPER_ADMIN -->
                 <a class="menu-card inventario"
                    sec:authorize="hasAnyRole('ADMIN_LOCAL', 'SUPER_ADMIN')"
                    th:href="@{/producto/actualizar}">
@@ -266,14 +314,12 @@
                     Actualizar Producto
                 </a>
 
-                <!-- Todos los roles pueden ver el inventario -->
                 <a class="menu-card inventario"
                    th:href="@{/inventario}">
                     <img src="/icons/inventory.png" alt="Inventario" class="menu-icon">
                     Ver Inventario
                 </a>
 
-                <!-- BODEGA + ADMIN_LOCAL + SUPER_ADMIN -->
                 <a class="menu-card inventario"
                    sec:authorize="hasAnyRole('BODEGA', 'ADMIN_LOCAL', 'SUPER_ADMIN')"
                    th:href="@{/producto/eliminar}">
@@ -282,10 +328,11 @@
                 </a>
             </div>
 
-            <!-- Botón cerrar sesión -->
             <div class="logout-container">
                 <form th:action="@{/logout}" method="post">
-                    <button type="submit" class="btn-logout">Cerrar Sesión</button>
+                    <button type="submit" class="btn btn-danger">
+                        <span class="icon">🚪</span> Cerrar Sesión
+                    </button>
                 </form>
             </div>
         </div>

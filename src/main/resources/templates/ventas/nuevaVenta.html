@@ -8,6 +8,301 @@
     <!-- Meta tags para protección CSRF -->
     <meta th:name="_csrf" th:content="${_csrf.token}" />
     <meta th:name="_csrf_header" th:content="${_csrf.headerName}" />
+    <style>
+        :root {
+            --background-dark: #181A1B;
+            --surface: #F8F9FA;
+            --card: #FFFFFF;
+            --primary: #1565C0;
+            --primary-dark: #0D47A1;
+            --accent: #00B8D9;
+            --danger: #D32F2F;
+            --success: #43A047;
+            --text-main: #181A1B;
+            --text-invert: #FFFFFF;
+            --text-muted: #6C757D;
+            --border: #E0E3E7;
+            --shadow: 0 4px 24px rgba(21, 101, 192, 0.08);
+        }
+        body {
+            background: var(--background-dark);
+            color: var(--text-invert);
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            margin: 0;
+            min-height: 100vh;
+        }
+        .page-container {
+            max-width: 1300px;
+            margin: 0 auto;
+            padding: 40px 16px 32px 16px;
+        }
+        .header {
+            margin-bottom: 32px;
+        }
+        .header h2 {
+            color: var(--primary);
+            margin-bottom: 4px;
+            font-size: 2rem;
+            font-weight: 700;
+        }
+        .header p {
+            color: var(--text-muted);
+            margin: 0;
+        }
+        .dolar-info {
+            background: var(--card);
+            color: var(--primary-dark);
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+            padding: 18px 24px;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            font-size: 1.1rem;
+        }
+        .label-info {
+            font-weight: 600;
+            color: var(--primary-dark);
+        }
+        .precio-dolar {
+            font-weight: 700;
+            color: var(--success);
+        }
+        .venta-container {
+            display: flex;
+            gap: 32px;
+        }
+        .buscador-column {
+            flex: 1 1 340px;
+            max-width: 340px;
+        }
+        .tabla-column {
+            flex: 3 1 0;
+        }
+        .input-group {
+            margin-bottom: 18px;
+        }
+        .input-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 600;
+            color: var(--primary-dark);
+        }
+        .input-group input {
+            width: 100%;
+            padding: 10px;
+            border: 1.5px solid var(--border);
+            border-radius: 8px;
+            font-size: 1rem;
+            background: var(--surface);
+            color: var(--text-main);
+            transition: border 0.2s;
+        }
+        .input-group input:focus {
+            border: 1.5px solid var(--primary);
+            outline: none;
+        }
+        .sugerencias-list {
+            max-height: unset;
+            overflow-y: unset;
+            border: 1.5px solid var(--border);
+            border-radius: 8px;
+            padding: 0;
+            margin: 0;
+            list-style: none;
+            background: var(--card);
+            box-shadow: var(--shadow);
+        }
+        .sugerencias-list li {
+            padding: 10px 14px;
+            cursor: pointer;
+            border-bottom: 1px solid var(--border);
+            color: var(--text-main);
+            font-size: 1rem;
+            transition: background 0.2s, color 0.2s;
+        }
+        .sugerencias-list li:last-child {
+            border-bottom: none;
+        }
+        .sugerencias-list li:hover {
+            background: #F0F6FF;
+            color: var(--primary-dark);
+        }
+        .stock-rojo { background: #ffebee !important; color: #c62828 !important; }
+        .stock-amarillo { background: #fffde7 !important; color: #f9a825 !important; }
+        .stock-verde { background: #e8f5e9 !important; color: #388e3c !important; }
+        .modern-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            background: var(--card);
+            color: var(--text-main);
+            border-radius: 14px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+        .modern-table th, .modern-table td {
+            padding: 12px 10px;
+            text-align: left;
+        }
+        .modern-table th {
+            background: var(--primary);
+            color: var(--text-invert);
+            font-weight: 700;
+            border-bottom: 2px solid var(--border);
+        }
+        .modern-table tr:nth-child(even) {
+            background: #F0F6FF;
+        }
+        .modern-table tr:nth-child(odd) {
+            background: var(--card);
+        }
+        .modern-table td {
+            border-bottom: 1px solid var(--border);
+        }
+        .resumen-venta {
+            margin-top: 20px;
+            padding: 15px;
+            background: var(--card);
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+        }
+        .metodo-pago, .tipo-venta {
+            flex: 1;
+            margin-right: 20px;
+        }
+        .form-label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: var(--primary-dark);
+        }
+        .form-select {
+            width: 100%;
+            padding: 8px;
+            border: 1.5px solid var(--border);
+            border-radius: 8px;
+            font-size: 1rem;
+            background: var(--surface);
+            color: var(--text-main);
+            transition: border 0.2s;
+        }
+        .form-select:focus {
+            border: 1.5px solid var(--primary);
+            outline: none;
+        }
+        .resumen-total {
+            text-align: right;
+        }
+        .action-buttons {
+            margin-top: 15px;
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+        .btn-confirmar, .btn-limpiar {
+            padding: 12px 28px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 1rem;
+            transition: background 0.2s, box-shadow 0.2s, transform 0.2s;
+        }
+        .btn-confirmar {
+            background: var(--success);
+            color: var(--text-invert);
+        }
+        .btn-limpiar {
+            background: var(--danger);
+            color: var(--text-invert);
+        }
+        .btn-confirmar:hover {
+            background: #388E3C;
+            transform: translateY(-2px) scale(1.03);
+        }
+        .btn-limpiar:hover {
+            background: #B71C1C;
+            transform: translateY(-2px) scale(1.03);
+        }
+        .cliente-selector {
+            margin-top: 15px;
+            padding: 15px;
+            background: var(--card);
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+        }
+        .cliente-selector .input-group {
+            margin-bottom: 10px;
+        }
+        .cliente-selector label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: var(--primary-dark);
+        }
+        .cliente-selector input {
+            width: 100%;
+            padding: 8px;
+            border: 1.5px solid var(--border);
+            border-radius: 8px;
+            font-size: 1rem;
+            background: var(--surface);
+            color: var(--text-main);
+        }
+        .cliente-selector .sugerencias-list {
+            max-height: 180px;
+            overflow-y: auto;
+            border: 1.5px solid var(--border);
+            border-radius: 8px;
+            padding: 0;
+            margin: 0;
+            list-style: none;
+            background: var(--card);
+        }
+        .cliente-selector .sugerencias-list li {
+            padding: 8px 12px;
+            cursor: pointer;
+            border-bottom: 1px solid var(--border);
+            color: var(--text-main);
+            font-size: 1rem;
+        }
+        .cliente-selector .sugerencias-list li:last-child {
+            border-bottom: none;
+        }
+        .cliente-selector .sugerencias-list li:hover {
+            background: #F0F6FF;
+            color: var(--primary-dark);
+        }
+        .bottom-back {
+            margin-top: 32px;
+            text-align: center;
+        }
+        .btn-back {
+            background: var(--primary);
+            color: var(--text-invert);
+            padding: 12px 32px;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 1rem;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(21,101,192,0.08);
+            transition: background 0.2s, box-shadow 0.2s, transform 0.2s;
+        }
+        .btn-back:hover {
+            background: var(--primary-dark);
+            box-shadow: 0 4px 16px rgba(21,101,192,0.18);
+            transform: translateY(-2px) scale(1.03);
+        }
+    </style>
 </head>
 <body>
 <div class="page-container">
@@ -286,7 +581,8 @@
             sugerenciasList.appendChild(li);
             return;
         }
-        productos.forEach(prod => {
+        // Mostrar solo los primeros 5 elementos
+        productos.slice(0, 5).forEach(prod => {
             const li = document.createElement("li");
             li.setAttribute("data-id", prod.id);
             li.setAttribute("data-nombre", prod.nombre);

@@ -5,54 +5,209 @@
     <title>Gestionar Licorerías</title>
     <link rel="stylesheet" th:href="@{/css/styles.css}">
     <style>
+        :root {
+            --background-dark: #181A1B;
+            --surface: #F8F9FA;
+            --card: #FFFFFF;
+            --primary: #1565C0;
+            --primary-dark: #0D47A1;
+            --accent: #00B8D9;
+            --danger: #D32F2F;
+            --text-main: #181A1B;
+            --text-invert: #FFFFFF;
+            --text-muted: #6C757D;
+            --border: #E0E3E7;
+            --shadow: 0 4px 24px rgba(21, 101, 192, 0.08);
+            --success: #43A047;
+            --warning: #FFD600;
+        }
+        body {
+            background: var(--background-dark);
+            color: var(--text-invert);
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            margin: 0;
+            min-height: 100vh;
+        }
+        .page-container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 40px 16px 32px 16px;
+        }
+        .header {
+            margin-bottom: 32px;
+        }
+        .header h2 {
+            color: var(--primary);
+            margin-bottom: 4px;
+            font-size: 2rem;
+            font-weight: 700;
+        }
+        .header p {
+            color: var(--text-muted);
+            margin: 0;
+        }
         .form-container {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            background: var(--card);
+            color: var(--text-main);
+            border-radius: 18px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+            padding: 32px 28px 24px 28px;
+            margin-bottom: 32px;
+        }
+        .form-container h3 {
+            color: var(--primary-dark);
+            margin-top: 0;
+            margin-bottom: 18px;
+            font-size: 1.25rem;
+            font-weight: 700;
         }
         .form-grid {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 15px;
-        }
-        .form-group {
-            margin-bottom: 15px;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 18px;
         }
         .form-group label {
             display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
+            margin-bottom: 6px;
+            font-weight: 600;
+            color: var(--primary-dark);
         }
         .form-group input {
             width: 100%;
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
+            padding: 10px;
+            border: 1.5px solid var(--border);
+            border-radius: 8px;
+            font-size: 1rem;
+            background: var(--surface);
+            color: var(--text-main);
+            transition: border 0.2s;
+        }
+        .form-group input:focus {
+            border: 1.5px solid var(--primary);
+            outline: none;
+        }
+        .btn-guardar {
+            background: var(--primary);
+            color: var(--text-invert);
+            padding: 12px 32px;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 1rem;
+            border: none;
+            margin-top: 18px;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(21,101,192,0.08);
+            transition: background 0.2s, box-shadow 0.2s, transform 0.2s;
+        }
+        .btn-guardar:hover {
+            background: var(--primary-dark);
+            box-shadow: 0 4px 16px rgba(21,101,192,0.18);
+            transform: translateY(-2px) scale(1.03);
+        }
+        .alert-success {
+            background: #23272B;
+            color: var(--success);
+            border-radius: 14px;
+            border: 1px solid #43A04733;
+            padding: 18px 24px;
+            margin-bottom: 18px;
+        }
+        .alert-danger {
+            background: #23272B;
+            color: var(--danger);
+            border-radius: 14px;
+            border: 1px solid #D32F2F33;
+            padding: 18px 24px;
+            margin-bottom: 18px;
         }
         .table-container {
             margin-top: 20px;
             overflow-x: auto;
         }
+        .modern-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            background: var(--card);
+            color: var(--text-main);
+            border-radius: 14px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+        .modern-table th, .modern-table td {
+            padding: 14px 12px;
+            text-align: left;
+        }
+        .modern-table th {
+            background: var(--primary);
+            color: var(--text-invert);
+            font-weight: 700;
+            border-bottom: 2px solid var(--border);
+        }
+        .modern-table tr:nth-child(even) {
+            background: #F0F6FF;
+        }
+        .modern-table tr:nth-child(odd) {
+            background: var(--card);
+        }
+        .modern-table td {
+            border-bottom: 1px solid var(--border);
+        }
         .btn-action {
-            padding: 5px 10px;
+            padding: 7px 16px;
             border: none;
-            border-radius: 4px;
+            border-radius: 8px;
             cursor: pointer;
+            font-weight: 600;
+            font-size: 0.98rem;
             margin-right: 5px;
+            transition: background 0.2s, box-shadow 0.2s, transform 0.2s;
         }
         .btn-activar {
-            background-color: #B6D7A8;
-            color: white;
+            background: var(--success);
+            color: var(--text-invert);
+        }
+        .btn-activar:hover {
+            background: #388E3C;
+            transform: translateY(-2px) scale(1.03);
         }
         .btn-desactivar {
-            background-color: #F4C2C2;
-            color: white;
+            background: var(--warning);
+            color: var(--text-main);
+        }
+        .btn-desactivar:hover {
+            background: #FFC107;
+            transform: translateY(-2px) scale(1.03);
         }
         .btn-eliminar {
-            background-color: #ff6b6b;
-            color: white;
+            background: var(--danger);
+            color: var(--text-invert);
+        }
+        .btn-eliminar:hover {
+            background: #B71C1C;
+            transform: translateY(-2px) scale(1.03);
+        }
+        .action-button {
+            margin-top: 32px;
+            text-align: center;
+        }
+        .btn-back {
+            background: var(--primary);
+            color: var(--text-invert);
+            padding: 12px 32px;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 1rem;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(21,101,192,0.08);
+            transition: background 0.2s, box-shadow 0.2s, transform 0.2s;
+        }
+        .btn-back:hover {
+            background: var(--primary-dark);
+            box-shadow: 0 4px 16px rgba(21,101,192,0.18);
+            transform: translateY(-2px) scale(1.03);
         }
     </style>
 </head>
