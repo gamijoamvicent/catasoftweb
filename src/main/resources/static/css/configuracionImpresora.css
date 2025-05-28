@@ -1,0 +1,133 @@
+/* Estilos para configuración de impresora - paleta moderna (azul lavanda, violeta, rosa, fondo oscuro) */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(120deg, #23243a 0%, #3a2c4f 100%);
+    margin: 0; padding: 0;
+    min-height: 100vh;
+}
+.main-container {
+    max-width: 1100px;
+    margin: 40px auto;
+    display: flex;
+    gap: 32px;
+    background: rgba(255,255,255,0.04);
+    border-radius: 18px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+    padding: 32px 18px;
+}
+.col {
+    flex: 1 1 0;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+.card {
+    background: #2d2540;
+    border-radius: 14px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.10);
+    padding: 22px 18px 18px 18px;
+    color: #f3eaff;
+}
+h2, h3 {
+    color: #b388ff;
+    margin-bottom: 12px;
+    font-weight: 700;
+}
+h2 { font-size: 1.5rem; text-align: center; }
+h3 { font-size: 1.13rem; }
+.form-group { margin-bottom: 14px; }
+.form-group label { font-weight: 600; color: #e1bee7; margin-bottom: 5px; display: block; font-size: 1rem; }
+input[type="text"], select, textarea {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1.5px solid #b388ff;
+    border-radius: 7px;
+    background: #23243a;
+    color: #f3eaff;
+    font-size: 1rem;
+    margin-top: 2px;
+}
+input[type="text"]:focus, select:focus, textarea:focus {
+    outline: none;
+    border-color: #ff80ab;
+    background: #2d2540;
+}
+.radio-group { display: flex; gap: 18px; margin-top: 2px; }
+.checkbox-container { display: flex; align-items: center; gap: 7px; font-weight: 500; }
+.button-group { display: flex; gap: 12px; justify-content: flex-end; margin-top: 16px; }
+.btn-primary {
+    background: linear-gradient(90deg, #b388ff 0%, #ff80ab 100%);
+    color: #23243a;
+    border: none;
+    padding: 10px 22px;
+    border-radius: 8px;
+    font-size: 1.08rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+    box-shadow: 0 2px 8px rgba(179,136,255,0.10);
+}
+.btn-primary:hover {
+    background: linear-gradient(90deg, #ff80ab 0%, #b388ff 100%);
+    color: #fff;
+}
+.btn-secondary {
+    background: #3a2c4f;
+    color: #b388ff;
+    border: 1.5px solid #b388ff;
+    padding: 10px 18px;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+}
+.btn-secondary:hover {
+    background: #b388ff;
+    color: #2d2540;
+}
+.alert {
+    background: #4a148c;
+    color: #ffd6e7;
+    padding: 10px 14px;
+    border-radius: 8px;
+    margin-bottom: 12px;
+    font-weight: 500;
+    border: 1.5px solid #ff80ab;
+    font-size: 1rem;
+}
+.alert.success { background: #2e7d32; color: #c8e6c9; border-color: #b388ff; }
+.alert.error { background: #ad1457; color: #ffd6e7; border-color: #ff80ab; }
+.licoreria-actual { font-size: 1.05rem; color: #e1bee7; margin-bottom: 10px; text-align: right; }
+.ticket-preview {
+    background: #23243a;
+    border: 1.5px dashed #b388ff;
+    border-radius: 8px;
+    padding: 12px;
+    min-height: 70px;
+    font-family: 'Fira Mono', 'Courier New', Courier, monospace;
+    color: #f3eaff;
+    white-space: pre-wrap;
+    font-size: 1rem;
+}
+.qz-section {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.qz-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.qz-row select {
+    flex: 1 1 0;
+}
+.qz-row .btn-secondary {
+    font-size: 1.08rem;
+    padding: 10px 18px;
+}
+@media (max-width: 900px) {
+    .main-container { flex-direction: column; gap: 0; padding: 10px 2px; }
+    .col { gap: 18px; }
+}

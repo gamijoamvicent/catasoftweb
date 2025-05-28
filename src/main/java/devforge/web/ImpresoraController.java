@@ -170,7 +170,7 @@ public class ImpresoraController {
             logger.error("[DEBUG] Excepción en /impresora/probar: {}", e.getMessage(), e);
             return ResponseEntity.status(500).body(Map.of(
                 "exito", false,
-                "mensaje", "Error interno: " + e.getMessage()
+                "mensaje", e.getMessage() != null ? e.getMessage() : "Error interno: " + e.getClass().getSimpleName()
             ));
         }
     }

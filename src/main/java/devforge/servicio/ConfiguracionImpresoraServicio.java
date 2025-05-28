@@ -8,6 +8,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import javax.print.PrintService;
+import javax.print.PrintServiceLookup;
 import java.util.List;
 
 @Service
@@ -63,10 +65,10 @@ public class ConfiguracionImpresoraServicio {
     public boolean probarImpresionPorSistema(ConfiguracionImpresora config, String sistema) {
         try {
             logger.info("Prueba de impresión para sistema: {}", sistema);
+            String contenido = config.getTicketTexto() != null && !config.getTicketTexto().isEmpty()
+                    ? config.getTicketTexto()
+                    : "Prueba de impresión";
             if ("linux".equalsIgnoreCase(sistema)) {
-                String contenido = config.getTicketTexto() != null && !config.getTicketTexto().isEmpty()
-                        ? config.getTicketTexto()
-                        : "Prueba de impresión";
                 java.nio.file.Files.write(
                     java.nio.file.Path.of("/tmp/prueba_impresion_ticket.txt"),
                     contenido.getBytes(java.nio.charset.StandardCharsets.UTF_8),
@@ -75,19 +77,59 @@ public class ConfiguracionImpresoraServicio {
                 );
                 logger.info("Archivo de prueba creado en /tmp/prueba_impresion_ticket.txt");
                 return true;
+            } else if ("windows".equalsIgnoreCase(sistema)) {
+                String impresoraSeleccionada = config.getPuertoCom();
+                logger.info("Impresora seleccionada para Windows: {}", impresoraSeleccionada);
+                if (impresoraSeleccionada == null || impresoraSeleccionada.isBlank() || impresoraSeleccionada.equalsIgnoreCase("none")) {
+                    logger.warn("No se seleccionó impresora válida para Windows");
+                    throw new RuntimeException("Debe seleccionar una impresora válida (por ejemplo, Print to PDF)");
+                }
+                javax.print.PrintService[] printServices = javax.print.PrintServiceLookup.lookupPrintServices(null, null);
+                javax.print.PrintService impresora = null;
+                for (javax.print.PrintService ps : printServices) {
+                    if (ps.getName().trim().equalsIgnoreCase(impresoraSeleccionada.trim())) {
+                        impresora = ps;
+                        break;
+                    }
+                }
+                if (impresora == null) {
+                    logger.warn("No se encontró la impresora: {}", impresoraSeleccionada);
+                    throw new RuntimeException("No se encontró la impresora seleccionada: " + impresoraSeleccionada);
+                }
+                javax.print.DocFlavor flavor = javax.print.DocFlavor.STRING.TEXT_PLAIN;
+                javax.print.Doc doc = new javax.print.SimpleDoc(contenido, flavor, null);
+                javax.print.DocPrintJob job = impresora.createPrintJob();
+                job.print(doc, null);
+                logger.info("Enviado a imprimir en: {}", impresoraSeleccionada);
+                return true;
             } else {
-                logger.info("Realizando prueba de impresión en puerto: {}", config.getPuertoCom());
+                logger.info("Sistema no soportado, solo se simula impresión");
                 return true;
             }
         } catch (Exception e) {
-            logger.error("Error al realizar prueba de impresión: {}", e.getMessage());
-            throw new RuntimeException("Error al crear el archivo de impresión: " + e.getMessage(), e);
+            logger.error("Error al realizar prueba de impresión: {}", e.getMessage(), e);
+            throw new RuntimeException("Error al imprimir: " + e.getMessage(), e);
         }
     }
 
     public List<String> detectarPuertosDisponibles() {
-        // Implementación simplificada - en una implementación real, esto detectaría
-        // los puertos COM disponibles en el sistema
-        return List.of("COM1", "COM2", "COM3", "COM4");
+        try {
+            // Detectar impresoras instaladas en Windows
+            PrintService[] printServices = PrintServiceLookup.lookupPrintServices(null, null);
+            List<String> impresoras = new java.util.ArrayList<>();
+            for (PrintService ps : printServices) {
+                impresoras.add(ps.getName());
+            }
+            // Agregar puertos COM manuales para compatibilidad
+            impresoras.add("COM1");
+            impresoras.add("COM2");
+            impresoras.add("COM3");
+            impresoras.add("COM4");
+            return impresoras;
+        } catch (Exception e) {
+            logger.error("Error al detectar impresoras: {}", e.getMessage());
+            // Fallback a puertos COM si hay error
+            return List.of("COM1", "COM2", "COM3", "COM4");
+        }
     }
 }

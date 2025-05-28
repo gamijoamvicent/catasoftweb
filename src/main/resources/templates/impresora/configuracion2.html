@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Configuración de Impresora</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f3f6f9; }
+        .container { max-width: 500px; margin: 40px auto; background: #fff; border-radius: 10px; box-shadow: 0 4px 16px #0001; padding: 24px; }
+        h2 { color: #6c3483; text-align: center; }
+        label { font-weight: 600; }
+        select, textarea { width: 100%; padding: 7px; border-radius: 6px; border: 1px solid #ccc; margin-bottom: 12px; }
+        button { background: #6c3483; color: #fff; border: none; padding: 8px 16px; border-radius: 7px; font-size: 1rem; font-weight: bold; cursor: pointer; margin-right: 8px; }
+        button:hover { background: #512e5f; }
+        .msg { margin: 10px 0; padding: 10px; border-radius: 6px; }
+        .msg.ok { background: #d4efdf; color: #186a3b; }
+        .msg.err { background: #f4c2c2; color: #a94442; }
+    </style>
+    <script src="/js/qz-tray.js"></script>
+</head>
+<body>
+<div class="container">
+    <h2>Configuración de Impresora (QZ Tray)</h2>
+    <form id="formImpresora" onsubmit="return false;">
+        <label for="impresora">Selecciona una impresora:</label>
+        <select id="impresora" name="impresora" required>
+            <option value="">-- Selecciona --</option>
+        </select>
+        <label for="texto">Texto de prueba:</label>
+        <textarea id="texto" name="texto" rows="4">Prueba de impresión desde InventSoft</textarea>
+        <button type="button" id="btnProbar">Probar impresión</button>
+        <button type="button" id="btnActualizar">Actualizar lista</button>
+    </form>
+    <div id="msg" class="msg" style="display:none"></div>
+    <div id="qzStatus" class="msg" style="display:none"></div>
+</div>
+<script>
+    // QZ Tray connection
+    function showMsg(text, ok) {
+        var msg = document.getElementById('msg');
+        msg.textContent = text;
+        msg.className = 'msg ' + (ok ? 'ok' : 'err');
+        msg.style.display = 'block';
+    }
+    function showQzStatus(text, ok) {
+        var st = document.getElementById('qzStatus');
+        st.textContent = text;
+        st.className = 'msg ' + (ok ? 'ok' : 'err');
+        st.style.display = 'block';
+    }
+    function hideQzStatus() {
+        document.getElementById('qzStatus').style.display = 'none';
+    }
+    function conectarQZ(callback) {
+        if (qz.websocket.isActive()) {
+            callback && callback();
+            return;
+        }
+        qz.websocket.connect().then(function() {
+            showQzStatus('QZ Tray conectado', true);
+            setTimeout(hideQzStatus, 2000);
+            callback && callback();
+        }).catch(function(err) {
+            showQzStatus('No se pudo conectar a QZ Tray: ' + err, false);
+        });
+    }
+    function cargarImpresoras() {
+        conectarQZ(function() {
+            qz.printers.find().then(function(lista) {
+                var sel = document.getElementById('impresora');
+                sel.innerHTML = '<option value="">-- Selecciona --</option>';
+                lista.forEach(function(i) {
+                    var opt = document.createElement('option');
+                    opt.value = i; opt.textContent = i;
+                    sel.appendChild(opt);
+                });
+            }).catch(function(e) {
+                showMsg('Error al listar impresoras: ' + e, false);
+            });
+        });
+    }
+    document.getElementById('btnActualizar').onclick = cargarImpresoras;
+    document.addEventListener('DOMContentLoaded', cargarImpresoras);
+    document.getElementById('btnProbar').onclick = function() {
+        var impresora = document.getElementById('impresora').value;
+        var texto = document.getElementById('texto').value;
+        if (!impresora) {
+            showMsg('Selecciona una impresora.', false);
+            return;
+        }
+        conectarQZ(function() {
+            qz.printers.find(impresora).then(function(printer) {
+                var config = qz.configs.create(printer);
+                return qz.print(config, [{ type: 'raw', format: 'plain', data: texto + '\n' }]);
+            }).then(function() {
+                showMsg('Impresión enviada correctamente a "' + impresora + '".', true);
+            }).catch(function(e) {
+                showMsg('Error al imprimir: ' + e, false);
+            });
+        });
+    };
+</script>
+</body>
+</html>
