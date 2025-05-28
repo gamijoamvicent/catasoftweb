@@ -12,7 +12,9 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Controller
 @RequestMapping("/producto")
@@ -139,6 +141,7 @@ public class ProductoController {
             String marca = producto.getMarca();
             String proveedor = producto.getProveedor();
             int cantidad = producto.getCantidad();
+            String tipoTasa = producto.getTipoTasa() != null ? producto.getTipoTasa() : "BCV";
 
             String codigoBase = generarCodigoBusqueda(nombre);
             Licoreria licoreriaActual = licoreriaContext.getLicoreriaActual();
@@ -160,6 +163,7 @@ public class ProductoController {
                 p.setMarca(marca);
                 p.setProveedor(proveedor);
                 p.setCantidad(cantidad);
+                p.setTipoTasa(tipoTasa);
                 p.setLicoreria(licoreriaActual);
                 productoRepositorio.save(p);
             } else {
@@ -174,6 +178,7 @@ public class ProductoController {
                     p.setMarca(marca);
                     p.setProveedor(proveedor);
                     p.setCantidad(cantidad);
+                    p.setTipoTasa(tipoTasa);
                     p.setLicoreria(licoreriaActual);
                     productoRepositorio.save(p);
                 }
@@ -222,5 +227,34 @@ public class ProductoController {
     private String generarCodigoColor(String color) {
         if (color == null || color.isEmpty()) return "";
         return color.length() >= 3 ? color.substring(0, 3).toUpperCase() : color.toUpperCase();
+    }
+
+    @GetMapping("/buscar")
+    @ResponseBody
+    public List<Map<String, Object>> buscarProductos(@RequestParam String q) {
+        if (licoreriaContext.getLicoreriaActual() == null) {
+            return new ArrayList<>();
+        }
+
+        String busqueda = q.toLowerCase();
+        return productoRepositorio.findByLicoreriaId(licoreriaContext.getLicoreriaId())
+            .stream()
+            .filter(p -> 
+                p.getNombre().toLowerCase().contains(busqueda) ||
+                (p.getCodigoUnico() != null && p.getCodigoUnico().toLowerCase().contains(busqueda)) ||
+                (p.getMarca() != null && p.getMarca().toLowerCase().contains(busqueda))
+            )
+            .map(p -> {
+                Map<String, Object> productoData = new HashMap<>();
+                productoData.put("id", p.getId());
+                productoData.put("nombre", p.getNombre());
+                productoData.put("codigoUnico", p.getCodigoUnico());
+                productoData.put("precioVenta", p.getPrecioVenta());
+                productoData.put("cantidad", p.getCantidad());
+                productoData.put("marca", p.getMarca());
+                productoData.put("tipoTasa", p.getTipoTasa());
+                return productoData;
+            })
+            .toList();
     }
 }

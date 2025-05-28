@@ -34,4 +34,14 @@ public class DetalleVenta {
 
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal subtotal;
-} 
+
+    @Column(name = "tasa_cambio_usado", precision = 10, scale = 2)
+    private BigDecimal tasaCambioUsado;
+
+    @Column(name = "subtotal_bolivares", precision = 10, scale = 2)
+    private BigDecimal subtotalBolivares;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "tipo_tasa_usado")
+    private PrecioDolar.TipoTasa tipoTasaUsado;
+}

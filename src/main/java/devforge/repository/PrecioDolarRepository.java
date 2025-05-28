@@ -15,4 +15,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface PrecioDolarRepository  extends JpaRepository<PrecioDolar, Long>{
     List<PrecioDolar> findAll();
     List<PrecioDolar> findByLicoreriaIdOrderByFechaDolarDesc(Long licoreriaId);
+    List<PrecioDolar> findByLicoreriaIdAndTipoTasaOrderByFechaDolarDesc(Long licoreriaId, PrecioDolar.TipoTasa tipoTasa);
 }

@@ -2,933 +2,175 @@
 <html lang="es" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Nueva Venta</title>
-    <link rel="stylesheet" th:href="@{/css/styles.css}">
-    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nueva Venta - InventSoft</title>
     <!-- Meta tags para protección CSRF -->
     <meta th:name="_csrf" th:content="${_csrf.token}" />
     <meta th:name="_csrf_header" th:content="${_csrf.headerName}" />
-    <style>
-        :root {
-            --background-dark: #181A1B;
-            --surface: #F8F9FA;
-            --card: #FFFFFF;
-            --primary: #1565C0;
-            --primary-dark: #0D47A1;
-            --accent: #00B8D9;
-            --danger: #D32F2F;
-            --success: #43A047;
-            --text-main: #181A1B;
-            --text-invert: #FFFFFF;
-            --text-muted: #6C757D;
-            --border: #E0E3E7;
-            --shadow: 0 4px 24px rgba(21, 101, 192, 0.08);
-        }
-        body {
-            background: var(--background-dark);
-            color: var(--text-invert);
-            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-            margin: 0;
-            min-height: 100vh;
-        }
-        .page-container {
-            max-width: 1300px;
-            margin: 0 auto;
-            padding: 40px 16px 32px 16px;
-        }
-        .header {
-            margin-bottom: 32px;
-        }
-        .header h2 {
-            color: var(--primary);
-            margin-bottom: 4px;
-            font-size: 2rem;
-            font-weight: 700;
-        }
-        .header p {
-            color: var(--text-muted);
-            margin: 0;
-        }
-        .dolar-info {
-            background: var(--card);
-            color: var(--primary-dark);
-            border-radius: 12px;
-            box-shadow: var(--shadow);
-            border: 1px solid var(--border);
-            padding: 18px 24px;
-            margin-bottom: 24px;
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            font-size: 1.1rem;
-        }
-        .label-info {
-            font-weight: 600;
-            color: var(--primary-dark);
-        }
-        .precio-dolar {
-            font-weight: 700;
-            color: var(--success);
-        }
-        .venta-container {
-            display: flex;
-            gap: 32px;
-        }
-        .buscador-column {
-            flex: 1 1 340px;
-            max-width: 340px;
-        }
-        .tabla-column {
-            flex: 3 1 0;
-        }
-        .input-group {
-            margin-bottom: 18px;
-        }
-        .input-group label {
-            display: block;
-            margin-bottom: 6px;
-            font-weight: 600;
-            color: var(--primary-dark);
-        }
-        .input-group input {
-            width: 100%;
-            padding: 10px;
-            border: 1.5px solid var(--border);
-            border-radius: 8px;
-            font-size: 1rem;
-            background: var(--surface);
-            color: var(--text-main);
-            transition: border 0.2s;
-        }
-        .input-group input:focus {
-            border: 1.5px solid var(--primary);
-            outline: none;
-        }
-        .sugerencias-list {
-            max-height: unset;
-            overflow-y: unset;
-            border: 1.5px solid var(--border);
-            border-radius: 8px;
-            padding: 0;
-            margin: 0;
-            list-style: none;
-            background: var(--card);
-            box-shadow: var(--shadow);
-        }
-        .sugerencias-list li {
-            padding: 10px 14px;
-            cursor: pointer;
-            border-bottom: 1px solid var(--border);
-            color: var(--text-main);
-            font-size: 1rem;
-            transition: background 0.2s, color 0.2s;
-        }
-        .sugerencias-list li:last-child {
-            border-bottom: none;
-        }
-        .sugerencias-list li:hover {
-            background: #F0F6FF;
-            color: var(--primary-dark);
-        }
-        .stock-rojo { background: #ffebee !important; color: #c62828 !important; }
-        .stock-amarillo { background: #fffde7 !important; color: #f9a825 !important; }
-        .stock-verde { background: #e8f5e9 !important; color: #388e3c !important; }
-        .modern-table {
-            width: 100%;
-            border-collapse: separate;
-            border-spacing: 0;
-            background: var(--card);
-            color: var(--text-main);
-            border-radius: 14px;
-            box-shadow: var(--shadow);
-            overflow: hidden;
-        }
-        .modern-table th, .modern-table td {
-            padding: 12px 10px;
-            text-align: left;
-        }
-        .modern-table th {
-            background: var(--primary);
-            color: var(--text-invert);
-            font-weight: 700;
-            border-bottom: 2px solid var(--border);
-        }
-        .modern-table tr:nth-child(even) {
-            background: #F0F6FF;
-        }
-        .modern-table tr:nth-child(odd) {
-            background: var(--card);
-        }
-        .modern-table td {
-            border-bottom: 1px solid var(--border);
-        }
-        .resumen-venta {
-            margin-top: 20px;
-            padding: 15px;
-            background: var(--card);
-            border-radius: 8px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: var(--shadow);
-            border: 1px solid var(--border);
-        }
-        .metodo-pago, .tipo-venta {
-            flex: 1;
-            margin-right: 20px;
-        }
-        .form-label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: 600;
-            color: var(--primary-dark);
-        }
-        .form-select {
-            width: 100%;
-            padding: 8px;
-            border: 1.5px solid var(--border);
-            border-radius: 8px;
-            font-size: 1rem;
-            background: var(--surface);
-            color: var(--text-main);
-            transition: border 0.2s;
-        }
-        .form-select:focus {
-            border: 1.5px solid var(--primary);
-            outline: none;
-        }
-        .resumen-total {
-            text-align: right;
-        }
-        .action-buttons {
-            margin-top: 15px;
-            display: flex;
-            gap: 10px;
-            justify-content: flex-end;
-        }
-        .btn-confirmar, .btn-limpiar {
-            padding: 12px 28px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 700;
-            font-size: 1rem;
-            transition: background 0.2s, box-shadow 0.2s, transform 0.2s;
-        }
-        .btn-confirmar {
-            background: var(--success);
-            color: var(--text-invert);
-        }
-        .btn-limpiar {
-            background: var(--danger);
-            color: var(--text-invert);
-        }
-        .btn-confirmar:hover {
-            background: #388E3C;
-            transform: translateY(-2px) scale(1.03);
-        }
-        .btn-limpiar:hover {
-            background: #B71C1C;
-            transform: translateY(-2px) scale(1.03);
-        }
-        .cliente-selector {
-            margin-top: 15px;
-            padding: 15px;
-            background: var(--card);
-            border-radius: 8px;
-            box-shadow: var(--shadow);
-            border: 1px solid var(--border);
-        }
-        .cliente-selector .input-group {
-            margin-bottom: 10px;
-        }
-        .cliente-selector label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: 600;
-            color: var(--primary-dark);
-        }
-        .cliente-selector input {
-            width: 100%;
-            padding: 8px;
-            border: 1.5px solid var(--border);
-            border-radius: 8px;
-            font-size: 1rem;
-            background: var(--surface);
-            color: var(--text-main);
-        }
-        .cliente-selector .sugerencias-list {
-            max-height: 180px;
-            overflow-y: auto;
-            border: 1.5px solid var(--border);
-            border-radius: 8px;
-            padding: 0;
-            margin: 0;
-            list-style: none;
-            background: var(--card);
-        }
-        .cliente-selector .sugerencias-list li {
-            padding: 8px 12px;
-            cursor: pointer;
-            border-bottom: 1px solid var(--border);
-            color: var(--text-main);
-            font-size: 1rem;
-        }
-        .cliente-selector .sugerencias-list li:last-child {
-            border-bottom: none;
-        }
-        .cliente-selector .sugerencias-list li:hover {
-            background: #F0F6FF;
-            color: var(--primary-dark);
-        }
-        .bottom-back {
-            margin-top: 32px;
-            text-align: center;
-        }
-        .btn-back {
-            background: var(--primary);
-            color: var(--text-invert);
-            padding: 12px 32px;
-            border-radius: 8px;
-            font-weight: 700;
-            font-size: 1rem;
-            border: none;
-            cursor: pointer;
-            box-shadow: 0 2px 8px rgba(21,101,192,0.08);
-            transition: background 0.2s, box-shadow 0.2s, transform 0.2s;
-        }
-        .btn-back:hover {
-            background: var(--primary-dark);
-            box-shadow: 0 4px 16px rgba(21,101,192,0.18);
-            transform: translateY(-2px) scale(1.03);
-        }
-    </style>
+    <link rel="stylesheet" th:href="@{/css/dashboard.css}">
+    <link rel="stylesheet" th:href="@{/css/ventas.css}">
 </head>
 <body>
-<div class="page-container">
-    <div class="header">
-        <h2>Registrar Nueva Venta</h2>
-        <p>Agrega productos y confirma la venta.</p>
-    </div>
-
-    <!-- Precio del dólar -->
-    <div class="dolar-info">
-        <span class="label-info">Precio del Dólar:</span>
-        <span class="precio-dolar" id="precioDolarLabel" th:text="${precioDolar} ?: '0.00 Bs'"></span>
-    </div>
-
-    <div class="venta-container">
-        <!-- Columna izquierda: Buscador -->
-        <div class="buscador-column">
-            <div class="input-group">
-                <label for="buscarField">Buscar producto</label>
-                <input type="text" id="buscarField" placeholder="Ej. Cuaderno" onkeyup="buscarProducto()" autocomplete="off"/>
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="logo-container">
+                <img src="/images/logo.png" alt="InventSoft Logo" class="logo">
             </div>
-            <ul id="sugerenciasList" class="sugerencias-list" onclick="agregarProducto(event)">
-                <!-- Productos dinámicos aparecerán aquí -->
-            </ul>
-        </div>
-
-        <!-- Columna derecha: Tabla de ventas -->
-        <div class="tabla-column">
-            <table class="modern-table">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Nombre</th>
-                        <th>Código</th>
-                        <th>Marca</th>
-                        <th>Precio ($)</th>
-                        <th>Precio (Bs)</th>
-                        <th>Cantidad</th>
-                        <th>Subtotal (Bs)</th>
-                        <th>Subtotal ($)</th>
-                    </tr>
-                </thead>
-                <tbody id="ventasTableBody">
-                    <!-- Productos agregados aparecerán aquí -->
-                </tbody>
-            </table>
-
-            <!-- Método de pago y total -->
-            <div class="resumen-venta">
-                <div class="metodo-pago">
-                    <label for="metodoPago" class="form-label">Método de Pago:</label>
-                    <select class="form-select" id="metodoPago" required>
-                        <option value="EFECTIVO">Efectivo</option>
-                        <option value="TRANSFERENCIA">Transferencia</option>
-                        <option value="PUNTO_VENTA">Punto de Venta</option>
-                        <option value="PAGO_MOVIL">Pago Móvil</option>
-                    </select>
-                </div>
-                
-                <!-- Agregar aquí el selector de tipo de venta -->
-                <div class="tipo-venta">
-                    <label for="tipoVenta" class="form-label">Tipo de Venta:</label>
-                    <select class="form-select" id="tipoVenta" onchange="toggleClienteSelector()">
-                        <option value="CONTADO">Contado</option>
-                        <option value="CREDITO">Crédito</option>
-                    </select>
-                </div>
-
-                <div class="resumen-total">
-                    <span class="label-info">Total:</span>
-                    <span class="total-label" id="totalLabel">0.00 Bs | $0.00</span>
+            
+            <div class="user-info" th:if="${licoreriaActual != null}">
+                <div class="licoreria-info">
+                    <h3>🏢 Licorería Actual</h3>
+                    <p th:text="${licoreriaActual.nombre}"></p>
+                    <p><strong>Ubicación:</strong> <span th:text="${licoreriaActual.direccion}"></span></p>
+                    <p><strong>Teléfono:</strong> <span th:text="${licoreriaActual.telefono}"></span></p>
                 </div>
             </div>
 
-            <!-- Agregar el selector de cliente después del resumen-venta -->
-            <div id="clienteSelector" style="display: none;" class="cliente-selector">
-                <div class="input-group">
-                    <label for="buscarCliente">Buscar Cliente</label>
-                    <input type="text" id="buscarCliente" placeholder="Nombre o cédula del cliente" onkeyup="buscarClientes()"/>
+            <!-- Tasas de cambio -->
+            <div class="tasas-container">
+                <h3>Tasas de Cambio</h3>
+                <div class="tasas-grid">
+                    <div th:each="tasa : ${tasasActuales}" class="tasa-item">
+                        <span class="tasa-label" th:text="${tasa.tipoTasa}">BCV</span>
+                        <span class="tasa-value" 
+                              th:text="${#numbers.formatDecimal(tasa.precioDolar, 0, 'POINT', 2, 'COMMA') + ' Bs'}"
+                              th:data-tasa="${tasa.tipoTasa}"
+                              th:data-valor="${tasa.precioDolar}">0.00 Bs</span>
+                    </div>
                 </div>
-                <ul id="clientesList" class="sugerencias-list">
-                    <!-- Los clientes aparecerán aquí -->
-                </ul>
-                <input type="hidden" id="clienteId" name="clienteId"/>
             </div>
 
-            <!-- Botones de acción -->
-            <div class="action-buttons">
-                <button class="btn-confirmar" onclick="confirmarVenta()">Confirmar Venta</button>
-                <button class="btn-secondary" onclick="generarTicketPdf()">Generar Factura PDF</button>
-                <button class="btn-limpiar" onclick="limpiarCarrito()">Limpiar Carrito</button>
+            <div class="actions-container">
+                <a th:href="@{/}" class="btn btn-secondary">
+                    <span class="icon">🏠</span> Volver al Inicio
+                </a>
             </div>
-        </div>
+        </aside>
+
+        <!-- Contenido Principal -->
+        <main class="main-content">
+            <div class="venta-container">
+                <h1>Nueva Venta</h1>
+
+                <!-- Búsqueda de productos -->
+                <div class="search-container">
+                    <div class="search-group">
+                        <input type="text" class="search-input" id="buscarField" 
+                               placeholder="Buscar por nombre o código...">
+                        <button class="btn btn-primary">
+                            <span class="icon">🔍</span> Buscar
+                        </button>
+                    </div>
+                    <div class="search-results">
+                        <ul id="sugerenciasList" class="sugerencias-list">
+                            <!-- Los productos se agregarán dinámicamente -->
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Tabla de productos -->
+                <div class="table-container">
+                    <table class="productos-table">
+                        <thead>
+                            <tr>
+                                <th>Código</th>
+                                <th>Producto</th>
+                                <th>Marca</th>
+                                <th>Precio ($)</th>
+                                <th>Precio (Bs)</th>
+                                <th>Cantidad</th>
+                                <th>Subtotal ($)</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ventasTableBody">
+                            <!-- Los productos se agregarán dinámicamente -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Opciones de venta -->
+                <div class="venta-options">
+                    <div class="metodo-pago-container">
+                        <div class="form-group">
+                            <label for="metodoPago">Método de Pago:</label>
+                            <select id="metodoPago" class="form-select" required>
+                                <option value="EFECTIVO">Efectivo</option>
+                                <option value="TRANSFERENCIA">Transferencia</option>
+                                <option value="PUNTO_VENTA">Punto de Venta</option>
+                                <option value="PAGO_MOVIL">Pago Móvil</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="tipoVenta">Tipo de Venta:</label>
+                            <select id="tipoVenta" class="form-select" onchange="toggleClienteSelector()">
+                                <option value="CONTADO">Contado</option>
+                                <option value="CREDITO">Crédito</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Selector de cliente (para créditos) -->
+                    <div id="clienteSelector" class="cliente-selector" style="display: none;">
+                        <div class="form-group">
+                            <label for="buscarCliente">Buscar Cliente:</label>
+                            <input type="text" id="buscarCliente" class="form-control" 
+                                   placeholder="Nombre o cédula del cliente" 
+                                   onkeyup="buscarClientes()">
+                            <ul id="clientesList" class="sugerencias-list">
+                                <!-- Los clientes se agregarán dinámicamente -->
+                            </ul>
+                            <input type="hidden" id="clienteId" name="clienteId">
+                        </div>
+                    </div>
+
+                    <!-- Resumen de venta -->
+                    <div class="resumen-venta">
+                        <h2>Resumen de Venta</h2>
+                        <div class="resumen-grid">
+                            <div class="resumen-item total">
+                                <span>Total:</span>
+                                <div class="total-amounts">
+                                    <span id="totalUSD">$0.00</span>
+                                    <span id="totalBS">0.00 Bs</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Botones de acción -->
+                    <div class="actions-container">
+                        <button type="button" class="btn btn-danger" onclick="limpiarCarrito()">
+                            <span class="icon">🗑️</span> Limpiar
+                        </button>
+                        <button type="button" class="btn btn-secondary" onclick="generarTicketPdf()">
+                            <span class="icon">📄</span> Generar Factura
+                        </button>
+                        <button type="button" class="btn btn-primary" onclick="confirmarVenta()">
+                            <span class="icon">✅</span> Confirmar Venta
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </main>
     </div>
 
-    <!-- Botón volver -->
-    <div class="bottom-back">
-        <button class="btn-back" onclick="window.location.href='/'">Volver al Menú</button>
-    </div>
+    <!-- Datos ocultos -->
+    <ul id="productosData" style="display: none;">
+        <li th:each="producto : ${productos}"
+            th:data-id="${producto.id}"
+            th:data-nombre="${producto.nombre}"
+            th:data-codigo="${producto.codigoUnico}"
+            th:data-precio="${producto.precioVenta}"
+            th:data-cantidad="${producto.cantidad}"
+            th:data-marca="${producto.marca ?: 'Sin marca'}"
+            th:data-tipo-tasa="${producto.tipoTasa}">
+        </li>
+    </ul>
 
-    <div class="button-group" id="botonesPostVenta" style="display: none; margin-top: 15px; justify-content: flex-end; gap: 10px;">
-        <button class="btn-primary" onclick="window.location.href='/ventas/nueva'">Nueva Venta</button>
-        <button class="btn-secondary" onclick="generarTicketPdf()">Generar Factura PDF</button>
-    </div>
-</div>
-
-<style>
-    /* Estilos para el resumen de venta */
-    .resumen-venta {
-        margin-top: 20px;
-        padding: 15px;
-        background-color: #f8f9fa;
-        border-radius: 8px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-
-    .metodo-pago {
-        flex: 1;
-        margin-right: 20px;
-    }
-
-    .metodo-pago label {
-        display: block;
-        margin-bottom: 5px;
-        font-weight: bold;
-    }
-
-    .metodo-pago select {
-        width: 100%;
-        padding: 8px;
-        border: 1px solid #ddd;
-        border-radius: 4px;
-    }
-
-    .resumen-total {
-        text-align: right;
-    }
-
-    .action-buttons {
-        margin-top: 15px;
-        display: flex;
-        gap: 10px;
-        justify-content: flex-end;
-    }
-
-    .btn-confirmar, .btn-limpiar {
-        padding: 10px 20px;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-        font-weight: bold;
-    }
-
-    .btn-confirmar {
-        background-color: #28a745;
-        color: white;
-    }
-
-    .btn-limpiar {
-        background-color: #dc3545;
-        color: white;
-    }
-
-    .btn-confirmar:hover {
-        background-color: #218838;
-    }
-
-    .btn-limpiar:hover {
-        background-color: #c82333;
-    }
-
-    .cliente-selector {
-        margin-top: 15px;
-        padding: 15px;
-        background-color: #f8f9fa;
-        border-radius: 8px;
-    }
-
-    .cliente-selector .input-group {
-        margin-bottom: 10px;
-    }
-
-    .cliente-selector label {
-        display: block;
-        margin-bottom: 5px;
-        font-weight: bold;
-    }
-
-    .cliente-selector input {
-        width: 100%;
-        padding: 8px;
-        border: 1px solid #ddd;
-        border-radius: 4px;
-    }
-
-    .cliente-selector .sugerencias-list {
-        max-height: 200px;
-        overflow-y: auto;
-        border: 1px solid #ddd;
-        border-radius: 4px;
-        padding: 0;
-        margin: 0;
-        list-style: none;
-    }
-
-    .cliente-selector .sugerencias-list li {
-        padding: 8px;
-        cursor: pointer;
-        border-bottom: 1px solid #eee;
-    }
-
-    .cliente-selector .sugerencias-list li:hover {
-        background-color: #f0f0f0;
-    }
-</style>
-
-<!-- Datos ocultos con Thymeleaf -->
-<ul id="productosData" style="display: none;">
-    <li th:each="producto : ${productos}"
-        th:data-id="${producto.id}"
-        th:data-nombre="${producto.nombre}"
-        th:data-codigo="${producto.codigoUnico ?: ''}"
-        th:data-precio="${producto.precioVenta}"
-        th:data-cantidad="${producto.cantidad != null ? producto.cantidad : 0}"
-        th:data-marca="${producto.marca ?: 'Sin marca'}">
-    </li>
-</ul>
-
-<script src="/js/qz-tray.js"></script>
-    <!-- QZ Tray debe estar cargado antes de cualquier uso de window.qz -->
-<script>
-    const precioDolar = parseFloat(document.getElementById("precioDolarLabel").textContent.replace(' Bs', '') || 1);
-    let productosSeleccionados = [];
-    let todosLosProductos = [];
-
-    // Cargar productos desde Thymeleaf
-    window.onload = () => {
-        const dataProductos = document.querySelectorAll("#productosData li");
-        todosLosProductos = Array.from(dataProductos).map(li => {
-            const cantidadRaw = li.getAttribute("data-cantidad");
-            const parsedCantidad = parseInt(cantidadRaw);
-            const cantidadFinal = isNaN(parsedCantidad) || parsedCantidad < 0 ? 0 : parsedCantidad;
-
-            return {
-                id: li.getAttribute("data-id"),
-                nombre: li.getAttribute("data-nombre") || "Producto sin nombre",
-                codigoUnico: li.getAttribute("data-codigo") || "",
-                precioVenta: parseFloat(li.getAttribute("data-precio")) || 0,
-                cantidad: cantidadFinal,
-                marca: li.getAttribute("data-marca") || "Sin marca"
-            };
-        });
-
-        renderizarSugerencias(todosLosProductos);
-    };
-
-    // Buscar productos en tiempo real
-    function buscarProducto() {
-        const input = document.getElementById("buscarField");
-        const valor = input.value.trim().toLowerCase();
-        if (!valor) {
-            renderizarSugerencias(todosLosProductos);
-            return;
-        }
-        const filtrados = todosLosProductos.filter(p =>
-            p.nombre.toLowerCase().includes(valor) ||
-            (p.codigoUnico && p.codigoUnico.toLowerCase().includes(valor))
-        );
-        renderizarSugerencias(filtrados);
-    }
-
-    // Renderiza sugerencias
-    function renderizarSugerencias(productos) {
-        const sugerenciasList = document.getElementById("sugerenciasList");
-        sugerenciasList.innerHTML = "";
-        if (productos.length === 0) {
-            const li = document.createElement("li");
-            li.textContent = "No se encontraron productos.";
-            li.style.textAlign = "center";
-            li.style.color = "#999";
-            li.style.cursor = "default";
-            sugerenciasList.appendChild(li);
-            return;
-        }
-        // Mostrar solo los primeros 5 elementos
-        productos.slice(0, 5).forEach(prod => {
-            const li = document.createElement("li");
-            li.setAttribute("data-id", prod.id);
-            li.setAttribute("data-nombre", prod.nombre);
-            li.setAttribute("data-codigo", prod.codigoUnico);
-            li.setAttribute("data-precio", prod.precioVenta);
-            li.setAttribute("data-cantidad", prod.cantidad);
-            li.setAttribute("data-marca", prod.marca);
-
-            // Mostrar marca y evitar NaN
-            li.textContent = `${prod.nombre} - ${prod.codigoUnico} - $${parseFloat(prod.precioVenta).toFixed(2)} - ${prod.cantidad} unidades - Marca: ${prod.marca}`;
-
-            if (prod.cantidad == 0) {
-                li.classList.add("stock-rojo");
-                li.style.cursor = "not-allowed";
-            } else if (prod.cantidad <= 10) {
-                li.classList.add("stock-amarillo");
-            } else {
-                li.classList.add("stock-verde");
-            }
-
-            sugerenciasList.appendChild(li);
-        });
-    }
-
-    // Agregar producto al carrito
-    function agregarProducto(event) {
-        if (event.target.tagName !== "LI") return;
-        const estaAgotado = event.target.classList.contains("stock-rojo");
-        if (estaAgotado) {
-            alert("❌ Este producto está agotado.");
-            return;
-        }
-        const producto = event.target;
-        const id = producto.getAttribute("data-id");
-        const nombre = producto.getAttribute("data-nombre");
-        const codigo = producto.getAttribute("data-codigo");
-        const precioUSD = parseFloat(producto.getAttribute("data-precio"));
-        const cantidadDisponible = parseInt(producto.getAttribute("data-cantidad"));
-        const marca = producto.getAttribute("data-marca") || "Sin marca";
-
-        if (isNaN(precioUSD) || isNaN(cantidadDisponible)) {
-            alert("⚠️ Datos del producto incorrectos. No se puede agregar.");
-            return;
-        }
-
-        const nuevoProducto = {
-            id,
-            nombre,
-            codigo,
-            marca,
-            precioUSD,
-            cantidad: 1,
-            subtotalBs: (precioUSD * 1 * precioDolar).toFixed(2),
-            stockOriginal: cantidadDisponible
-        };
-
-        const index = productosSeleccionados.findIndex(p => p.id === id);
-        if (index >= 0) {
-            if (productosSeleccionados[index].cantidad + 1 > productosSeleccionados[index].stockOriginal) {
-                alert(`❌ Solo hay ${productosSeleccionados[index].stockOriginal} unidades disponibles.`);
-                return;
-            }
-            productosSeleccionados[index].cantidad += 1;
-            productosSeleccionados[index].subtotalBs = (
-                productosSeleccionados[index].precioUSD *
-                productosSeleccionados[index].cantidad *
-                precioDolar
-            ).toFixed(2);
-        } else {
-            productosSeleccionados.push(nuevoProducto);
-        }
-
-        renderizarTabla();
-    }
-
-    // Renderizar tabla de ventas
-    function renderizarTabla() {
-        const tbody = document.getElementById("ventasTableBody");
-        tbody.innerHTML = "";
-        let totalBs = 0;
-
-        productosSeleccionados.forEach(p => {
-            const tr = document.createElement("tr");
-            tr.innerHTML = `
-                <td>${p.id}</td>
-                <td>${p.nombre}</td>
-                <td>${p.codigo}</td>
-                <td>${p.marca}</td>
-                <td>$${parseFloat(p.precioUSD).toFixed(2)}</td>
-                <td>${(p.precioUSD * precioDolar).toFixed(2)} Bs</td>
-                <td><input type="number" min="1" max="${p.stockOriginal}" value="${p.cantidad}" onchange="actualizarCantidad('${p.id}', this.value)" /></td>
-                <td>${parseFloat(p.subtotalBs).toFixed(2)} Bs</td>
-                <td>$${(p.subtotalBs / precioDolar).toFixed(2)}</td>
-                <td><button class="btn-eliminar-fila" onclick="eliminarProducto('${p.id}')">Eliminar</button></td>
-            `;
-            tbody.appendChild(tr);
-            totalBs += parseFloat(p.subtotalBs);
-        });
-
-        const totalLabel = document.getElementById("totalLabel");
-        totalLabel.textContent = `${totalBs.toFixed(2)} Bs | ${(totalBs / precioDolar).toFixed(2)} $`;
-    }
-
-    // Actualizar cantidad
-    function actualizarCantidad(id, nuevaCantidad) {
-        const producto = productosSeleccionados.find(p => p.id === id);
-        if (!producto) return;
-        const nuevaCant = parseInt(nuevaCantidad);
-        if (nuevaCant <= 0) {
-            alert("⚠️ La cantidad debe ser mayor a cero.");
-            return;
-        }
-        if (nuevaCant > producto.stockOriginal) {
-            alert(`❌ La cantidad máxima disponible es ${producto.stockOriginal}`);
-            return;
-        }
-        producto.cantidad = nuevaCant;
-        producto.subtotalBs = (producto.precioUSD * nuevaCant * precioDolar).toFixed(2);
-        renderizarTabla();
-    }
-
-    // Eliminar producto del carrito
-    function eliminarProducto(id) {
-        if (!confirm("¿Quitar este producto del carrito?")) return;
-        productosSeleccionados = productosSeleccionados.filter(p => p.id !== id);
-        renderizarTabla();
-    }
-
-    // Funciones para manejo de clientes
-    function toggleClienteSelector() {
-        const tipoVenta = document.getElementById('tipoVenta').value;
-        const clienteSelector = document.getElementById('clienteSelector');
-        clienteSelector.style.display = tipoVenta === 'CREDITO' ? 'block' : 'none';
-        if (tipoVenta === 'CONTADO') {
-            document.getElementById('clienteId').value = '';
-            document.getElementById('buscarCliente').value = '';
-        }
-    }
-
-    function buscarClientes() {
-        const input = document.getElementById('buscarCliente');
-        const termino = input.value.trim();
-        if (!termino) {
-            document.getElementById('clientesList').innerHTML = '';
-            return;
-        }
-
-        fetch(`/clientes/buscar?termino=${encodeURIComponent(termino)}`)
-            .then(response => response.json())
-            .then(clientes => {
-                const lista = document.getElementById('clientesList');
-                lista.innerHTML = '';
-                clientes.forEach(cliente => {
-                    const li = document.createElement('li');
-                    li.textContent = `${cliente.nombre} ${cliente.apellido} - ${cliente.cedula}`;
-                    li.onclick = () => seleccionarCliente(cliente);
-                    lista.appendChild(li);
-                });
-            })
-            .catch(error => console.error('Error:', error));
-    }
-
-    function seleccionarCliente(cliente) {
-        document.getElementById('clienteId').value = cliente.id;
-        document.getElementById('buscarCliente').value = 
-            `${cliente.nombre} ${cliente.apellido} - ${cliente.cedula}`;
-        document.getElementById('clientesList').innerHTML = '';
-    }
-
-    // Modificar la función confirmarVenta existente
-    function confirmarVenta() {
-        if (productosSeleccionados.length === 0) {
-            alert("❌ El carrito está vacío");
-            return;
-        }
-
-        const metodoPago = document.getElementById('metodoPago').value;
-        const tipoVenta = document.getElementById('tipoVenta').value;
-        const clienteId = document.getElementById('clienteId').value;
-
-        if (!metodoPago) {
-            alert("❌ Por favor seleccione un método de pago");
-            return;
-        }
-
-        if (tipoVenta === 'CREDITO' && !clienteId) {
-            alert("❌ Debe seleccionar un cliente para ventas a crédito");
-            return;
-        }
-
-        const items = productosSeleccionados.map(p => ({
-            id: p.id,
-            cantidad: p.cantidad
-        }));
-
-        fetch('/ventas/confirmar', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                items: items,
-                metodoPago: metodoPago,
-                tipoVenta: tipoVenta,
-                clienteId: clienteId || null
-            })
-        })
-        .then(response => response.json())
-        .then(result => {
-            if (result.mensaje && result.mensaje.includes("registrada")) {
-                // Imprimir ticket automáticamente usando QZ Tray
-                imprimirTicketVenta(result);
-                mostrarMensajeVenta('✅ Venta registrada exitosamente');
-                // Mostrar botones post venta
-                document.getElementById('botonesPostVenta').style.display = 'flex';
-                // Guardar el ID de la venta para el PDF
-                window.ventaId = result.ventaId;
-                setTimeout(() => window.location.reload(), 1800);
-            } else {
-                alert("❌ Error: " + (result.error || "Error desconocido"));
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert("❌ Error al procesar la venta");
-        });
-    }
-
-    // Limpiar carrito
-    function limpiarCarrito() {
-        if (!confirm("¿Limpiar todo el carrito?")) return;
-        productosSeleccionados = [];
-        renderizarTabla();
-    }
-
-    // --- Impresión automática de ticket con QZ Tray ---
-function imprimirTicketVenta(ventaResult) {
-    // Solicita al backend el ticket ya formateado para la venta
-    fetch(`/ventas/ticket/${ventaResult.ventaId}`)
-        .then(response => response.json())
-        .then(data => {
-            if (!data.ticket || !data.impresora) {
-                alert('No se pudo obtener el ticket o la impresora configurada.');
-                return;
-            }
-            if (!window.qz) {
-                alert('QZ Tray no está disponible.');
-                return;
-            }
-            console.log('[QZ] Imprimiendo en:', data.impresora); // Debug impresora
-            qz.websocket.connect().then(function() {
-                return qz.printers.find(data.impresora);
-            }).then(function(printer) {
-                var config = qz.configs.create(printer);
-                return qz.print(config, [{ type: 'raw', format: 'plain', data: data.ticket + '\n' }]);
-            }).catch(function(e) {
-                alert('Error al imprimir el ticket: ' + e);
-            });
-        })
-        .catch(() => alert('No se pudo obtener el ticket para imprimir.'));
-}
-// --- Fin impresión automática ---
-
-// --- Mensaje visual amigable de venta realizada ---
-function mostrarMensajeVenta(msg) {
-    let div = document.createElement('div');
-    div.textContent = msg;
-    div.style.position = 'fixed';
-    div.style.top = '32px';
-    div.style.left = '50%';
-    div.style.transform = 'translateX(-50%)';
-    div.style.background = '#43A047';
-    div.style.color = '#fff';
-    div.style.padding = '18px 36px';
-    div.style.fontSize = '1.3rem';
-    div.style.fontWeight = 'bold';
-    div.style.borderRadius = '10px';
-    div.style.boxShadow = '0 4px 24px rgba(21,101,192,0.12)';
-    div.style.zIndex = 9999;
-    document.body.appendChild(div);
-    setTimeout(() => { div.remove(); }, 1500);
-}
-
-function generarTicketPdf() {
-    if (productosSeleccionados.length === 0) {
-        alert("❌ El carrito está vacío");
-        return;
-    }
-
-    const metodoPago = document.getElementById('metodoPago').value;
-    const tipoVenta = document.getElementById('tipoVenta').value;
-    const clienteId = document.getElementById('clienteId').value;
-
-    if (!metodoPago) {
-        alert("❌ Por favor seleccione un método de pago");
-        return;
-    }
-
-    if (tipoVenta === 'CREDITO' && !clienteId) {
-        alert("❌ Debe seleccionar un cliente para ventas a crédito");
-        return;
-    }
-
-    const items = productosSeleccionados.map(p => ({
-        id: p.id,
-        cantidad: p.cantidad
-    }));
-
-    fetch('/ventas/confirmar', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-            items: items,
-            metodoPago: metodoPago,
-            tipoVenta: tipoVenta,
-            clienteId: clienteId || null,
-            generarPdf: true // Indicador para el backend
-        })
-    })
-    .then(response => response.json())
-    .then(result => {
-        if (result.mensaje && result.mensaje.includes("registrada")) {
-            mostrarMensajeVenta('✅ Venta registrada exitosamente');
-            // Descargar el PDF
-            window.location.href = `/ventas/venta/${result.ventaId}/ticket-pdf`;
-            // Recargar la página después de un momento
-            setTimeout(() => window.location.reload(), 1800);
-        } else {
-            alert("❌ Error: " + (result.error || "Error desconocido"));
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert("❌ Error al procesar la venta");
-    });
-}
-</script>
+    <script th:src="@{/js/qz-tray.js}"></script>
+    <script th:src="@{/js/dashboard.js}"></script>
+    <script th:src="@{/js/ventas.js}"></script>
 </body>
 </html>

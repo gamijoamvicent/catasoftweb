@@ -19,6 +19,8 @@ import java.util.Date;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 
 @Entity
 @Table(name = "preciodolar")
@@ -26,6 +28,12 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class PrecioDolar {
+
+    public enum TipoTasa {
+        BCV,
+        PROMEDIO,
+        PARALELA
+    }
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -39,13 +47,14 @@ public class PrecioDolar {
     @Temporal(TemporalType.TIMESTAMP)
     private Date fechaDolar;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "tipo_tasa", nullable = false)
+    private TipoTasa tipoTasa = TipoTasa.BCV;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "licoreria_id", nullable = false)
     private Licoreria licoreria;
 
     @Column(name = "licoreria_id", insertable = false, updatable = false)
     private Long licoreriaId;
-
-    @Column(name = "tipo_tasa")
-    private String tipoTasa; // BCV, INTERNA1, INTERNA2
 }

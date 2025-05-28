@@ -56,4 +56,14 @@ public class Producto {
 
     @Column(name = "licoreria_id", insertable = false, updatable = false)
     private Long licoreriaId;
+
+    @Column(name = "tipo_tasa", nullable = false)
+    private String tipoTasa; // BCV, PROMEDIO, PARALELA
+
+    public TipoTasa getTipoTasaEnum() {
+        return TipoTasa.valueOf(tipoTasa);
+    }
+    public void setTipoTasaEnum(TipoTasa tipoTasa) {
+        this.tipoTasa = tipoTasa.name();
+    }
 }

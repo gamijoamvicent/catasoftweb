@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Paletas de Colores - InventSoft</title>
+    <style>
+        :root {
+            --spacing: 20px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: white;
+            color: #333;
+            line-height: 1.6;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            color: #2C3E50;
+        }
+
+        .description {
+            color: #666;
+            font-size: 1.1rem;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .palettes-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .palette-card {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .palette-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .palette-name {
+            padding: 15px 20px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            border-bottom: 1px solid #eee;
+        }
+
+        .palette-description {
+            padding: 10px 20px;
+            font-size: 0.9rem;
+            color: #666;
+            background: #f8f9fa;
+        }
+
+        .color-strip {
+            height: 200px;
+            display: flex;
+        }
+
+        .color-column {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .color-box {
+            flex: 1;
+            padding: 10px;
+            color: white;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            transition: opacity 0.3s ease;
+        }
+
+        .color-box:hover {
+            opacity: 0.9;
+        }
+
+        .color-code {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 3px 6px;
+            border-radius: 4px;
+            margin-top: 4px;
+        }
+
+        .back-button {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: #2C3E50;
+            color: white;
+            padding: 15px 30px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            transition: transform 0.3s ease, background 0.3s ease;
+        }
+
+        .back-button:hover {
+            transform: translateY(-2px);
+            background: #34495E;
+        }
+
+        @media (max-width: 768px) {
+            .palettes-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Paletas de Colores</h1>
+            <p class="description">Selección de paletas de colores profesionales para InventSoft. Cada paleta está diseñada para proporcionar una experiencia visual coherente y moderna.</p>
+        </header>
+
+        <div class="palettes-grid">
+            <!-- Paleta Océano Profundo -->
+            <div class="palette-card">
+                <div class="palette-name">Océano Profundo</div>
+                <div class="palette-description">Tonos azules profesionales con acentos cálidos</div>
+                <div class="color-strip">
+                    <div class="color-column">
+                        <div class="color-box" style="background: #1B3C59">
+                            Principal
+                            <div class="color-code">#1B3C59</div>
+                        </div>
+                        <div class="color-box" style="background: #456789">
+                            Secundario
+                            <div class="color-code">#456789</div>
+                        </div>
+                    </div>
+                    <div class="color-column">
+                        <div class="color-box" style="background: #11A0BD">
+                            Acento
+                            <div class="color-code">#11A0BD</div>
+                        </div>
+                        <div class="color-box" style="background: #F5F5F5">
+                            <span style="color: #333">Fondo</span>
+                            <div class="color-code" style="color: #333">#F5F5F5</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Paleta Amanecer Corporativo -->
+            <div class="palette-card">
+                <div class="palette-name">Amanecer Corporativo</div>
+                <div class="palette-description">Combinación elegante de grises y azules</div>
+                <div class="color-strip">
+                    <div class="color-column">
+                        <div class="color-box" style="background: #2C3E50">
+                            Principal
+                            <div class="color-code">#2C3E50</div>
+                        </div>
+                        <div class="color-box" style="background: #3498DB">
+                            Secundario
+                            <div class="color-code">#3498DB</div>
+                        </div>
+                    </div>
+                    <div class="color-column">
+                        <div class="color-box" style="background: #E74C3C">
+                            Acento
+                            <div class="color-code">#E74C3C</div>
+                        </div>
+                        <div class="color-box" style="background: #ECF0F1">
+                            <span style="color: #333">Fondo</span>
+                            <div class="color-code" style="color: #333">#ECF0F1</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Paleta Verde Empresarial -->
+            <div class="palette-card">
+                <div class="palette-name">Verde Empresarial</div>
+                <div class="palette-description">Tonos verdes modernos con contraste suave</div>
+                <div class="color-strip">
+                    <div class="color-column">
+                        <div class="color-box" style="background: #2E7D32">
+                            Principal
+                            <div class="color-code">#2E7D32</div>
+                        </div>
+                        <div class="color-box" style="background: #4CAF50">
+                            Secundario
+                            <div class="color-code">#4CAF50</div>
+                        </div>
+                    </div>
+                    <div class="color-column">
+                        <div class="color-box" style="background: #FF5722">
+                            Acento
+                            <div class="color-code">#FF5722</div>
+                        </div>
+                        <div class="color-box" style="background: #FAFAFA">
+                            <span style="color: #333">Fondo</span>
+                            <div class="color-code" style="color: #333">#FAFAFA</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Paleta Crepúsculo Moderno -->
+            <div class="palette-card">
+                <div class="palette-name">Crepúsculo Moderno</div>
+                <div class="palette-description">Tonos púrpura con acentos brillantes</div>
+                <div class="color-strip">
+                    <div class="color-column">
+                        <div class="color-box" style="background: #4A148C">
+                            Principal
+                            <div class="color-code">#4A148C</div>
+                        </div>
+                        <div class="color-box" style="background: #7B1FA2">
+                            Secundario
+                            <div class="color-code">#7B1FA2</div>
+                        </div>
+                    </div>
+                    <div class="color-column">
+                        <div class="color-box" style="background: #00BCD4">
+                            Acento
+                            <div class="color-code">#00BCD4</div>
+                        </div>
+                        <div class="color-box" style="background: #F3E5F5">
+                            <span style="color: #333">Fondo</span>
+                            <div class="color-code" style="color: #333">#F3E5F5</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Paleta Atardecer Ejecutivo -->
+            <div class="palette-card">
+                <div class="palette-name">Atardecer Ejecutivo</div>
+                <div class="palette-description">Tonos cálidos con contraste elegante</div>
+                <div class="color-strip">
+                    <div class="color-column">
+                        <div class="color-box" style="background: #37474F">
+                            Principal
+                            <div class="color-code">#37474F</div>
+                        </div>
+                        <div class="color-box" style="background: #546E7A">
+                            Secundario
+                            <div class="color-code">#546E7A</div>
+                        </div>
+                    </div>
+                    <div class="color-column">
+                        <div class="color-box" style="background: #FF6F00">
+                            Acento
+                            <div class="color-code">#FF6F00</div>
+                        </div>
+                        <div class="color-box" style="background: #FAFAFA">
+                            <span style="color: #333">Fondo</span>
+                            <div class="color-code" style="color: #333">#FAFAFA</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Paleta Tecnológica -->
+            <div class="palette-card">
+                <div class="palette-name">Tecnológica</div>
+                <div class="palette-description">Diseño moderno con tonos fríos</div>
+                <div class="color-strip">
+                    <div class="color-column">
+                        <div class="color-box" style="background: #1565C0">
+                            Principal
+                            <div class="color-code">#1565C0</div>
+                        </div>
+                        <div class="color-box" style="background: #1976D2">
+                            Secundario
+                            <div class="color-code">#1976D2</div>
+                        </div>
+                    </div>
+                    <div class="color-column">
+                        <div class="color-box" style="background: #00BFA5">
+                            Acento
+                            <div class="color-code">#00BFA5</div>
+                        </div>
+                        <div class="color-box" style="background: #E3F2FD">
+                            <span style="color: #333">Fondo</span>
+                            <div class="color-code" style="color: #333">#E3F2FD</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <a href="/" class="back-button">Volver al Dashboard</a>
+</body>
+</html> 

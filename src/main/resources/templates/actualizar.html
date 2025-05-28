@@ -383,6 +383,13 @@
                     <label for="codigoInput">Código Único</label>
                     <input type="text" autocomplete="off" id="codigoInput" name="codigoUnico" placeholder="Generado automáticamente" readonly>
 
+                    <label for="tipoTasaInput">Tipo de Tasa</label>
+                    <select id="tipoTasaInput" name="tipoTasa" required>
+                        <option value="BCV">Tasa BCV</option>
+                        <option value="PROMEDIO">Tasa Promedio</option>
+                        <option value="PARALELA">Tasa Paralela</option>
+                    </select>
+
                     <label for="precioVentaInput">Precio de Venta ($)</label>
                     <input type="number" autocomplete="off" step="0.01" id="precioVentaInput" name="precioVenta" placeholder="Ej. 15.50" required>
 

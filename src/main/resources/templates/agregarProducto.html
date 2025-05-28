@@ -262,6 +262,15 @@
                 <input type="text" id="descripcion" name="descripcion" th:field="*{descripcion}" placeholder="Ej. Bebida espirituosa de alta calidad, Cerveza refrescante" autocomplete="off" />
             </div>
 
+            <div class="form-group">
+                <label for="tipoTasa">Tipo de Tasa</label>
+                <select id="tipoTasa" name="tipoTasa" th:field="*{tipoTasa}" required>
+                    <option value="BCV">Tasa BCV</option>
+                    <option value="PROMEDIO">Tasa Promedio</option>
+                    <option value="PARALELA">Tasa Paralela</option>
+                </select>
+            </div>
+
             <div class="form-double">
                 <div class="form-col form-group">
                     <label for="precioVenta">Precio de Venta ($)</label>

@@ -8,6 +8,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import java.util.Date;
+import java.util.List;
 
 @Controller
 @RequestMapping("/dolar")
@@ -26,14 +27,16 @@ public class PrecioDolarController {
         if (licoreriaContext.getLicoreriaActual() == null) {
             return "redirect:/licorerias/seleccionar";
         }
-        PrecioDolar ultimoPrecio = servicio.obtenerUltimoPrecio(licoreriaContext.getLicoreriaId());
-        model.addAttribute("ultimoPrecio", ultimoPrecio);
+        
+        List<PrecioDolar> tasasActuales = servicio.obtenerUltimasTasas(licoreriaContext.getLicoreriaId());
+        model.addAttribute("tasasActuales", tasasActuales);
         return "dolar/actualizar";
     }
 
     @PostMapping("/actualizar")
     public String actualizarPrecio(
             @RequestParam double precioDolar,
+            @RequestParam PrecioDolar.TipoTasa tipoTasa,
             RedirectAttributes redirectAttrs) {
         try {
             if (licoreriaContext.getLicoreriaActual() == null) {
@@ -48,12 +51,14 @@ public class PrecioDolarController {
 
             PrecioDolar nuevoPrecio = new PrecioDolar();
             nuevoPrecio.setPrecioDolar(precioDolar);
+            nuevoPrecio.setTipoTasa(tipoTasa);
             nuevoPrecio.setLicoreria(licoreriaContext.getLicoreriaActual());
             nuevoPrecio.setFechaDolar(new Date());
             servicio.guardar(nuevoPrecio);
             
-            redirectAttrs.addFlashAttribute("mensajeExito", "✅ Precio del dólar actualizado a " + precioDolar + " Bs");
-            return "redirect:/";
+            redirectAttrs.addFlashAttribute("mensajeExito", 
+                "✅ " + tipoTasa + " actualizada a " + precioDolar + " Bs");
+            return "redirect:/dolar/actualizar";
 
         } catch (Exception e) {
             redirectAttrs.addFlashAttribute("mensajeError", "❌ Error al actualizar el precio del dólar: " + e.getMessage());

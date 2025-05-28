@@ -1,4 +1,4 @@
-package devforge.web;
+/*package devforge.web;
 
 import devforge.model.*;
 import devforge.servicio.*;
@@ -54,11 +54,10 @@ public class NuevaVentaController {
             return "redirect:/licorerias/seleccionar";
         }
 
-        // Obtener todas las tasas actuales
-        List<PrecioDolar> tasasActuales = precioDolarServicio.obtenerUltimasTasas(licoreriaContext.getLicoreriaId());
+        Double precioDolar = precioDolarServicio.obtenerPrecioActual(licoreriaContext.getLicoreriaId());
         List<Producto> productos = productoServicio.listarProductosPorLicoreria(licoreriaContext.getLicoreriaId());
         
-        model.addAttribute("tasasActuales", tasasActuales);
+        model.addAttribute("precioDolar", precioDolar);
         model.addAttribute("productos", productos);
         model.addAttribute("licoreriaActual", licoreriaContext.getLicoreriaActual());
         
@@ -349,3 +348,4 @@ public class NuevaVentaController {
         }
     }
 }
+*/
