@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <title>Configuración de Impresora - InventSoft</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #F3F6F9;
+            margin: 0;
+            padding: 0;
+        }
+        .nav-menu {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 18px;
+            background: #6c3483;
+            padding: 0.5rem 0;
+            margin: 0 0 18px 0;
+            border-radius: 0 0 12px 12px;
+            list-style: none;
+        }
+        .nav-menu li {
+            display: inline-block;
+        }
+        .nav-menu a {
+            color: #fff;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 1rem;
+            padding: 8px 16px;
+            border-radius: 6px;
+            transition: background 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .nav-menu a:hover, .nav-menu .active {
+            background: #512e5f;
+        }
+        .container {
+            max-width: 650px;
+            margin: 30px auto;
+            padding: 18px 12px;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.07);
+        }
+        .panel {
+            background: #f9f9f9;
+            border-radius: 10px;
+            padding: 18px 12px 10px 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+        h2 {
+            color: #6c3483;
+            margin-bottom: 10px;
+            font-size: 1.3rem;
+            text-align: center;
+        }
+        .form-section {
+            margin-bottom: 16px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        .form-section:last-child {
+            border-bottom: none;
+        }
+        .form-group {
+            margin-bottom: 10px;
+        }
+        .form-group label {
+            font-weight: 600;
+            color: #444;
+            margin-bottom: 4px;
+            display: block;
+            font-size: 0.97rem;
+        }
+        input[type="text"], select, textarea {
+            width: 100%;
+            padding: 7px 8px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            background: #fafafa;
+            font-size: 0.97rem;
+        }
+        input[type="text"]:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #aed9e0;
+        }
+        .radio-group {
+            display: flex;
+            gap: 18px;
+            margin-top: 2px;
+        }
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: 500;
+        }
+        .button-group {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 10px;
+        }
+        .btn-primary {
+            background: #6c3483;
+            color: #fff;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 7px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .btn-primary:hover {
+            background: #512e5f;
+        }
+        .btn-secondary {
+            background: #aed9e0;
+            color: #444;
+            border: none;
+            padding: 8px 14px;
+            border-radius: 7px;
+            font-size: 0.97rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .btn-secondary:hover {
+            background: #96cfd6;
+        }
+        .alert {
+            background: #f4c2c2;
+            color: #a94442;
+            padding: 8px 12px;
+            border-radius: 7px;
+            margin-bottom: 10px;
+            font-weight: 500;
+            border: 1px solid #e8a7a7;
+            font-size: 0.97rem;
+        }
+        .licoreria-actual {
+            font-size: 1rem;
+            color: #6c3483;
+            margin-bottom: 10px;
+            text-align: right;
+        }
+        .ticket-section {
+            margin-top: 18px;
+            background: #f4f6fa;
+            border-radius: 10px;
+            padding: 10px 8px;
+        }
+        .ticket-section h3 {
+            color: #6c3483;
+            margin-bottom: 6px;
+            font-size: 1.05rem;
+        }
+        .ticket-editor {
+            margin-bottom: 8px;
+        }
+        .ticket-preview {
+            background: #fff;
+            border: 1px dashed #bdbdbd;
+            border-radius: 7px;
+            padding: 10px;
+            min-height: 60px;
+            font-family: 'Courier New', Courier, monospace;
+            color: #333;
+            white-space: pre-wrap;
+            font-size: 0.97rem;
+        }
+        .form-row {
+            display: flex;
+            gap: 10px;
+        }
+        @media (max-width: 600px) {
+            .container {
+                padding: 5px;
+            }
+            .panel {
+                padding: 6px 2px 5px 2px;
+            }
+            .form-row {
+                flex-direction: column;
+                gap: 0;
+            }
+            .nav-menu {
+                flex-direction: column;
+                gap: 0;
+                border-radius: 0 0 8px 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div th:replace="~{fragments/header :: header}"></div>
+    <div class="container">
+        <div class="panel">
+            <h2>Configuración de Impresora Térmica</h2>
+            <p class="licoreria-actual">Licorería: <span th:text="${licoreriaActual.nombre}"></span></p>
+            <div th:if="${mensaje != null}" class="alert" th:classappend="${clase}">
+                <span th:text="${mensaje}"></span>
+            </div>
+            <form th:action="@{/impresora/guardar}" method="post" th:object="${configuracion}">
+                <input type="hidden" th:field="*{id}">
+
+                <div class="form-section">
+                    <h3>Configuración de Conexión</h3>
+
+                    <div class="form-group">
+                        <label for="deteccionAutomatica">Modo de Detección:</label>
+                        <div class="radio-group">
+                            <label>
+                                <input type="radio" th:field="*{deteccionAutomatica}" value="true" name="deteccionAutomatica" id="deteccionAutomatica">
+                                Automática
+                            </label>
+                            <label>
+                                <input type="radio" th:field="*{deteccionAutomatica}" value="false">
+                                Manual
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-group" id="puertoComContainer" th:style="${configuracion.deteccionAutomatica ? 'display:none' : ''}">
+                        <label for="puertoCom">Puerto COM:</label>
+                        <select th:field="*{puertoCom}" id="puertoCom">
+                            <option value="">Seleccione un puerto</option>
+                            <option value="COM1">COM1</option>
+                            <option value="COM2">COM2</option>
+                            <option value="COM3">COM3</option>
+                            <option value="COM4">COM4</option>
+                        </select>
+                        <button type="button" id="btnDetectarPuertos" class="btn-secondary">Detectar Puertos</button>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h3>Parámetros de Comunicación</h3>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="velocidadBaudios">Velocidad (baudios):</label>
+                            <select th:field="*{velocidadBaudios}" id="velocidadBaudios">
+                                <option value="9600">9600</option>
+                                <option value="19200">19200</option>
+                                <option value="38400">38400</option>
+                                <option value="57600">57600</option>
+                                <option value="115200">115200</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="bitsDatos">Bits de datos:</label>
+                            <select th:field="*{bitsDatos}" id="bitsDatos">
+                                <option value="7">7</option>
+                                <option value="8">8</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="bitsParada">Bits de parada:</label>
+                            <select th:field="*{bitsParada}" id="bitsParada">
+                                <option value="1">1</option>
+                                <option value="2">2</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="paridad">Paridad:</label>
+                            <select th:field="*{paridad}" id="paridad">
+                                <option value="NONE">Ninguna</option>
+                                <option value="EVEN">Par</option>
+                                <option value="ODD">Impar</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h3>Configuración de Impresión</h3>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="anchoPapel">Ancho del papel (mm):</label>
+                            <select th:field="*{anchoPapel}" id="anchoPapel">
+                                <option value="58">58mm</option>
+                                <option value="80">80mm</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="dpi">Resolución (DPI):</label>
+                            <select th:field="*{dpi}" id="dpi">
+                                <option value="203">203 DPI</option>
+                                <option value="300">300 DPI</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="checkbox-container">
+                            <input type="checkbox" th:field="*{corteAutomatico}" id="corteAutomatico">
+                            <span class="checkmark"></span>
+                            Corte automático del papel
+                        </label>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="checkbox-container">
+                            <input type="checkbox" th:field="*{imprimirLogo}" id="imprimirLogo">
+                            <span class="checkmark"></span>
+                            Imprimir logo en los tickets
+                        </label>
+                    </div>
+
+                    <div class="form-group" id="rutaLogoContainer" th:style="${configuracion.imprimirLogo ? '' : 'display:none'}">
+                        <label for="rutaLogo">Ruta del logo:</label>
+                        <input type="text" th:field="*{rutaLogo}" id="rutaLogo" placeholder="/ruta/al/logo.png">
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h3>Estado</h3>
+                    <div class="form-group">
+                        <label class="checkbox-container">
+                            <input type="checkbox" th:field="*{activa}" id="activa">
+                            <span class="checkmark"></span>
+                            Impresora activa
+                        </label>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h3>Editor de Ticket</h3>
+                    <div class="form-group ticket-editor">
+                        <label for="ticketTexto">Contenido del ticket:</label>
+                        <textarea id="ticketTexto" name="ticketTexto" rows="7" placeholder="Ingrese el texto del ticket aquí..." th:text="${configuracion.ticketTexto != null && !configuracion.ticketTexto.isEmpty() ? configuracion.ticketTexto : '*** ${licoreria} ***\nFecha: ${fecha}\n----------------------\n${detalle_productos}\n----------------------\nTOTAL: ${total}\n¡Gracias por su compra!'}"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Previsualización:</label>
+                        <div class="ticket-preview" id="ticketPreview"></div>
+                    </div>
+                </div>
+
+                <div class="button-group">
+                    <button type="submit" class="btn-primary">Guardar Configuración</button>
+                    <button type="button" id="btnProbarImpresionWin" class="btn-secondary">Probar Impresión Windows</button>
+                    <button type="button" id="btnProbarImpresionLinux" class="btn-secondary">Probar Impresión Linux</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script th:inline="javascript">
+    document.addEventListener('DOMContentLoaded', function() {
+        // Toggle manual port selection based on detection mode
+        const deteccionAutomatica = document.querySelectorAll('input[name="deteccionAutomatica"]');
+        const puertoComContainer = document.getElementById('puertoComContainer');
+
+        deteccionAutomatica.forEach(radio => {
+            radio.addEventListener('change', function() {
+                if (this.value === 'true') {
+                    puertoComContainer.style.display = 'none';
+                } else {
+                    puertoComContainer.style.display = 'block';
+                }
+            });
+        });
+
+        // Toggle logo path field
+        const imprimirLogo = document.getElementById('imprimirLogo');
+        const rutaLogoContainer = document.getElementById('rutaLogoContainer');
+
+        imprimirLogo.addEventListener('change', function() {
+            rutaLogoContainer.style.display = this.checked ? 'block' : 'none';
+        });
+
+        // Detect available ports
+        const btnDetectarPuertos = document.getElementById('btnDetectarPuertos');
+        const puertoCom = document.getElementById('puertoCom');
+
+        btnDetectarPuertos.addEventListener('click', function() {
+            fetch('/impresora/detectar-puertos')
+                .then(response => response.json())
+                .then(puertos => {
+                    // Clear existing options
+                    puertoCom.innerHTML = '<option value="">Seleccione un puerto</option>';
+
+                    // Add detected ports
+                    puertos.forEach(puerto => {
+                        const option = document.createElement('option');
+                        option.value = puerto;
+                        option.textContent = puerto;
+                        puertoCom.appendChild(option);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error al detectar puertos:', error);
+                    alert('Error al detectar puertos disponibles');
+                });
+        });
+
+        // Ticket preview
+        const ticketTextarea = document.getElementById('ticketTexto');
+        const ticketPreview = document.getElementById('ticketPreview');
+        const defaultTicket = `*** {licoreria} ***\nFecha: {fecha}\n----------------------\n{detalle_productos}\n----------------------\nTOTAL: {total}\n¡Gracias por su compra!`;
+        function updatePreview() {
+            let value = ticketTextarea.value;
+            if (!value || value.trim() === '') {
+                value = defaultTicket;
+            }
+            ticketPreview.textContent = value;
+        }
+        if(ticketTextarea && ticketPreview) {
+            ticketTextarea.addEventListener('input', updatePreview);
+            updatePreview();
+        }
+
+        // Probar impresión Windows
+        const btnProbarImpresionWin = document.getElementById('btnProbarImpresionWin');
+        // Probar impresión Linux
+        const btnProbarImpresionLinux = document.getElementById('btnProbarImpresionLinux');
+        const form = document.querySelector('form');
+
+        function getConfigFormData() {
+            const formData = new FormData(form);
+            const configuracion = {};
+            formData.forEach((value, key) => {
+                if (key === 'deteccionAutomatica' || key === 'corteAutomatico' || 
+                    key === 'imprimirLogo' || key === 'activa') {
+                    configuracion[key] = value === 'true' || value === 'on';
+                } else if (key === 'velocidadBaudios' || key === 'bitsDatos' || 
+                          key === 'bitsParada' || key === 'anchoPapel' || key === 'dpi') {
+                    configuracion[key] = parseInt(value);
+                } else {
+                    configuracion[key] = value;
+                }
+            });
+            return configuracion;
+        }
+
+        if (btnProbarImpresionWin) {
+            btnProbarImpresionWin.addEventListener('click', function() {
+                const configuracion = getConfigFormData();
+                configuracion.sistema = 'windows';
+                fetch('/impresora/probar', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(configuracion)
+                })
+                .then(response => response.json())
+                .then(result => {
+                    alert(result.mensaje || result.error || 'Respuesta recibida');
+                })
+                .catch(error => {
+                    console.error('Error al probar impresión:', error);
+                    alert('Error al comunicarse con el servidor');
+                });
+            });
+        }
+
+        if (btnProbarImpresionLinux) {
+            btnProbarImpresionLinux.addEventListener('click', function() {
+                const configuracion = getConfigFormData();
+                configuracion.sistema = 'linux';
+                fetch('/impresora/probar', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(configuracion)
+                })
+                .then(response => response.json())
+                .then(result => {
+                    alert(result.mensaje || result.error || 'Respuesta recibida');
+                })
+                .catch(error => {
+                    console.error('Error al probar impresión:', error);
+                    alert('Error al comunicarse con el servidor');
+                });
+            });
+        }
+    });
+    </script>
+</body>
+</html>

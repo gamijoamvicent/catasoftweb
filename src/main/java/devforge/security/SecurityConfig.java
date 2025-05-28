@@ -37,6 +37,7 @@ public class SecurityConfig {
                 .requestMatchers("/ventas/**").hasAnyRole("CAJERO", "ADMIN_LOCAL", "SUPER_ADMIN")
                 .requestMatchers("/ventas/confirmar").hasAnyAuthority("ROLE_CAJERO", "ROLE_ADMIN_LOCAL", "ROLE_SUPER_ADMIN")
                 .requestMatchers("/producto/actualizar", "/usuarios/**").hasAnyRole("ADMIN_LOCAL", "SUPER_ADMIN")
+                .requestMatchers("/impresora/**").hasAnyRole("ADMIN_LOCAL", "SUPER_ADMIN")
                 .requestMatchers("/licorerias/gestionar", "/licorerias/guardar", "/licorerias/*/cambiar-estado", "/licorerias/*/eliminar").hasRole("SUPER_ADMIN")
                 .anyRequest().authenticated()
             )

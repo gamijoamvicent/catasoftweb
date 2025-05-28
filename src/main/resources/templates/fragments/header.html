@@ -1,0 +1,13 @@
+<div th:fragment="header">
+    <ul class="nav-menu">
+        <li><a th:href="@{/dashboard}"><i class="fas fa-home"></i> Inicio</a></li>
+        <li sec:authorize="hasAnyRole('CAJERO', 'ADMIN_LOCAL', 'SUPER_ADMIN')"><a th:href="@{/ventas/nueva}"><i class="fas fa-cash-register"></i> Nueva Venta</a></li>
+        <li sec:authorize="hasAnyRole('ADMIN_LOCAL', 'SUPER_ADMIN')"><a th:href="@{/producto/actualizar}"><i class="fas fa-boxes"></i> Inventario</a></li>
+        <li sec:authorize="hasAnyRole('ADMIN_LOCAL', 'SUPER_ADMIN')"><a th:href="@{/clientes}"><i class="fas fa-users"></i> Clientes</a></li>
+        <li sec:authorize="hasAnyRole('ADMIN_LOCAL', 'SUPER_ADMIN')"><a th:href="@{/creditos}"><i class="fas fa-credit-card"></i> Créditos</a></li>
+        <li sec:authorize="hasAnyRole('ADMIN_LOCAL', 'SUPER_ADMIN')"><a th:href="@{/reportes/ventas}"><i class="fas fa-chart-bar"></i> Reportes</a></li>
+        <li sec:authorize="hasAnyRole('SUPER_ADMIN')"><a th:href="@{/licorerias/gestionar}"><i class="fas fa-store"></i> Licorerías</a></li>
+        <li sec:authorize="hasAnyRole('ADMIN_LOCAL', 'SUPER_ADMIN')"><a th:href="@{/usuarios}"><i class="fas fa-users-cog"></i> Usuarios</a></li>
+        <li sec:authorize="hasAnyRole('ADMIN_LOCAL', 'SUPER_ADMIN')"><a th:href="@{/impresora/configuracion}"><i class="fas fa-print"></i> Impresora</a></li>
+    </ul>
+</div>

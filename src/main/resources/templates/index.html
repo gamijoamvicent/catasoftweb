@@ -258,6 +258,13 @@
                     Gestionar Licorerías
                 </a>
 
+                <a class="menu-card configuracion"
+                   sec:authorize="hasAnyRole('ADMIN_LOCAL', 'SUPER_ADMIN')"
+                   th:href="@{/impresora/configuracion}">
+                    <img src="/icons/printer.png" alt="Impresora" class="menu-icon">
+                    Configurar Impresora
+                </a>
+
                 <a class="menu-card clientes"
                    sec:authorize="hasAnyRole('ADMIN_LOCAL', 'SUPER_ADMIN', 'VENDEDOR')"
                    th:href="@{/clientes}">
