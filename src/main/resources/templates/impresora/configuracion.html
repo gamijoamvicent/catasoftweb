@@ -91,6 +91,12 @@
                     <div class="form-group">
                         <label class="checkbox-container"><input type="checkbox" th:field="*{activa}" id="activa"> Impresora activa</label>
                     </div>
+                    <div class="form-group">
+                        <label>Impresora configurada actual:</label>
+                        <div id="impresoraActual" style="font-weight:bold;color:#1565C0;">
+                            <span th:text="${configuracion.deteccionAutomatica} ? '(Automática)' : (configuracion.puertoCom != null ? (configuracion.puertoCom != '' ? configuracion.puertoCom : '(No definida)') : '(No definida)')"></span>
+                        </div>
+                    </div>
                     <div class="button-group">
                         <button type="submit" class="btn-primary">Guardar Configuración</button>
                     </div>

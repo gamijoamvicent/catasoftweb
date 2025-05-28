@@ -102,7 +102,16 @@ public class ImpresoraController {
 
         configuracionServicio.guardar(configuracion);
 
-        redirectAttributes.addFlashAttribute("mensaje", "Configuración guardada correctamente");
+        String impresoraGuardada = "";
+        if (Boolean.TRUE.equals(configuracion.getDeteccionAutomatica())) {
+            impresoraGuardada = "(Automática)";
+        } else if (configuracion.getPuertoCom() != null && !configuracion.getPuertoCom().isBlank()) {
+            impresoraGuardada = configuracion.getPuertoCom();
+        } else {
+            impresoraGuardada = "(No definida)";
+        }
+
+        redirectAttributes.addFlashAttribute("mensaje", "Configuración guardada correctamente. Impresora seleccionada: " + impresoraGuardada);
         redirectAttributes.addFlashAttribute("clase", "success");
 
         return "redirect:/impresora/configuracion";

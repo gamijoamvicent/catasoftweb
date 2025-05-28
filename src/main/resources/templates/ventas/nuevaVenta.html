@@ -392,6 +392,7 @@
             <!-- Botones de acción -->
             <div class="action-buttons">
                 <button class="btn-confirmar" onclick="confirmarVenta()">Confirmar Venta</button>
+                <button class="btn-secondary" onclick="generarTicketPdf()">Generar Factura PDF</button>
                 <button class="btn-limpiar" onclick="limpiarCarrito()">Limpiar Carrito</button>
             </div>
         </div>
@@ -400,6 +401,11 @@
     <!-- Botón volver -->
     <div class="bottom-back">
         <button class="btn-back" onclick="window.location.href='/'">Volver al Menú</button>
+    </div>
+
+    <div class="button-group" id="botonesPostVenta" style="display: none; margin-top: 15px; justify-content: flex-end; gap: 10px;">
+        <button class="btn-primary" onclick="window.location.href='/ventas/nueva'">Nueva Venta</button>
+        <button class="btn-secondary" onclick="generarTicketPdf()">Generar Factura PDF</button>
     </div>
 </div>
 
@@ -527,6 +533,8 @@
     </li>
 </ul>
 
+<script src="/js/qz-tray.js"></script>
+    <!-- QZ Tray debe estar cargado antes de cualquier uso de window.qz -->
 <script>
     const precioDolar = parseFloat(document.getElementById("precioDolarLabel").textContent.replace(' Bs', '') || 1);
     let productosSeleccionados = [];
@@ -793,8 +801,14 @@
         .then(response => response.json())
         .then(result => {
             if (result.mensaje && result.mensaje.includes("registrada")) {
-                alert("✅ Venta registrada exitosamente");
-                window.location.reload();
+                // Imprimir ticket automáticamente usando QZ Tray
+                imprimirTicketVenta(result);
+                mostrarMensajeVenta('✅ Venta registrada exitosamente');
+                // Mostrar botones post venta
+                document.getElementById('botonesPostVenta').style.display = 'flex';
+                // Guardar el ID de la venta para el PDF
+                window.ventaId = result.ventaId;
+                setTimeout(() => window.location.reload(), 1800);
             } else {
                 alert("❌ Error: " + (result.error || "Error desconocido"));
             }
@@ -811,6 +825,110 @@
         productosSeleccionados = [];
         renderizarTabla();
     }
+
+    // --- Impresión automática de ticket con QZ Tray ---
+function imprimirTicketVenta(ventaResult) {
+    // Solicita al backend el ticket ya formateado para la venta
+    fetch(`/ventas/ticket/${ventaResult.ventaId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (!data.ticket || !data.impresora) {
+                alert('No se pudo obtener el ticket o la impresora configurada.');
+                return;
+            }
+            if (!window.qz) {
+                alert('QZ Tray no está disponible.');
+                return;
+            }
+            console.log('[QZ] Imprimiendo en:', data.impresora); // Debug impresora
+            qz.websocket.connect().then(function() {
+                return qz.printers.find(data.impresora);
+            }).then(function(printer) {
+                var config = qz.configs.create(printer);
+                return qz.print(config, [{ type: 'raw', format: 'plain', data: data.ticket + '\n' }]);
+            }).catch(function(e) {
+                alert('Error al imprimir el ticket: ' + e);
+            });
+        })
+        .catch(() => alert('No se pudo obtener el ticket para imprimir.'));
+}
+// --- Fin impresión automática ---
+
+// --- Mensaje visual amigable de venta realizada ---
+function mostrarMensajeVenta(msg) {
+    let div = document.createElement('div');
+    div.textContent = msg;
+    div.style.position = 'fixed';
+    div.style.top = '32px';
+    div.style.left = '50%';
+    div.style.transform = 'translateX(-50%)';
+    div.style.background = '#43A047';
+    div.style.color = '#fff';
+    div.style.padding = '18px 36px';
+    div.style.fontSize = '1.3rem';
+    div.style.fontWeight = 'bold';
+    div.style.borderRadius = '10px';
+    div.style.boxShadow = '0 4px 24px rgba(21,101,192,0.12)';
+    div.style.zIndex = 9999;
+    document.body.appendChild(div);
+    setTimeout(() => { div.remove(); }, 1500);
+}
+
+function generarTicketPdf() {
+    if (productosSeleccionados.length === 0) {
+        alert("❌ El carrito está vacío");
+        return;
+    }
+
+    const metodoPago = document.getElementById('metodoPago').value;
+    const tipoVenta = document.getElementById('tipoVenta').value;
+    const clienteId = document.getElementById('clienteId').value;
+
+    if (!metodoPago) {
+        alert("❌ Por favor seleccione un método de pago");
+        return;
+    }
+
+    if (tipoVenta === 'CREDITO' && !clienteId) {
+        alert("❌ Debe seleccionar un cliente para ventas a crédito");
+        return;
+    }
+
+    const items = productosSeleccionados.map(p => ({
+        id: p.id,
+        cantidad: p.cantidad
+    }));
+
+    fetch('/ventas/confirmar', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            items: items,
+            metodoPago: metodoPago,
+            tipoVenta: tipoVenta,
+            clienteId: clienteId || null,
+            generarPdf: true // Indicador para el backend
+        })
+    })
+    .then(response => response.json())
+    .then(result => {
+        if (result.mensaje && result.mensaje.includes("registrada")) {
+            mostrarMensajeVenta('✅ Venta registrada exitosamente');
+            // Descargar el PDF
+            window.location.href = `/ventas/venta/${result.ventaId}/ticket-pdf`;
+            // Recargar la página después de un momento
+            setTimeout(() => window.location.reload(), 1800);
+        } else {
+            alert("❌ Error: " + (result.error || "Error desconocido"));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert("❌ Error al procesar la venta");
+    });
+}
 </script>
 </body>
 </html>

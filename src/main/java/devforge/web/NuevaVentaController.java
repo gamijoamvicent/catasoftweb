@@ -11,6 +11,10 @@ import java.util.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.stream.Collectors;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.HttpStatus;
+import org.springframework.beans.factory.annotation.Autowired;
 
 @Controller
 @RequestMapping("/ventas")
@@ -22,6 +26,8 @@ public class NuevaVentaController {
     private final VentaServicio ventaServicio;
     private final ClienteServicio clienteServicio;
     private final CreditoServicio creditoServicio;
+    private final ConfiguracionImpresoraServicio impresoraConfigServicio;
+    private final PdfServicio pdfServicio;
 
     public NuevaVentaController(
             ProductoServicio productoServicio,
@@ -29,13 +35,17 @@ public class NuevaVentaController {
             LicoreriaContext licoreriaContext,
             VentaServicio ventaServicio,
             ClienteServicio clienteServicio,
-            CreditoServicio creditoServicio) {
+            CreditoServicio creditoServicio,
+            ConfiguracionImpresoraServicio impresoraConfigServicio,
+            PdfServicio pdfServicio) {
         this.productoServicio = productoServicio;
         this.precioDolarServicio = precioDolarServicio;
         this.licoreriaContext = licoreriaContext;
         this.ventaServicio = ventaServicio;
         this.clienteServicio = clienteServicio;
         this.creditoServicio = creditoServicio;
+        this.impresoraConfigServicio = impresoraConfigServicio;
+        this.pdfServicio = pdfServicio;
     }
 
     @GetMapping("/nueva")
@@ -252,6 +262,72 @@ public class NuevaVentaController {
         model.addAttribute("licoreriaActual", licoreriaContext.getLicoreriaActual());
 
         return "ventas/detalle";
+    }
+
+    @GetMapping("/ticket/{ventaId}")
+    @ResponseBody
+    public ResponseEntity<?> obtenerTicketVenta(@PathVariable Long ventaId) {
+        try {
+            Venta venta = ventaServicio.buscarPorId(ventaId)
+                .orElseThrow(() -> new RuntimeException("Venta no encontrada"));
+            Licoreria licoreria = licoreriaContext.getLicoreriaActual();
+            if (licoreria == null || !venta.getLicoreriaId().equals(licoreria.getId())) {
+                return ResponseEntity.status(403).body(Map.of("error", "No tienes permiso para ver esta venta"));
+            }
+            // Obtener configuración de impresora para la licorería
+            ConfiguracionImpresora config = null;
+            if (licoreria != null) {
+                config = impresoraConfigServicio.obtenerPorLicoreria(licoreria.getId());
+            }
+            String impresora = (config != null && config.getPuertoCom() != null && !config.getPuertoCom().isBlank())
+                ? config.getPuertoCom() : null;
+            // Formato editable o por defecto
+            String formato = (config != null && config.getTicketTexto() != null && !config.getTicketTexto().isBlank())
+                ? config.getTicketTexto() : "*** {licoreria} ***\nFecha: {fecha}\n----------------------\n{detalle_productos}\n----------------------\nSUBTOTAL: {subtotal}\nTOTAL: {total}\n¡Gracias por su compra!";
+            // Construir detalle de productos
+            StringBuilder detalle = new StringBuilder();
+            BigDecimal subtotal = BigDecimal.ZERO;
+            for (DetalleVenta d : venta.getDetalles()) {
+                detalle.append(d.getProducto().getNombre())
+                    .append(" x")
+                    .append(d.getCantidad())
+                    .append("  $")
+                    .append(d.getSubtotal().setScale(2, BigDecimal.ROUND_HALF_UP))
+                    .append("\n");
+                subtotal = subtotal.add(d.getSubtotal());
+            }
+            String ticket = formato
+                .replace("{licoreria}", licoreria != null ? licoreria.getNombre() : "-")
+                .replace("{fecha}", venta.getFechaVenta().toString())
+                .replace("{detalle_productos}", detalle.toString().trim())
+                .replace("{subtotal}", "$" + subtotal.setScale(2, BigDecimal.ROUND_HALF_UP))
+                .replace("{total}", "$" + venta.getTotalVenta().setScale(2, BigDecimal.ROUND_HALF_UP));
+            return ResponseEntity.ok(Map.of(
+                "ticket", ticket,
+                "impresora", impresora
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(Map.of("error", "No se pudo generar el ticket: " + e.getMessage()));
+        }
+    }
+
+    @GetMapping("/venta/{id}/ticket-pdf")
+    public ResponseEntity<byte[]> generarTicketPdf(@PathVariable Long id) {
+        try {
+            Venta venta = ventaServicio.buscarPorId(id)
+                .orElseThrow(() -> new RuntimeException("Venta no encontrada"));
+
+            ConfiguracionImpresora config = impresoraConfigServicio.obtenerPorLicoreria(venta.getLicoreria().getId());
+            byte[] pdfBytes = pdfServicio.generarTicketPdf(venta, config);
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_PDF);
+            headers.setContentDispositionFormData("attachment", "ticket-venta-" + id + ".pdf");
+
+            return new ResponseEntity<>(pdfBytes, headers, HttpStatus.OK);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
 
     private static class ItemVentaDto {
