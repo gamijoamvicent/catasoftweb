@@ -2,28 +2,31 @@
 <html lang="es" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Seleccionar Sucursal - InventSoft</title>
     <link rel="stylesheet" th:href="@{/css/styles.css}">
     <style>
-        /* Variables de colores consistentes con el resto del proyecto */
+        /* Paleta de colores consistente con el resto de la aplicación */
         :root {
-            --primary-dark: #2C3E50; /* Azul oscuro para elementos principales y texto fuerte */
-            --primary-medium: #34495E; /* Azul grisáceo para fondos de tarjetas/secciones */
-            --primary-light: #ECF0F1; /* Gris muy claro para el fondo general */
-            --accent-green: #27AE60; /* Verde para acciones positivas/éxito */
-            --accent-red: #E74C3C; /* Rojo para acciones negativas/peligro */
+            --primary: #1565C0;
+            --accent: #00BFA5;
+            --secondary: #1976D2;
+            --background: #E3F2FD;
             --text-dark: #2C3E50;
             --text-light: #FFFFFF;
-            --border-color: #BDC3C7; /* Gris claro para bordes sutiles */
-            --shadow-light: 0 4px 12px rgba(0, 0, 0, 0.08); /* Sombra suave */
-            --shadow-hover: 0 6px 20px rgba(0, 0, 0, 0.15); /* Sombra al pasar el ratón */
-            --input-bg: #F8F9F9; /* Fondo claro para inputs */
+            --border-color: #BBDEFB;
+            --shadow-light: 0 4px 12px rgba(21, 101, 192, 0.08);
+            --shadow-hover: 0 6px 20px rgba(21, 101, 192, 0.15);
+            --input-bg: #FFFFFF;
+            --success: #27AE60;
+            --error: #E74C3C;
+            --warning: #F39C12;
         }
 
         body {
             margin: 0;
             font-family: 'Roboto', 'Segoe UI', Arial, sans-serif;
-            background: var(--primary-light);
+            background: var(--background);
             color: var(--text-dark);
             min-height: 100vh;
             display: flex;
@@ -34,54 +37,86 @@
         }
 
         .page-container {
-            max-width: 1000px; /* Ancho ajustado para la grilla de tarjetas */
+            max-width: 1200px;
             width: 100%;
             box-shadow: var(--shadow-hover);
-            border-radius: 12px;
+            border-radius: 16px;
             overflow: hidden;
             display: flex;
             flex-direction: column;
-            background: var(--text-light); /* Fondo blanco para el contenedor principal */
+            background: var(--input-bg);
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         .header {
-            background: var(--primary-dark);
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
             color: var(--text-light);
-            padding: 30px 35px;
+            padding: 35px 40px;
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
             text-align: left;
+            position: relative;
+            overflow: hidden;
         }
+
+        .header::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--accent), var(--primary));
+        }
+
         .header h2 {
-            margin: 0 0 8px 0;
-            font-size: 1.8rem;
-            font-weight: 600;
+            margin: 0 0 10px 0;
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text-light);
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            letter-spacing: 0.5px;
         }
+
         .header p {
-            color: rgba(255, 255, 255, 0.8);
+            color: rgba(255, 255, 255, 0.95);
             margin: 0;
-            font-size: 0.95rem;
+            font-size: 1rem;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
         }
 
         /* Mensajes de Alerta */
         .alert {
-            padding: 18px 25px;
-            border-radius: 8px;
+            padding: 16px 20px;
+            border-radius: 10px;
             font-size: 0.95rem;
             display: flex;
             align-items: center;
-            gap: 15px;
-            border-width: 1px;
-            border-style: solid;
-            margin: 25px 35px 0; /* Margen para estar dentro del flujo principal */
+            gap: 12px;
+            margin: 25px 35px 0;
+            animation: shake 0.5s ease-in-out;
         }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
         .alert strong {
             font-weight: 600;
         }
+
         .alert-danger {
-            background: #F8D7DA;
-            color: #721C24;
-            border-color: #F5C6CB;
+            background-color: rgba(231, 76, 60, 0.1);
+            color: var(--error);
+            border: 1px solid rgba(231, 76, 60, 0.2);
         }
+
         .alert .icon {
             font-size: 1.2em;
         }
@@ -89,124 +124,175 @@
         /* Grilla de licorerías */
         .licoreria-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 25px; /* Espacio entre tarjetas */
-            padding: 35px; /* Padding interno para la grilla */
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 25px;
+            padding: 35px;
         }
+
         .licoreria-card {
-            background: var(--input-bg); /* Fondo gris claro para las tarjetas */
-            border-radius: 10px; /* Bordes más redondeados */
-            padding: 25px; /* Más padding interno */
-            box-shadow: var(--shadow-light); /* Sombra suave */
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            background: var(--input-bg);
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: var(--shadow-light);
+            transition: all 0.3s ease;
             display: flex;
             flex-direction: column;
-            justify-content: space-between; /* Para empujar el footer hacia abajo */
+            justify-content: space-between;
+            border: 1px solid var(--border-color);
         }
+
         .licoreria-card:hover {
             transform: translateY(-5px);
-            box-shadow: var(--shadow-hover); /* Sombra más pronunciada al pasar el ratón */
+            box-shadow: var(--shadow-hover);
+            border-color: var(--primary);
         }
+
         .licoreria-card h3 {
-            margin: 0 0 10px 0;
-            color: var(--primary-dark);
+            margin: 0 0 15px 0;
+            color: var(--primary);
             font-size: 1.4rem;
             font-weight: 600;
         }
+
         .licoreria-card p {
-            margin: 5px 0;
-            color: #555; /* Un gris más oscuro para la información */
+            margin: 8px 0;
+            color: var(--text-dark);
             font-size: 0.95rem;
+            opacity: 0.9;
         }
+
         .licoreria-card.inactive {
-            opacity: 0.7; /* Ligeramente más transparente */
+            opacity: 0.7;
             cursor: not-allowed;
-            filter: grayscale(80%); /* Efecto de blanco y negro para inactiva */
+            filter: grayscale(80%);
         }
+
         .licoreria-card.inactive:hover {
-            transform: none; /* No hay levantamiento para tarjetas inactivas */
-            box-shadow: var(--shadow-light); /* Sombra estándar */
+            transform: none;
+            box-shadow: var(--shadow-light);
+            border-color: var(--border-color);
         }
 
         .card-footer {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-top: 20px; /* Más espacio entre contenido y footer */
+            margin-top: 20px;
             padding-top: 15px;
-            border-top: 1px solid var(--border-color); /* Separador sutil */
+            border-top: 1px solid var(--border-color);
         }
+
         .badge {
-            padding: 6px 12px; /* Más padding para los badges */
-            border-radius: 20px; /* Más redondeado */
-            font-size: 0.85em; /* Tamaño de fuente ligeramente mayor */
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
             font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
+
         .badge-success {
-            background-color: var(--accent-green);
+            background-color: var(--success);
             color: var(--text-light);
         }
+
         .badge-danger {
-            background-color: var(--accent-red);
+            background-color: var(--error);
             color: var(--text-light);
         }
 
         .btn-seleccionar {
-            background-color: var(--primary-dark); /* Azul oscuro para seleccionar */
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
             color: var(--text-light);
             border: none;
-            padding: 10px 20px; /* Más padding */
-            border-radius: 8px; /* Bordes redondeados */
+            padding: 12px 20px;
+            border-radius: 10px;
             cursor: pointer;
             font-size: 0.95rem;
-            font-weight: 500;
-            transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.2s ease;
+            font-weight: 600;
+            transition: all 0.3s ease;
             display: inline-flex;
             align-items: center;
-            gap: 8px; /* Espacio entre ícono y texto */
+            gap: 8px;
+            box-shadow: var(--shadow-light);
         }
+
         .btn-seleccionar:hover {
-            background-color: var(--primary-medium); /* Gris oscuro al pasar el ratón */
             transform: translateY(-2px);
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            box-shadow: var(--shadow-hover);
+            background: linear-gradient(135deg, var(--secondary) 0%, var(--primary) 100%);
         }
+
+        .btn-seleccionar:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 5px rgba(21, 101, 192, 0.2);
+        }
+
         .btn-seleccionar:disabled {
-            background-color: #BDC3C7; /* Gris claro para deshabilitado */
-            color: #7F8C8D;
+            background: #E0E0E0;
+            color: #9E9E9E;
             cursor: not-allowed;
             transform: none;
             box-shadow: none;
         }
 
+        .btn-seleccionar .icon {
+            font-size: 1.1rem;
+        }
+
+        /* Mensaje de no hay licorerías */
+        .no-licorerias {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 40px;
+            color: var(--text-dark);
+            font-style: italic;
+            background: var(--input-bg);
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+        }
+
+        .no-licorerias p {
+            margin: 8px 0;
+            font-size: 1rem;
+        }
+
         /* Responsive adjustments */
         @media (max-width: 768px) {
             .page-container {
-                border-radius: 0;
-                box-shadow: none;
-                padding: 0;
+                border-radius: 12px;
+                margin: 10px;
             }
+
             .header {
                 padding: 25px 20px;
             }
+
+            .header h2 {
+                font-size: 1.75rem;
+            }
+
             .alert {
                 margin: 20px 20px 0;
-                padding: 15px 20px;
+                padding: 14px 16px;
             }
+
             .licoreria-grid {
-                grid-template-columns: 1fr; /* Una columna en pantallas pequeñas */
-                padding: 25px 20px;
+                grid-template-columns: 1fr;
+                padding: 20px;
                 gap: 20px;
             }
+
             .licoreria-card {
                 padding: 20px;
             }
+
             .licoreria-card h3 {
                 font-size: 1.2rem;
             }
+
             .btn-seleccionar {
-                padding: 8px 15px;
+                padding: 10px 16px;
                 font-size: 0.9rem;
             }
         }
@@ -216,7 +302,7 @@
 <div class="page-container">
     <div class="header">
         <h2>Seleccionar Sucursal</h2>
-        <p>Selecciona la sucursal de **InventSoft** con la que deseas gestionar el inventario.</p>
+        <p>Selecciona la sucursal de InventSoft con la que deseas gestionar el inventario</p>
     </div>
 
     <div th:if="${error}" class="alert alert-danger" role="alert">
@@ -233,8 +319,8 @@
                     <p><strong>Teléfono:</strong> <span th:text="${licoreria.telefono}"></span></p>
                 </div>
                 <div class="card-footer">
-                        <span th:class="${licoreria.estado ? 'badge badge-success' : 'badge badge-danger'}"
-                              th:text="${licoreria.estado ? 'Activa' : 'Inactiva'}">Estado</span>
+                    <span th:class="${licoreria.estado ? 'badge badge-success' : 'badge badge-danger'}"
+                          th:text="${licoreria.estado ? 'Activa' : 'Inactiva'}">Estado</span>
                     <button type="submit"
                             name="licoreriaId"
                             th:value="${licoreria.id}"
@@ -245,7 +331,7 @@
                 </div>
             </div>
 
-            <div th:if="${#lists.isEmpty(licorerias)}" class="licoreria-card" style="grid-column: 1 / -1; text-align: center; padding: 40px; color: var(--primary-medium); font-style: italic;">
+            <div th:if="${#lists.isEmpty(licorerias)}" class="no-licorerias">
                 <p>No hay sucursales de licorería registradas en el sistema.</p>
                 <p>Por favor, contacta al administrador para configurar una.</p>
             </div>

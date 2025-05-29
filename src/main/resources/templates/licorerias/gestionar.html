@@ -5,209 +5,307 @@
     <title>Gestionar Licorerías</title>
     <link rel="stylesheet" th:href="@{/css/styles.css}">
     <style>
+        /* Nueva paleta de colores */
         :root {
-            --background-dark: #181A1B;
-            --surface: #F8F9FA;
-            --card: #FFFFFF;
-            --primary: #1565C0;
-            --primary-dark: #0D47A1;
-            --accent: #00B8D9;
-            --danger: #D32F2F;
-            --text-main: #181A1B;
-            --text-invert: #FFFFFF;
-            --text-muted: #6C757D;
-            --border: #E0E3E7;
-            --shadow: 0 4px 24px rgba(21, 101, 192, 0.08);
-            --success: #43A047;
-            --warning: #FFD600;
+            --primary: #1565C0; /* Principal */
+            --accent: #00BFA5; /* Acento */
+            --secondary: #1976D2; /* Secundario */
+            --background: #E3F2FD; /* Fondo */
+            --text-dark: #1A237E; /* Texto oscuro */
+            --text-light: #FFFFFF; /* Texto claro */
+            --border-color: #BBDEFB; /* Color de bordes */
+            --shadow-light: 0 4px 12px rgba(21, 101, 192, 0.08); /* Sombra suave */
+            --shadow-hover: 0 6px 20px rgba(21, 101, 192, 0.15); /* Sombra al hover */
+            --input-bg: #FFFFFF; /* Fondo de inputs */
+            --success: #00BFA5; /* Color de éxito */
+            --error: #FF5252; /* Color de error */
+            --warning: #FFA000; /* Color de advertencia */
         }
+
         body {
-            background: var(--background-dark);
-            color: var(--text-invert);
-            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: var(--background);
+            color: var(--text-dark);
+            font-family: 'Roboto', 'Segoe UI', Arial, sans-serif;
             margin: 0;
             min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            box-sizing: border-box;
         }
+
         .page-container {
-            max-width: 1100px;
-            margin: 0 auto;
-            padding: 40px 16px 32px 16px;
-        }
-        .header {
-            margin-bottom: 32px;
-        }
-        .header h2 {
-            color: var(--primary);
-            margin-bottom: 4px;
-            font-size: 2rem;
-            font-weight: 700;
-        }
-        .header p {
-            color: var(--text-muted);
-            margin: 0;
-        }
-        .form-container {
-            background: var(--card);
-            color: var(--text-main);
-            border-radius: 18px;
-            box-shadow: var(--shadow);
-            border: 1px solid var(--border);
-            padding: 32px 28px 24px 28px;
-            margin-bottom: 32px;
-        }
-        .form-container h3 {
-            color: var(--primary-dark);
-            margin-top: 0;
-            margin-bottom: 18px;
-            font-size: 1.25rem;
-            font-weight: 700;
-        }
-        .form-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 18px;
-        }
-        .form-group label {
-            display: block;
-            margin-bottom: 6px;
-            font-weight: 600;
-            color: var(--primary-dark);
-        }
-        .form-group input {
+            max-width: 1200px;
             width: 100%;
-            padding: 10px;
-            border: 1.5px solid var(--border);
-            border-radius: 8px;
-            font-size: 1rem;
-            background: var(--surface);
-            color: var(--text-main);
-            transition: border 0.2s;
-        }
-        .form-group input:focus {
-            border: 1.5px solid var(--primary);
-            outline: none;
-        }
-        .btn-guardar {
-            background: var(--primary);
-            color: var(--text-invert);
-            padding: 12px 32px;
-            border-radius: 8px;
-            font-weight: 700;
-            font-size: 1rem;
-            border: none;
-            margin-top: 18px;
-            cursor: pointer;
-            box-shadow: 0 2px 8px rgba(21,101,192,0.08);
-            transition: background 0.2s, box-shadow 0.2s, transform 0.2s;
-        }
-        .btn-guardar:hover {
-            background: var(--primary-dark);
-            box-shadow: 0 4px 16px rgba(21,101,192,0.18);
-            transform: translateY(-2px) scale(1.03);
-        }
-        .alert-success {
-            background: #23272B;
-            color: var(--success);
-            border-radius: 14px;
-            border: 1px solid #43A04733;
-            padding: 18px 24px;
-            margin-bottom: 18px;
-        }
-        .alert-danger {
-            background: #23272B;
-            color: var(--danger);
-            border-radius: 14px;
-            border: 1px solid #D32F2F33;
-            padding: 18px 24px;
-            margin-bottom: 18px;
-        }
-        .table-container {
-            margin-top: 20px;
-            overflow-x: auto;
-        }
-        .modern-table {
-            width: 100%;
-            border-collapse: separate;
-            border-spacing: 0;
-            background: var(--card);
-            color: var(--text-main);
-            border-radius: 14px;
-            box-shadow: var(--shadow);
+            box-shadow: var(--shadow-hover);
+            border-radius: 12px;
             overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            background: var(--input-bg);
         }
-        .modern-table th, .modern-table td {
-            padding: 14px 12px;
+
+        .header {
+            background: var(--primary);
+            color: var(--text-light);
+            padding: 30px 35px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
             text-align: left;
         }
-        .modern-table th {
-            background: var(--primary);
-            color: var(--text-invert);
+
+        .header h2 {
+            margin: 0 0 8px 0;
+            font-size: 2rem;
             font-weight: 700;
-            border-bottom: 2px solid var(--border);
+            color: #FFFFFF;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
         }
-        .modern-table tr:nth-child(even) {
-            background: #F0F6FF;
+
+        .header p {
+            color: rgba(255, 255, 255, 0.9);
+            margin: 0;
+            font-size: 0.95rem;
         }
-        .modern-table tr:nth-child(odd) {
-            background: var(--card);
-        }
-        .modern-table td {
-            border-bottom: 1px solid var(--border);
-        }
-        .btn-action {
-            padding: 7px 16px;
-            border: none;
+
+        .form-container {
+            background: var(--input-bg);
+            padding: 35px;
             border-radius: 8px;
-            cursor: pointer;
-            font-weight: 600;
-            font-size: 0.98rem;
-            margin-right: 5px;
-            transition: background 0.2s, box-shadow 0.2s, transform 0.2s;
+            box-shadow: var(--shadow-light);
+            border: 1px solid var(--border-color);
+            margin: 25px;
         }
+
+        .form-container h3 {
+            color: var(--primary);
+            margin-top: 0;
+            margin-bottom: 25px;
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--text-dark);
+            font-size: 0.95rem;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 1rem;
+            background: var(--input-bg);
+            color: var(--text-dark);
+            transition: all 0.2s ease-in-out;
+            box-sizing: border-box;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(21, 101, 192, 0.1);
+        }
+
+        .form-group input::placeholder {
+            color: #000000;
+            opacity: 0.7;
+            font-weight: 500;
+        }
+
+        .btn-guardar {
+            background: var(--primary);
+            color: var(--text-light);
+            padding: 12px 28px;
+            border-radius: 6px;
+            font-weight: 500;
+            border: none;
+            cursor: pointer;
+            font-size: 0.95rem;
+            margin-top: 20px;
+            transition: all 0.2s ease-in-out;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: var(--shadow-light);
+        }
+
+        .btn-guardar:hover {
+            background: var(--secondary);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .alert {
+            padding: 18px 25px;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            border-width: 1px;
+            border-style: solid;
+            margin: 25px;
+        }
+
+        .alert-success {
+            background: rgba(0, 191, 165, 0.1);
+            color: var(--success);
+            border-color: var(--success);
+        }
+
+        .alert-danger {
+            background: rgba(255, 82, 82, 0.1);
+            color: var(--error);
+            border-color: var(--error);
+        }
+
+        .table-container {
+            margin: 25px;
+            overflow-x: auto;
+            background: var(--input-bg);
+            border-radius: 8px;
+            box-shadow: var(--shadow-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .modern-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.95rem;
+        }
+
+        .modern-table thead {
+            background: var(--primary);
+            color: var(--text-light);
+        }
+
+        .modern-table th {
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            border-bottom: 2px solid var(--secondary);
+        }
+
+        .modern-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-dark);
+        }
+
+        .modern-table tbody tr:hover {
+            background-color: rgba(21, 101, 192, 0.05);
+        }
+
+        .btn-action {
+            padding: 8px 16px;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin-right: 8px;
+        }
+
         .btn-activar {
             background: var(--success);
-            color: var(--text-invert);
+            color: var(--text-light);
         }
+
         .btn-activar:hover {
-            background: #388E3C;
-            transform: translateY(-2px) scale(1.03);
+            background: #00A896;
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-light);
         }
+
         .btn-desactivar {
             background: var(--warning);
-            color: var(--text-main);
+            color: var(--text-dark);
         }
+
         .btn-desactivar:hover {
-            background: #FFC107;
-            transform: translateY(-2px) scale(1.03);
+            background: #FFB300;
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-light);
         }
+
         .btn-eliminar {
-            background: var(--danger);
-            color: var(--text-invert);
+            background: var(--error);
+            color: var(--text-light);
         }
+
         .btn-eliminar:hover {
-            background: #B71C1C;
-            transform: translateY(-2px) scale(1.03);
+            background: #D32F2F;
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-light);
         }
+
         .action-button {
-            margin-top: 32px;
+            margin: 25px;
             text-align: center;
         }
+
         .btn-back {
-            background: var(--primary);
-            color: var(--text-invert);
-            padding: 12px 32px;
-            border-radius: 8px;
-            font-weight: 700;
-            font-size: 1rem;
+            background: var(--accent);
+            color: var(--text-light);
+            padding: 12px 28px;
+            border-radius: 6px;
+            font-weight: 500;
             border: none;
             cursor: pointer;
-            box-shadow: 0 2px 8px rgba(21,101,192,0.08);
-            transition: background 0.2s, box-shadow 0.2s, transform 0.2s;
+            font-size: 0.95rem;
+            transition: all 0.2s ease-in-out;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: var(--shadow-light);
         }
+
         .btn-back:hover {
-            background: var(--primary-dark);
-            box-shadow: 0 4px 16px rgba(21,101,192,0.18);
-            transform: translateY(-2px) scale(1.03);
+            background: #00A896;
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-hover);
+        }
+
+        @media (max-width: 768px) {
+            .page-container {
+                border-radius: 0;
+                box-shadow: none;
+            }
+            .header, .form-container, .alert, .table-container, .action-button {
+                margin: 15px;
+                padding: 20px;
+            }
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+            .modern-table th,
+            .modern-table td {
+                padding: 10px;
+                font-size: 0.9rem;
+            }
+            .btn-action {
+                padding: 6px 12px;
+                font-size: 0.85rem;
+            }
+            .btn-back {
+                width: 100%;
+                justify-content: center;
+            }
         }
     </style>
 </head>

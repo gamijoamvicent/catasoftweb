@@ -3,206 +3,511 @@
 <head>
     <meta charset="UTF-8">
     <title>Registrar Usuario</title>
-    <link rel="stylesheet" th:href="@{/css/styleRegistrarUsuario.css}">
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
     <style>
+        /* Nueva paleta de colores */
         :root {
-            --background-dark: #181A1B;
-            --surface: #F8F9FA;
-            --card: #FFFFFF;
-            --primary: #1565C0;
-            --primary-dark: #0D47A1;
-            --accent: #00B8D9;
-            --danger: #D32F2F;
-            --text-main: #181A1B;
-            --text-invert: #FFFFFF;
-            --text-muted: #6C757D;
-            --border: #E0E3E7;
-            --shadow: 0 4px 24px rgba(21, 101, 192, 0.08);
-            --success: #43A047;
-            --warning: #FFD600;
+            --primary: #1565C0; /* Principal */
+            --accent: #00BFA5; /* Acento */
+            --secondary: #1976D2; /* Secundario */
+            --background: #E3F2FD; /* Fondo */
+            --text-dark: #1A237E; /* Texto oscuro */
+            --text-light: #FFFFFF; /* Texto claro */
+            --border-color: #BBDEFB; /* Color de bordes */
+            --shadow-light: 0 4px 12px rgba(21, 101, 192, 0.08); /* Sombra suave */
+            --shadow-hover: 0 6px 20px rgba(21, 101, 192, 0.15); /* Sombra al hover */
+            --input-bg: #FFFFFF; /* Fondo de inputs */
+            --success: #00BFA5; /* Color de éxito */
+            --error: #FF5252; /* Color de error */
+            --warning: #FFA000; /* Color de advertencia */
         }
+
         body {
-            background: var(--background-dark);
-            color: var(--text-invert);
-            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: var(--background);
+            color: var(--text-dark);
+            font-family: 'Roboto', 'Segoe UI', Arial, sans-serif;
             margin: 0;
             min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            box-sizing: border-box;
         }
+
+        .page-container {
+            max-width: 1200px;
+            width: 100%;
+            box-shadow: var(--shadow-hover);
+            border-radius: 12px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            background: var(--input-bg);
+        }
+
+        .header {
+            background: var(--primary);
+            color: var(--text-light);
+            padding: 30px 35px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            text-align: left;
+        }
+
+        .header h2 {
+            margin: 0 0 8px 0;
+            font-size: 2rem;
+            font-weight: 700;
+            color: #FFFFFF;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .header p {
+            color: rgba(255, 255, 255, 0.9);
+            margin: 0;
+            font-size: 0.95rem;
+        }
+
+        .form-container {
+            background: var(--input-bg);
+            padding: 35px;
+            border-radius: 8px;
+            box-shadow: var(--shadow-light);
+            border: 1px solid var(--border-color);
+            margin: 25px;
+        }
+
+        .form-container h3 {
+            color: var(--primary);
+            margin-top: 0;
+            margin-bottom: 25px;
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--text-dark);
+            font-size: 0.95rem;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 1rem;
+            background: var(--input-bg);
+            color: var(--text-dark);
+            transition: all 0.2s ease-in-out;
+            box-sizing: border-box;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(21, 101, 192, 0.1);
+        }
+
+        .form-group input::placeholder {
+            color: #000000;
+            opacity: 0.7;
+            font-weight: 500;
+        }
+
+        .form-group select {
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%231565C0' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            background-size: 16px;
+            padding-right: 40px;
+        }
+
+        .btn-guardar {
+            background: var(--primary);
+            color: var(--text-light);
+            padding: 12px 28px;
+            border-radius: 6px;
+            font-weight: 500;
+            border: none;
+            cursor: pointer;
+            font-size: 0.95rem;
+            margin-top: 20px;
+            transition: all 0.2s ease-in-out;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: var(--shadow-light);
+        }
+
+        .btn-guardar:hover {
+            background: var(--secondary);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .alert {
+            padding: 18px 25px;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            border-width: 1px;
+            border-style: solid;
+            margin: 25px;
+        }
+
+        .alert-success {
+            background: rgba(0, 191, 165, 0.1);
+            color: var(--success);
+            border-color: var(--success);
+        }
+
+        .alert-danger {
+            background: rgba(255, 82, 82, 0.1);
+            color: var(--error);
+            border-color: var(--error);
+        }
+
+        .alert-warning {
+            background: rgba(255, 160, 0, 0.1);
+            color: var(--warning);
+            border-color: var(--warning);
+        }
+
+        .action-button {
+            margin: 25px;
+            text-align: center;
+        }
+
+        .btn-back {
+            background: var(--accent);
+            color: var(--text-light);
+            padding: 12px 28px;
+            border-radius: 6px;
+            font-weight: 500;
+            border: none;
+            cursor: pointer;
+            font-size: 0.95rem;
+            transition: all 0.2s ease-in-out;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: var(--shadow-light);
+        }
+
+        .btn-back:hover {
+            background: #00A896;
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .password-requirements {
+            background: rgba(21, 101, 192, 0.05);
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 10px;
+            border: 1px solid var(--border-color);
+        }
+
+        .password-requirements h4 {
+            color: var(--primary);
+            margin: 0 0 10px 0;
+            font-size: 0.95rem;
+            font-weight: 600;
+        }
+
+        .password-requirements ul {
+            margin: 0;
+            padding-left: 20px;
+            font-size: 0.9rem;
+            color: var(--text-dark);
+        }
+
+        .password-requirements li {
+            margin-bottom: 5px;
+        }
+
+        .password-requirements li:last-child {
+            margin-bottom: 0;
+        }
+
+        @media (max-width: 768px) {
+            .page-container {
+                border-radius: 0;
+                box-shadow: none;
+            }
+            .header, .form-container, .alert, .action-button {
+                margin: 15px;
+                padding: 20px;
+            }
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+            .password-requirements {
+                padding: 12px;
+            }
+            .btn-back {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+
+        /* Estilos para botones de acción en la tabla */
+        .btn-action {
+            padding: 8px 16px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin-right: 8px;
+            text-decoration: none;
+        }
+
+        .btn-editar {
+            background: var(--accent);
+            color: var(--text-light);
+        }
+
+        .btn-editar:hover {
+            background: #00A896;
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-light);
+        }
+
+        .btn-eliminar {
+            background: var(--error);
+            color: var(--text-light);
+        }
+
+        .btn-eliminar:hover {
+            background: #D32F2F;
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-light);
+        }
+
+        /* Actualizar estilos de la tabla */
+        .tabla-usuarios {
+            margin-top: 32px;
+            background: var(--input-bg);
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: var(--shadow-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .tabla-usuarios h3 {
+            color: var(--primary);
+            margin-bottom: 20px;
+            font-size: 1.3rem;
+            font-weight: 600;
+        }
+
+        .modern-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.95rem;
+        }
+
+        .modern-table thead {
+            background: var(--primary);
+            color: var(--text-light);
+        }
+
+        .modern-table th {
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            border-bottom: 2px solid var(--secondary);
+        }
+
+        .modern-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-dark);
+        }
+
+        .modern-table tbody tr:hover {
+            background-color: rgba(21, 101, 192, 0.05);
+        }
+
+        /* Actualizar estilos del contenedor principal */
         .registro-container {
-            max-width: 1100px;
+            max-width: 1200px;
+            width: 100%;
             margin: 0 auto;
-            padding: 40px 16px 32px 16px;
+            padding: 20px;
         }
+
         .registro-box {
-            background: var(--card);
-            color: var(--text-main);
-            border-radius: 18px;
-            box-shadow: var(--shadow);
-            border: 1px solid var(--border);
-            padding: 32px 28px 24px 28px;
+            background: var(--input-bg);
+            border-radius: 12px;
+            box-shadow: var(--shadow-hover);
+            border: 1px solid var(--border-color);
+            padding: 35px;
         }
+
         .registro-box h2 {
             color: var(--primary);
             margin-bottom: 8px;
             font-size: 2rem;
             font-weight: 700;
         }
+
         .registro-box p {
-            color: var(--text-muted);
+            color: var(--text-dark);
             margin-top: 0;
+            opacity: 0.8;
+            font-size: 0.95rem;
         }
-        .alert-success {
-            background: #23272B;
-            color: var(--success);
-            border-radius: 14px;
-            border: 1px solid #43A04733;
-            padding: 18px 24px;
-            margin-bottom: 18px;
-        }
-        .alert-danger {
-            background: #23272B;
-            color: var(--danger);
-            border-radius: 14px;
-            border: 1px solid #D32F2F33;
-            padding: 18px 24px;
-            margin-bottom: 18px;
-        }
-        form {
-            margin-bottom: 32px;
-        }
+
+        /* Actualizar estilos de los inputs */
         .input-group {
-            margin-bottom: 18px;
+            margin-bottom: 25px;
         }
+
         .input-group label {
             display: block;
-            margin-bottom: 6px;
-            font-weight: 600;
-            color: var(--primary-dark);
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--text-dark);
+            font-size: 0.95rem;
         }
+
         .input-group input,
         .input-group select {
             width: 100%;
-            padding: 10px;
-            border: 1.5px solid var(--border);
-            border-radius: 8px;
+            padding: 12px 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
             font-size: 1rem;
-            background: var(--surface);
-            color: var(--text-main);
-            transition: border 0.2s;
+            background: var(--input-bg);
+            color: var(--text-dark);
+            transition: all 0.2s ease-in-out;
+            box-sizing: border-box;
         }
+
         .input-group input:focus,
         .input-group select:focus {
-            border: 1.5px solid var(--primary);
             outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(21, 101, 192, 0.1);
         }
+
+        .input-group input::placeholder {
+            color: #000000;
+            opacity: 0.7;
+            font-weight: 500;
+        }
+
+        .input-group select {
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%231565C0' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            background-size: 16px;
+            padding-right: 40px;
+        }
+
         .readonly-input {
-            background: #f0f0f0;
-            color: #888;
+            background: rgba(21, 101, 192, 0.05);
+            color: var(--text-dark);
+            opacity: 0.8;
         }
+
+        /* Actualizar estilos del botón de registro */
         .btn-registrar {
             background: var(--primary);
-            color: var(--text-invert);
-            padding: 12px 32px;
-            border-radius: 8px;
-            font-weight: 700;
-            font-size: 1rem;
+            color: var(--text-light);
+            padding: 12px 28px;
+            border-radius: 6px;
+            font-weight: 500;
             border: none;
-            margin-top: 8px;
             cursor: pointer;
-            box-shadow: 0 2px 8px rgba(21,101,192,0.08);
-            transition: background 0.2s, box-shadow 0.2s, transform 0.2s;
+            font-size: 0.95rem;
+            margin-top: 20px;
+            transition: all 0.2s ease-in-out;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: var(--shadow-light);
         }
+
         .btn-registrar:hover {
-            background: var(--primary-dark);
-            box-shadow: 0 4px 16px rgba(21,101,192,0.18);
-            transform: translateY(-2px) scale(1.03);
+            background: var(--secondary);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-hover);
         }
-        .tabla-usuarios {
-            margin-top: 32px;
-        }
-        .tabla-usuarios h3 {
-            color: var(--primary-dark);
-            margin-bottom: 12px;
-            font-size: 1.2rem;
-            font-weight: 700;
-        }
-        .modern-table {
-            width: 100%;
-            border-collapse: separate;
-            border-spacing: 0;
-            background: var(--card);
-            color: var(--text-main);
-            border-radius: 14px;
-            box-shadow: var(--shadow);
-            overflow: hidden;
-        }
-        .modern-table th, .modern-table td {
-            padding: 14px 12px;
-            text-align: left;
-        }
-        .modern-table th {
-            background: var(--primary);
-            color: var(--text-invert);
-            font-weight: 700;
-            border-bottom: 2px solid var(--border);
-        }
-        .modern-table tr:nth-child(even) {
-            background: #F0F6FF;
-        }
-        .modern-table tr:nth-child(odd) {
-            background: var(--card);
-        }
-        .modern-table td {
-            border-bottom: 1px solid var(--border);
-        }
-        .btn-editar, .btn-eliminar {
-            padding: 7px 16px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 600;
-            font-size: 0.98rem;
-            margin-right: 5px;
-            transition: background 0.2s, box-shadow 0.2s, transform 0.2s;
-            text-decoration: none;
-            display: inline-block;
-        }
-        .btn-editar {
-            background: var(--accent);
-            color: var(--text-invert);
-        }
-        .btn-editar:hover {
-            background: var(--primary);
-            transform: translateY(-2px) scale(1.03);
-        }
-        .btn-eliminar {
-            background: var(--danger);
-            color: var(--text-invert);
-        }
-        .btn-eliminar:hover {
-            background: #B71C1C;
-            transform: translateY(-2px) scale(1.03);
-        }
-        .action-button {
-            margin-top: 32px;
-            text-align: center;
-        }
+
+        /* Actualizar estilos del botón volver */
         .btn-volver {
-            background: var(--primary);
-            color: var(--text-invert);
-            padding: 12px 32px;
-            border-radius: 8px;
-            font-weight: 700;
-            font-size: 1rem;
+            background: var(--accent);
+            color: var(--text-light);
+            padding: 12px 28px;
+            border-radius: 6px;
+            font-weight: 500;
             border: none;
             cursor: pointer;
-            box-shadow: 0 2px 8px rgba(21,101,192,0.08);
-            transition: background 0.2s, box-shadow 0.2s, transform 0.2s;
+            font-size: 0.95rem;
+            transition: all 0.2s ease-in-out;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: var(--shadow-light);
         }
+
         .btn-volver:hover {
-            background: var(--primary-dark);
-            box-shadow: 0 4px 16px rgba(21,101,192,0.18);
-            transform: translateY(-2px) scale(1.03);
+            background: #00A896;
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-hover);
+        }
+
+        @media (max-width: 768px) {
+            .registro-container {
+                padding: 15px;
+            }
+            .registro-box {
+                padding: 20px;
+            }
+            .tabla-usuarios {
+                padding: 15px;
+            }
+            .modern-table th,
+            .modern-table td {
+                padding: 10px;
+                font-size: 0.9rem;
+            }
+            .btn-action {
+                padding: 6px 12px;
+                font-size: 0.85rem;
+            }
+            .btn-volver {
+                width: 100%;
+                justify-content: center;
+            }
         }
     </style>
 </head>
@@ -271,7 +576,8 @@
             </div>
 
             <button type="submit" class="btn-registrar" th:text="${usuarioNuevo.id != null ? 'Actualizar Usuario' : 'Registrar Usuario'}">
-                Registrar Usuario
+                <span class="icon">👤</span>
+                <span th:text="${usuarioNuevo.id != null ? 'Actualizar Usuario' : 'Registrar Usuario'}">Registrar Usuario</span>
             </button>
         </form>
 
@@ -296,12 +602,18 @@
                         <td th:text="${usuario.licoreria?.nombre ?: 'Sin licorería'}">Licorería</td>
                         <td>
                             <a th:href="@{/usuarios/editar/{id}(id=${usuario.id})}" 
-                               class="btn-editar"
-                               th:unless="${usuario.rol.name() == 'SUPER_ADMIN'}">Editar</a>
+                               class="btn-action btn-editar"
+                               th:unless="${usuario.rol.name() == 'SUPER_ADMIN'}">
+                                <span class="icon">✏️</span>
+                                Editar
+                            </a>
                             <a th:href="@{/usuarios/eliminar/{id}(id=${usuario.id})}"
-                               class="btn-eliminar"
+                               class="btn-action btn-eliminar"
                                th:unless="${usuario.rol.name() == 'SUPER_ADMIN'}"
-                               onclick="return confirm('¿Estás seguro de eliminar este usuario?')">Eliminar</a>
+                               onclick="return confirm('¿Estás seguro de eliminar este usuario?')">
+                                <span class="icon">🗑️</span>
+                                Eliminar
+                            </a>
                         </td>
                     </tr>
                 </tbody>
@@ -310,7 +622,10 @@
 
         <!-- Botón volver -->
         <div class="action-button">
-            <button class="btn-volver" type="button" onclick="window.location.href='/'">Volver al Menú</button>
+            <button class="btn-volver" type="button" onclick="window.location.href='/'">
+                <span class="icon">⬅️</span>
+                Volver al Menú
+            </button>
         </div>
     </div>
 </div>
