@@ -440,32 +440,22 @@ function actualizarTablaVentas() {
     console.log('Tasas disponibles:', tasas);
 
     productosSeleccionados.forEach(prod => {
-        // Asegurarse de que estamos usando la tasa correcta
         const tasaValor = tasas[prod.tipoTasa];
-        if (!tasaValor) {
-            console.error(`Tasa no encontrada para ${prod.tipoTasa}, usando BCV como respaldo`);
-        }
         const tasaEfectiva = tasaValor || tasas['BCV'] || 0;
-        
-        console.log(`Usando tasa ${prod.tipoTasa}: ${tasaEfectiva} para producto ${prod.nombre}`);
         
         const precioBs = prod.precioVenta * tasaEfectiva;
         const subtotalUSD = prod.precioVenta * prod.cantidad;
         const subtotalBs = precioBs * prod.cantidad;
-        
-        console.log(`Cálculos para ${prod.nombre}:`, {
-            precioUSD: prod.precioVenta,
-            tasaUsada: tasaEfectiva,
-            precioBs: precioBs,
-            cantidad: prod.cantidad,
-            subtotalUSD: subtotalUSD,
-            subtotalBs: subtotalBs
-        });
 
         totalUSD += subtotalUSD;
         totalBs += subtotalBs;
 
+        // Obtener el stock disponible del producto
+        const productoDisponible = productosDisponibles.find(p => p.id === prod.id);
+        const stockDisponible = productoDisponible ? productoDisponible.cantidad : 0;
+
         const tr = document.createElement('tr');
+        tr.setAttribute('data-id', prod.id);
         tr.innerHTML = `
             <td class="codigo-col">${prod.codigoUnico || 'Sin código'}</td>
             <td class="producto-col">${prod.nombre}</td>
@@ -476,12 +466,15 @@ function actualizarTablaVentas() {
                 <small class="tasa-badge">${prod.tipoTasa}</small>
             </td>
             <td class="cantidad-col">
-                <input type="number" 
-                       class="cantidad-input"
-                       min="1" 
-                       max="${prod.cantidad}" 
-                       value="${prod.cantidad}" 
-                       onchange="actualizarCantidad('${prod.id}', this.value)">
+                <div class="quantity-control">
+                    <button class="decrease">-</button>
+                    <input type="number" 
+                           class="cantidad-input"
+                           min="1" 
+                           max="${stockDisponible}" 
+                           value="${prod.cantidad}">
+                    <button class="increase">+</button>
+                </div>
             </td>
             <td class="subtotal-col">
                 <div class="subtotal-amounts">
@@ -502,38 +495,40 @@ function actualizarTablaVentas() {
     // Actualizar totales
     document.getElementById('totalUSD').textContent = `$${totalUSD.toFixed(2)}`;
     document.getElementById('totalBS').textContent = `${totalBs.toFixed(2)} Bs`;
+
+    // Reinicializar los controles de cantidad
+    setupQuantityControls();
 }
 
 // Actualizar cantidad
 function actualizarCantidad(id, nuevaCantidad) {
-    const producto = productosSeleccionados.find(p => p.id === id);
+    const producto = productosSeleccionados.find(p => p.id === parseInt(id));
     if (!producto) return;
     
-    fetch(`/productos/${id}`)
-        .then(response => response.json())
-        .then(productoActual => {
-            const nuevaCant = parseInt(nuevaCantidad);
-            
-            if (nuevaCant <= 0) {
-                showNotification('La cantidad debe ser mayor a cero', 'warning');
-                actualizarTablaVentas();
-                return;
-            }
-            
-            if (nuevaCant > productoActual.cantidad) {
-                showNotification(`Solo hay ${productoActual.cantidad} unidades disponibles`, 'warning');
-                actualizarTablaVentas();
-                return;
-            }
-            
-            producto.cantidad = nuevaCant;
-            actualizarTablaVentas();
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            showNotification('Error al actualizar la cantidad', 'error');
-            actualizarTablaVentas();
-        });
+    // Obtener el stock del producto desde productosDisponibles
+    const productoActual = productosDisponibles.find(p => p.id === parseInt(id));
+    if (!productoActual) {
+        showNotification('Error: Producto no encontrado', 'error');
+        actualizarTablaVentas();
+        return;
+    }
+
+    const nuevaCant = parseInt(nuevaCantidad);
+    
+    if (nuevaCant <= 0) {
+        showNotification('La cantidad debe ser mayor a cero', 'warning');
+        actualizarTablaVentas();
+        return;
+    }
+    
+    if (nuevaCant > productoActual.cantidad) {
+        showNotification(`Solo hay ${productoActual.cantidad} unidades disponibles`, 'warning');
+        actualizarTablaVentas();
+        return;
+    }
+    
+    producto.cantidad = nuevaCant;
+    actualizarTablaVentas();
 }
 
 // Eliminar producto
@@ -561,17 +556,41 @@ function setupQuantityControls() {
 
         if (!input || !decreaseBtn || !increaseBtn) return;
 
-        decreaseBtn.addEventListener('click', () => updateQuantity(input, -1));
-        increaseBtn.addEventListener('click', () => updateQuantity(input, 1));
-        input.addEventListener('change', () => validateQuantity(input));
-    });
-}
+        decreaseBtn.addEventListener('click', () => {
+            const currentValue = parseInt(input.value) || 0;
+            if (currentValue > 1) {
+                input.value = currentValue - 1;
+                const productoId = input.closest('tr').getAttribute('data-id');
+                actualizarCantidad(productoId, input.value);
+            }
+        });
 
-function updateQuantity(input, change) {
-    const currentValue = parseInt(input.value) || 0;
-    const newValue = Math.max(0, currentValue + change);
-    input.value = newValue;
-    input.dispatchEvent(new Event('change'));
+        increaseBtn.addEventListener('click', () => {
+            const currentValue = parseInt(input.value) || 0;
+            const productoId = input.closest('tr').getAttribute('data-id');
+            const producto = productosDisponibles.find(p => p.id === parseInt(productoId));
+            
+            if (producto && currentValue < producto.cantidad) {
+                input.value = currentValue + 1;
+                actualizarCantidad(productoId, input.value);
+            } else {
+                showNotification(`Solo hay ${producto?.cantidad || 0} unidades disponibles`, 'warning');
+            }
+        });
+
+        input.addEventListener('change', () => {
+            const productoId = input.closest('tr').getAttribute('data-id');
+            actualizarCantidad(productoId, input.value);
+        });
+
+        input.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                const productoId = input.closest('tr').getAttribute('data-id');
+                actualizarCantidad(productoId, input.value);
+            }
+        });
+    });
 }
 
 // Cálculos de pago
@@ -1299,17 +1318,17 @@ loadingStyles.textContent = `
         height: 100%;
         background: rgba(255, 255, 255, 0.8);
         display: flex;
-        justify-content: center;
         align-items: center;
-        z-index: 9999;
+        justify-content: center;
+        z-index: 999;
     }
 
     .spinner {
-        width: 50px;
-        height: 50px;
-        border: 5px solid #f3f3f3;
-        border-top: 5px solid #1565c0;
+        border: 4px solid #f3f3f3;
+        border-top: 4px solid #3498db;
         border-radius: 50%;
+        width: 40px;
+        height: 40px;
         animation: spin 1s linear infinite;
     }
 
@@ -1320,46 +1339,45 @@ loadingStyles.textContent = `
 `;
 document.head.appendChild(loadingStyles);
 
-// Funciones para manejo de clientes
-function toggleClienteSelector() {
-    const tipoVenta = document.getElementById('tipoVenta').value;
-    const clienteSelector = document.getElementById('clienteSelector');
-    clienteSelector.style.display = tipoVenta === 'CREDITO' ? 'block' : 'none';
-    if (tipoVenta === 'CONTADO') {
-        document.getElementById('clienteId').value = '';
-        document.getElementById('buscarCliente').value = '';
-    }
-}
-
-function buscarClientes() {
-    const input = document.getElementById('buscarCliente');
-    const termino = input.value.trim();
-    if (!termino) {
-        document.getElementById('clientesList').innerHTML = '';
-        return;
+// Agregar estilos para los controles de cantidad
+const quantityStyles = document.createElement('style');
+quantityStyles.textContent = `
+    .quantity-control {
+        display: flex;
+        align-items: center;
+        gap: 5px;
     }
 
-    fetch(`/clientes/buscar?termino=${encodeURIComponent(termino)}`)
-        .then(response => response.json())
-        .then(clientes => {
-            const lista = document.getElementById('clientesList');
-            lista.innerHTML = '';
-            clientes.forEach(cliente => {
-                const li = document.createElement('li');
-                li.textContent = `${cliente.nombre} ${cliente.apellido} - ${cliente.cedula}`;
-                li.onclick = () => seleccionarCliente(cliente);
-                lista.appendChild(li);
-            });
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            showNotification('Error al buscar clientes', 'error');
-        });
-}
+    .quantity-control button {
+        width: 25px;
+        height: 25px;
+        border: 1px solid #ddd;
+        background: #f8f9fa;
+        border-radius: 4px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+        padding: 0;
+    }
 
-function seleccionarCliente(cliente) {
-    document.getElementById('clienteId').value = cliente.id;
-    document.getElementById('buscarCliente').value = 
-        `${cliente.nombre} ${cliente.apellido} - ${cliente.cedula}`;
-    document.getElementById('clientesList').innerHTML = '';
-} 
+    .quantity-control button:hover {
+        background: #e9ecef;
+    }
+
+    .quantity-control input {
+        width: 50px;
+        text-align: center;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        padding: 2px;
+    }
+
+    .quantity-control input::-webkit-inner-spin-button,
+    .quantity-control input::-webkit-outer-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+`;
+document.head.appendChild(quantityStyles);
