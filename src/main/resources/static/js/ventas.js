@@ -1390,3 +1390,152 @@ quantityStyles.textContent = `
     }
 `;
 document.head.appendChild(quantityStyles);
+
+// Funciones para manejo de clientes
+function toggleClienteSelector() {
+    const tipoVenta = document.getElementById('tipoVenta').value;
+    const clienteSelector = document.getElementById('clienteSelector');
+    const buscarClienteInput = document.getElementById('buscarCliente');
+    const clientesList = document.getElementById('clientesList');
+    
+    if (tipoVenta === 'CREDITO') {
+        clienteSelector.style.display = 'block';
+        buscarClienteInput.focus();
+    } else {
+        clienteSelector.style.display = 'none';
+        document.getElementById('clienteId').value = '';
+        buscarClienteInput.value = '';
+        clientesList.innerHTML = '';
+    }
+}
+
+function buscarClientes() {
+    const input = document.getElementById('buscarCliente');
+    const termino = input.value.trim();
+    const clientesList = document.getElementById('clientesList');
+    
+    if (!termino) {
+        clientesList.innerHTML = '';
+        return;
+    }
+
+    // Mostrar indicador de carga
+    clientesList.innerHTML = '<li class="loading">Buscando clientes...</li>';
+
+    fetch(`/clientes/buscar?termino=${encodeURIComponent(termino)}`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Error en la búsqueda de clientes');
+            }
+            return response.json();
+        })
+        .then(clientes => {
+            clientesList.innerHTML = '';
+            
+            if (clientes.length === 0) {
+                clientesList.innerHTML = '<li class="no-results">No se encontraron clientes</li>';
+                return;
+            }
+
+            clientes.forEach(cliente => {
+                const li = document.createElement('li');
+                li.className = 'cliente-item';
+                li.innerHTML = `
+                    <div class="cliente-info">
+                        <strong>${cliente.nombre} ${cliente.apellido}</strong>
+                        <small>Cédula: ${cliente.cedula}</small>
+                        <small>Teléfono: ${cliente.telefono || 'No disponible'}</small>
+                    </div>
+                `;
+                li.onclick = () => seleccionarCliente(cliente);
+                clientesList.appendChild(li);
+            });
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            clientesList.innerHTML = '<li class="error">Error al buscar clientes</li>';
+            showNotification('Error al buscar clientes', 'error');
+        });
+}
+
+function seleccionarCliente(cliente) {
+    document.getElementById('clienteId').value = cliente.id;
+    document.getElementById('buscarCliente').value = `${cliente.nombre} ${cliente.apellido} - ${cliente.cedula}`;
+    document.getElementById('clientesList').innerHTML = '';
+    showNotification('Cliente seleccionado: ' + cliente.nombre + ' ' + cliente.apellido, 'success');
+}
+
+// Agregar estilos para el selector de clientes
+const clienteStyles = document.createElement('style');
+clienteStyles.textContent = `
+    .cliente-selector {
+        margin: 15px 0;
+        padding: 15px;
+        background: #f8f9fa;
+        border-radius: 8px;
+        border: 1px solid #dee2e6;
+    }
+
+    .cliente-selector .form-group {
+        margin-bottom: 10px;
+    }
+
+    .cliente-selector input {
+        width: 100%;
+        padding: 8px;
+        border: 1px solid #ced4da;
+        border-radius: 4px;
+    }
+
+    #clientesList {
+        max-height: 200px;
+        overflow-y: auto;
+        margin-top: 5px;
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+        background: white;
+    }
+
+    .cliente-item {
+        padding: 10px;
+        cursor: pointer;
+        border-bottom: 1px solid #dee2e6;
+    }
+
+    .cliente-item:last-child {
+        border-bottom: none;
+    }
+
+    .cliente-item:hover {
+        background: #f8f9fa;
+    }
+
+    .cliente-info {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .cliente-info small {
+        color: #6c757d;
+    }
+
+    .loading {
+        color: #6c757d;
+        text-align: center;
+        padding: 10px;
+    }
+
+    .error {
+        color: #dc3545;
+        text-align: center;
+        padding: 10px;
+    }
+
+    .no-results {
+        color: #6c757d;
+        text-align: center;
+        padding: 10px;
+    }
+`;
+document.head.appendChild(clienteStyles);
