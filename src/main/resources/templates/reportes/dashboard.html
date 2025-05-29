@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard de Ventas - InventSoft</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <!-- Custom CSS -->
+    
+    
+    <style>
+        :root {
+            --primary-color: #1565c0;
+            --accent-color: #00BFA5;
+            --secondary-color: #1976D2;
+            --background-color: #F4F7FA;
+            --text-primary: #222;
+            --text-light: #fff;
+            --card-shadow: 0 2px 12px rgba(0,0,0,0.10);
+            --card-radius: 14px;
+        }
+        html, body {
+            background: var(--background-color);
+            min-height: 100vh;
+        }
+        .dashboard-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 32px 10px 32px 10px;
+        }
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 18px;
+        }
+        .dashboard-title {
+            font-size: 2em;
+            color: var(--primary-color);
+            font-weight: 700;
+        }
+        .dashboard-actions {
+            display: flex;
+            gap: 10px;
+        }
+        .dashboard-top-row {
+            display: flex;
+            gap: 24px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+        .dashboard-filtros {
+            background: #fff;
+            border-radius: var(--card-radius);
+            box-shadow: var(--card-shadow);
+            padding: 18px 18px 10px 18px;
+            min-width: 320px;
+            max-width: 420px;
+            flex: 1 1 350px;
+        }
+        .dashboard-metricas-row {
+            display: flex;
+            gap: 18px;
+            flex: 3 1 700px;
+            flex-wrap: wrap;
+            align-items: stretch;
+        }
+        .dashboard-card {
+            background: #fff;
+            border-radius: var(--card-radius);
+            box-shadow: var(--card-shadow);
+            padding: 18px 16px 14px 16px;
+            min-width: 180px;
+            max-width: 220px;
+            flex: 1 1 180px;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            justify-content: center;
+        }
+        .dashboard-card .card-label {
+            color: #888;
+            font-size: 1em;
+            font-weight: 500;
+            margin-bottom: 6px;
+        }
+        .dashboard-card .card-value {
+            font-size: 1.7em;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 4px;
+            word-break: break-word;
+        }
+        .dashboard-card .card-sub {
+            font-size: 0.95em;
+            color: #4caf50;
+            font-weight: 500;
+        }
+        .dashboard-card .card-icon {
+            font-size: 1.4em;
+            margin-bottom: 8px;
+        }
+        .dashboard-card.bcv { border-left: 4px solid #1976D2; }
+        .dashboard-card.promedio { border-left: 4px solid #00BFA5; }
+        .dashboard-card.paralela { border-left: 4px solid #FF7043; }
+        .dashboard-card.ventas { border-left: 4px solid #1976D2; }
+        .dashboard-card.dolares { border-left: 4px solid #00BFA5; }
+        .dashboard-card.bolivares { border-left: 4px solid #FFD600; }
+        .dashboard-card.ticket { border-left: 4px solid #FF7043; }
+        .dashboard-card.productos { border-left: 4px solid #7C4DFF; }
+        .dashboard-charts-row {
+            display: flex;
+            gap: 24px;
+            margin-top: 18px;
+            flex-wrap: wrap;
+        }
+        .chart-card {
+            background: #fff;
+            border-radius: var(--card-radius);
+            box-shadow: var(--card-shadow);
+            padding: 18px 18px 10px 18px;
+            min-width: 340px;
+            max-width: 600px;
+            flex: 1 1 400px;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        .chart-card h3 {
+            margin-bottom: 12px;
+            color: var(--primary-color);
+            font-size: 1.1em;
+            font-weight: 600;
+        }
+        .chart-card canvas {
+            width: 100% !important;
+            max-width: 100% !important;
+            height: 260px !important;
+            max-height: 320px !important;
+        }
+        @media (max-width: 1200px) {
+            .dashboard-top-row, .dashboard-charts-row {
+                flex-direction: column;
+                gap: 18px;
+            }
+            .dashboard-metricas-row {
+                flex-wrap: wrap;
+                gap: 12px;
+            }
+        }
+        @media (max-width: 700px) {
+            .dashboard-container {
+                padding: 8px 2px;
+            }
+            .dashboard-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+            .dashboard-top-row, .dashboard-charts-row {
+                flex-direction: column;
+                gap: 12px;
+            }
+            .dashboard-card, .chart-card {
+                min-width: 0;
+                max-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <div class="dashboard-header">
+            <div class="dashboard-title">Dashboard de Ventas</div>
+            <div class="dashboard-actions">
+                <a href="/dashboard" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Volver
+                </a>
+                <a href="/reportes/ventas/lista" class="btn btn-primary">
+                    <i class="fas fa-list"></i> Ver Lista
+                </a>
+            </div>
+        </div>
+        <div class="dashboard-top-row">
+            <div class="dashboard-filtros mb-0">
+                <form class="row g-3 align-items-end">
+                    <div class="col-md-6">
+                        <label for="fecha-inicio" class="form-label">Fecha Inicio</label>
+                        <input type="date" class="form-control" id="fecha-inicio" name="fechaInicio">
+                    </div>
+                    <div class="col-md-6">
+                        <label for="fecha-fin" class="form-label">Fecha Fin</label>
+                        <input type="date" class="form-control" id="fecha-fin" name="fechaFin">
+                    </div>
+                    <div class="col-md-6">
+                        <label for="tipo-venta" class="form-label">Tipo de Venta</label>
+                        <select class="form-select" id="tipo-venta" name="tipoVenta">
+                            <option value="TODAS">Todas</option>
+                            <option value="CONTADO">Contado</option>
+                            <option value="CREDITO">Crédito</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="metodo-pago" class="form-label">Método de Pago</label>
+                        <select class="form-select" id="metodo-pago" name="metodoPago">
+                            <option value="TODOS">Todos</option>
+                            <option value="EFECTIVO">Efectivo</option>
+                            <option value="TRANSFERENCIA">Transferencia</option>
+                            <option value="PUNTO">Punto de Venta</option>
+                        </select>
+                    </div>
+                    <div class="col-12">
+                        <button type="button" class="btn btn-primary w-100" id="filtrar-reporte">
+                            <i class="fas fa-filter"></i> Filtrar
+                        </button>
+                    </div>
+                </form>
+            </div>
+            <div class="dashboard-metricas-row">
+                <div class="dashboard-card ventas">
+                    <div class="card-icon"><i class="fas fa-shopping-cart"></i></div>
+                    <div class="card-label">Total Ventas</div>
+                    <div class="card-value" id="total-ventas">0</div>
+                </div>
+                <div class="dashboard-card dolares">
+                    <div class="card-icon"><i class="fas fa-dollar-sign"></i></div>
+                    <div class="card-label">Ingresos Totales ($)</div>
+                    <div class="card-value" id="ingresos-totales">$0.00</div>
+                </div>
+                <div class="dashboard-card bolivares">
+                    <div class="card-icon"><i class="fas fa-money-bill-wave"></i></div>
+                    <div class="card-label">Ingresos Totales (Bs)</div>
+                    <div class="card-value" id="ingresos-totales-bs">Bs 0.00</div>
+                </div>
+                <div class="dashboard-card ticket">
+                    <div class="card-icon"><i class="fas fa-receipt"></i></div>
+                    <div class="card-label">Ticket Promedio</div>
+                    <div class="card-value" id="ticket-promedio">$0.00</div>
+                </div>
+                <div class="dashboard-card productos">
+                    <div class="card-icon"><i class="fas fa-boxes"></i></div>
+                    <div class="card-label">Productos Vendidos</div>
+                    <div class="card-value" id="productos-vendidos">0</div>
+                </div>
+                <div class="dashboard-card bcv">
+                    <div class="card-icon"><i class="fas fa-university"></i></div>
+                    <div class="card-label">Tasa BCV</div>
+                    <div class="card-value" id="tasa-bcv">-</div>
+                    <div class="card-sub">Bolívares</div>
+                </div>
+                <div class="dashboard-card promedio">
+                    <div class="card-icon"><i class="fas fa-balance-scale"></i></div>
+                    <div class="card-label">Tasa Promedio</div>
+                    <div class="card-value" id="tasa-promedio">-</div>
+                    <div class="card-sub">Bolívares</div>
+                </div>
+                <div class="dashboard-card paralela">
+                    <div class="card-icon"><i class="fas fa-chart-line"></i></div>
+                    <div class="card-label">Tasa Paralela</div>
+                    <div class="card-value" id="tasa-paralela">-</div>
+                    <div class="card-sub">Bolívares</div>
+                </div>
+            </div>
+        </div>
+        <div class="dashboard-charts-row">
+            <div class="chart-card">
+                <h3>Ventas por Método de Pago</h3>
+                <canvas id="metodosPagoChart"></canvas>
+            </div>
+            <div class="chart-card">
+                <h3>Estado de Créditos</h3>
+                <canvas id="creditosChart"></canvas>
+            </div>
+        </div>
+        <div class="dashboard-actions mt-4" style="justify-content: flex-end;">
+            <button type="button" class="btn btn-secondary export-btn" data-format="pdf">
+                <i class="fas fa-file-pdf"></i> Exportar PDF
+            </button>
+            <button type="button" class="btn btn-secondary export-btn" data-format="excel">
+                <i class="fas fa-file-excel"></i> Exportar Excel
+            </button>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script th:src="@{/js/reportes-dashboard.js}"></script>
+</body>
+</html>

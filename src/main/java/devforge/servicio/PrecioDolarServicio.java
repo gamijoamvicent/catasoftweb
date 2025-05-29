@@ -12,4 +12,9 @@ public interface PrecioDolarServicio {
     PrecioDolar obtenerUltimoPrecioPorTipo(Long licoreriaId, PrecioDolar.TipoTasa tipoTasa);
     List<PrecioDolar> obtenerUltimasTasas(Long licoreriaId);
     double obtenerPrecioActualPorTipo(Long licoreriaId, PrecioDolar.TipoTasa tipoTasa);
+    
+    // Devuelve la última tasa de cada tipo para la licorería
+    default List<PrecioDolar> obtenerTasasActualesPorLicoreria(Long licoreriaId) {
+        return obtenerUltimasTasas(licoreriaId);
+    }
 }

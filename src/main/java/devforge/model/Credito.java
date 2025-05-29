@@ -1,9 +1,11 @@
 package devforge.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 @Entity
 @Table(name = "creditos")
 public class Credito {
@@ -123,4 +125,4 @@ public class Credito {
     public Long getLicoreriaId() {
         return licoreria != null ? licoreria.getId() : null;
     }
-} 
+}

@@ -6,128 +6,364 @@
     <title>Reporte de Ventas - InventSoft</title>
     <link rel="stylesheet" th:href="@{/css/dashboard.css}">
     <link rel="stylesheet" th:href="@{/css/ventas.css}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #1565c0;
+            --accent-color: #00BFA5;
+            --secondary-color: #1976D2;
+            --background-color: #E3F2FD;
+            --text-primary: #333333;
+            --text-light: #ffffff;
+            --card-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        body {
+            background-color: var(--background-color);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: var(--text-primary);
+            margin: 0;
+            padding: 0;
+        }
+
+        .page-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: var(--card-shadow);
+        }
+
+        .header h2 {
+            color: var(--primary-color);
+            margin: 0;
+            font-weight: 600;
+        }
+
+        .filtros-container {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: var(--card-shadow);
+            margin-bottom: 20px;
+        }
+
+        .filter-group {
+            flex: 1;
+        }
+
+        .filter-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: var(--secondary-color);
+            font-weight: 500;
+        }
+
+        .filter-input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background: white;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: var(--card-shadow);
+            text-align: center;
+        }
+
+        .stat-title {
+            color: var(--secondary-color);
+            font-size: 0.9em;
+            margin-bottom: 10px;
+        }
+
+        .stat-value {
+            color: var(--primary-color);
+            font-size: 1.4em;
+            font-weight: bold;
+        }
+
+        .charts-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .chart-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: var(--card-shadow);
+        }
+
+        .chart-card h3 {
+            color: var(--primary-color);
+            margin-top: 0;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+
+        .table-container {
+            background: white;
+            border-radius: 10px;
+            box-shadow: var(--card-shadow);
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .productos-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .productos-table th {
+            background-color: var(--primary-color);
+            color: var(--text-light);
+            padding: 12px;
+            text-align: left;
+        }
+
+        .productos-table td {
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .productos-table tr:hover {
+            background-color: rgba(21, 101, 192, 0.05);
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background-color 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: var(--text-light);
+        }
+
+        .btn-secondary {
+            background-color: var(--secondary-color);
+            color: var(--text-light);
+        }
+
+        .btn-accent {
+            background-color: var(--accent-color);
+            color: var(--text-light);
+        }
+
+        .actions-container {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .filtros-container {
+                flex-direction: column;
+            }
+            
+            .charts-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
 </head>
 <body>
-    <div class="dashboard-container">
-        <!-- Sidebar -->
-        <aside class="sidebar">
-            <div class="logo-container">
-                <img src="/images/logo.png" alt="InventSoft Logo" class="logo">
-            </div>
-            
-            <div class="user-info" th:if="${licoreriaActual != null}">
-                <div class="licoreria-info">
-                    <h3>🏢 Licorería Actual</h3>
-                    <p th:text="${licoreriaActual.nombre}"></p>
-                    <p><strong>Ubicación:</strong> <span th:text="${licoreriaActual.direccion}"></span></p>
-                    <p><strong>Teléfono:</strong> <span th:text="${licoreriaActual.telefono}"></span></p>
-                </div>
-            </div>
-
-            <div class="actions-container">
-                <a th:href="@{/}" class="btn btn-secondary">
-                    <span class="icon">🏠</span> Volver al Inicio
+    <div class="page-container">
+        <div class="header">
+            <div class="d-flex justify-content-between align-items-center">
+                <a href="/dashboard" class="btn btn-secondary">
+                    <span class="icon">⬅️</span> Ir al Dashboard
                 </a>
+                <h2>Reporte de Ventas</h2>
+                <div style="width: 100px;"></div> <!-- Spacer for alignment -->
             </div>
-        </aside>
+            <p>Análisis de ventas y créditos</p>
+        </div>
 
-        <!-- Contenido Principal -->
-        <main class="main-content">
-            <div class="venta-container">
-                <h1>Reporte de Ventas</h1>
-
-                <!-- Filtros -->
-                <div class="filtros-container">
-                    <div class="filter-group">
-                        <label for="fecha-inicio">Fecha Inicio:</label>
-                        <input type="date" id="fecha-inicio" class="filter-input">
+        <div class="reporte-container">
+            <!-- Filtros -->
+            <div class="filtros-container">
+                <div class="row g-3 align-items-end">
+                    <div class="col-md-3">
+                        <label for="fecha-inicio" class="form-label">Fecha Inicio</label>
+                        <input type="date" class="form-control" id="fecha-inicio" name="fechaInicio">
                     </div>
-                    <div class="filter-group">
-                        <label for="fecha-fin">Fecha Fin:</label>
-                        <input type="date" id="fecha-fin" class="filter-input">
+                    <div class="col-md-3">
+                        <label for="fecha-fin" class="form-label">Fecha Fin</label>
+                        <input type="date" class="form-control" id="fecha-fin" name="fechaFin">
                     </div>
-                    <div class="filter-group">
-                        <label for="tipo-venta">Tipo de Venta:</label>
-                        <select id="tipo-venta" class="filter-input">
-                            <option value="TODAS">Todas</option>
+                    <div class="col-md-2">
+                        <label for="tipo-venta" class="form-label">Tipo de Venta</label>
+                        <select class="form-select" id="tipo-venta" name="tipoVenta">
+                            <option value="">Todos</option>
                             <option value="CONTADO">Contado</option>
                             <option value="CREDITO">Crédito</option>
                         </select>
                     </div>
-                    <div class="filter-group">
-                        <label for="metodo-pago">Método de Pago:</label>
-                        <select id="metodo-pago" class="filter-input">
-                            <option value="TODOS">Todos</option>
+                    <div class="col-md-2">
+                        <label for="metodo-pago" class="form-label">Método de Pago</label>
+                        <select class="form-select" id="metodo-pago" name="metodoPago">
+                            <option value="">Todos</option>
                             <option value="EFECTIVO">Efectivo</option>
                             <option value="TRANSFERENCIA">Transferencia</option>
-                            <option value="PUNTO_VENTA">Punto de Venta</option>
-                            <option value="PAGO_MOVIL">Pago Móvil</option>
+                            <option value="PUNTO">Punto de Venta</option>
                         </select>
                     </div>
-                </div>
-
-                <!-- Estadísticas -->
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <div class="stat-title">Total Ventas</div>
-                        <div class="stat-value" id="total-ventas">0</div>
+                    <div class="col-md-2">
+                        <button type="button" class="btn btn-primary w-100" id="filtrar-reporte">
+                            <i class="fas fa-filter"></i> Filtrar
+                        </button>
                     </div>
-                    <div class="stat-card">
-                        <div class="stat-title">Ingresos Totales</div>
-                        <div class="stat-value" id="ingresos-totales">$0.00</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-title">Ticket Promedio</div>
-                        <div class="stat-value" id="ticket-promedio">$0.00</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-title">Productos Vendidos</div>
-                        <div class="stat-value" id="productos-vendidos">0</div>
-                    </div>
-                </div>
-
-                <!-- Tabla de ventas -->
-                <div class="table-container">
-                    <table class="productos-table">
-                        <thead>
-                            <tr>
-                                <th>Fecha</th>
-                                <th>Nro. Venta</th>
-                                <th>Cliente</th>
-                                <th>Tipo</th>
-                                <th>Método Pago</th>
-                                <th>Total USD</th>
-                                <th>Total Bs</th>
-                                <th>Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody id="ventas-list">
-                            <!-- Las ventas se agregarán dinámicamente -->
-                        </tbody>
-                    </table>
-                </div>
-
-                <!-- Botones de acción -->
-                <div class="actions-container">
-                    <button type="button" class="btn btn-secondary export-btn" data-format="pdf">
-                        <span class="icon">📄</span> Exportar PDF
-                    </button>
-                    <button type="button" class="btn btn-secondary export-btn" data-format="excel">
-                        <span class="icon">📊</span> Exportar Excel
-                    </button>
-                    <button type="button" class="btn btn-primary" id="actualizar-reporte">
-                        <span class="icon">🔄</span> Actualizar
-                    </button>
                 </div>
             </div>
-        </main>
+
+            <!-- Estadísticas -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-title">Total Ventas</div>
+                    <div class="stat-value" id="total-ventas">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-title">Ingresos Totales</div>
+                    <div class="stat-value" id="ingresos-totales">$0.00</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-title">Ticket Promedio</div>
+                    <div class="stat-value" id="ticket-promedio">$0.00</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-title">Productos Vendidos</div>
+                    <div class="stat-value" id="productos-vendidos">0</div>
+                </div>
+            </div>
+
+            <!-- Gráficos -->
+            <div class="charts-container">
+                <div class="chart-card">
+                    <h3>Ventas por Método de Pago</h3>
+                    <canvas id="metodosPagoChart"></canvas>
+                </div>
+                <div class="chart-card">
+                    <h3>Estado de Créditos</h3>
+                    <canvas id="creditosChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Tabla de ventas -->
+            <div class="table-container">
+                <table class="productos-table">
+                    <thead>
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Nro. Venta</th>
+                            <th>Cliente</th>
+                            <th>Tipo</th>
+                            <th>Método Pago</th>
+                            <th>Total USD</th>
+                            <th>Total Bs</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ventas-list">
+                        <!-- Las ventas se agregarán dinámicamente -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Botones de acción -->
+            <div class="actions-container">
+                <button type="button" class="btn btn-secondary export-btn" data-format="pdf">
+                    <span class="icon">📄</span> Exportar PDF
+                </button>
+                <button type="button" class="btn btn-secondary export-btn" data-format="excel">
+                    <span class="icon">📊</span> Exportar Excel
+                </button>
+                <button type="button" class="btn btn-primary" id="actualizar-reporte">
+                    <span class="icon">🔄</span> Actualizar
+                </button>
+            </div>
+        </div>
     </div>
 
-    <script th:src="@{/js/dashboard.js}"></script>
+    <!-- Datos ocultos -->
+    <div style="display: none;">
+        <!-- Tasas -->
+        <div th:each="tasa : ${tasasActuales}" 
+             class="tasa-value"
+             th:data-tasa="${tasa.tipoTasa}"
+             th:data-valor="${tasa.precioDolar}">
+        </div>
+
+        <!-- Productos -->
+        <ul id="productosData">
+            <li th:each="producto : ${productos}"
+                th:data-id="${producto.id}"
+                th:data-nombre="${producto.nombre}"
+                th:data-codigo="${producto.codigoUnico}"
+                th:data-precio="${producto.precioVenta}"
+                th:data-cantidad="${producto.cantidad}"
+                th:data-marca="${producto.marca ?: 'Sin marca'}"
+                th:data-tipo-tasa="${producto.tipoTasa}">
+            </li>
+        </ul>
+    </div>
+
     <script th:src="@{/js/ventas.js}"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            initializeReportes();
+            console.log('DOM cargado, verificando Chart.js...');
+            if (typeof Chart === 'undefined') {
+                console.error('Chart.js no está disponible');
+                showNotification('Error: No se pudo cargar Chart.js', 'error');
+                return;
+            }
+            
+            console.log('Chart.js disponible, inicializando reporte...');
+            // Establecer fechas por defecto
+            const today = new Date();
+            const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+            
+            document.getElementById('fecha-inicio').valueAsDate = firstDay;
+            document.getElementById('fecha-fin').valueAsDate = today;
+            
+            // Cargar datos iniciales
+            updateReporte();
         });
     </script>
 </body>

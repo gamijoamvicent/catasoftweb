@@ -2,6 +2,7 @@ package devforge.repository;
 
 import devforge.model.Venta;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -11,7 +12,9 @@ import java.util.List;
 import java.util.Map;
 
 @Repository
-public interface VentaRepository extends JpaRepository<Venta, Long> {
+public interface VentaRepository extends JpaRepository<Venta, Long>, JpaSpecificationExecutor<Venta> {
+    List<Venta> findByLicoreriaId(Long licoreriaId);
+    
     List<Venta> findByLicoreriaIdAndFechaVentaBetween(
         Long licoreriaId, LocalDateTime fechaInicio, LocalDateTime fechaFin);
 

@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Reporte de Ventas</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary-color: #2C3E50;
+            --secondary-color: #34495E;
+            --success-color: #27AE60;
+            --background-color: #f8f9fa;
+            --card-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        body {
+            background-color: var(--background-color);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 20px;
+        }
+
+        .page-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: var(--card-shadow);
+        }
+
+        .header h2 {
+            color: var(--primary-color);
+            margin: 0;
+            font-weight: 600;
+        }
+
+        .header p {
+            color: var(--secondary-color);
+            margin-top: 10px;
+        }
+
+        .filtros-container {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: var(--card-shadow);
+            margin-bottom: 20px;
+        }
+
+        .filtro-grupo {
+            flex: 1;
+        }
+
+        .filtro-grupo label {
+            display: block;
+            margin-bottom: 5px;
+            color: var(--secondary-color);
+            font-weight: 500;
+        }
+
+        .filtro-grupo input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        .btn-filtrar {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .btn-filtrar:hover {
+            background-color: var(--secondary-color);
+        }
+
+        .resumen-total {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: var(--card-shadow);
+            margin-bottom: 20px;
+            text-align: center;
+            font-size: 1.2em;
+        }
+
+        .resumen-total .monto {
+            color: var(--success-color);
+            font-size: 1.4em;
+            font-weight: bold;
+        }
+
+        .graficos-container {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .grafico-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: var(--card-shadow);
+        }
+
+        .tabla-ventas {
+            width: 100%;
+            background: white;
+            border-radius: 10px;
+            box-shadow: var(--card-shadow);
+            overflow: hidden;
+        }
+
+        .tabla-ventas th {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 15px;
+            text-align: left;
+        }
+
+        .tabla-ventas td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .tabla-ventas tr:last-child td {
+            border-bottom: none;
+        }
+
+        .tabla-ventas tr:hover {
+            background-color: #f5f5f5;
+        }
+
+        .botones-exportar {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .btn-exportar {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-exportar:hover {
+            background-color: var(--secondary-color);
+        }
+
+        .btn-back {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: var(--secondary-color);
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            margin-top: 20px;
+            transition: background-color 0.3s;
+        }
+
+        .btn-back:hover {
+            background-color: var(--primary-color);
+            color: white;
+            text-decoration: none;
+        }
+
+        @media (max-width: 768px) {
+            .graficos-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .filtros-container {
+                flex-direction: column;
+            }
+
+            .filtro-grupo {
+                width: 100%;
+            }
+        }
+
+        .creditos-container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: var(--card-shadow);
+            margin-bottom: 20px;
+        }
+
+        .creditos-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .stat-card {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-card .stat-title {
+            color: var(--secondary-color);
+            font-size: 0.9em;
+            margin-bottom: 5px;
+        }
+
+        .stat-card .stat-value {
+            color: var(--primary-color);
+            font-size: 1.4em;
+            font-weight: bold;
+        }
+
+        .stat-card.warning .stat-value {
+            color: #f39c12;
+        }
+
+        .stat-card.danger .stat-value {
+            color: #e74c3c;
+        }
+
+        .stat-card.success .stat-value {
+            color: var(--success-color);
+        }
+    </style>
+</head>
+<body>
+    <div class="page-container">
+        <div class="header">
+            <h2>Reporte de Ventas</h2>
+            <p>Análisis de ventas y créditos</p>
+        </div>
+
+        <div class="reporte-container">
+            <!-- Filtros de fecha -->
+            <form th:action="@{/reportes/ventas}" method="get" class="filtros-container">
+                <div class="filtro-grupo">
+                    <label for="fechaInicio">Fecha Inicio:</label>
+                    <input type="date" id="fechaInicio" name="fechaInicio" 
+                           th:value="${#temporals.format(fechaInicio, 'yyyy-MM-dd')}">
+                </div>
+                <div class="filtro-grupo">
+                    <label for="fechaFin">Fecha Fin:</label>
+                    <input type="date" id="fechaFin" name="fechaFin" 
+                           th:value="${#temporals.format(fechaFin, 'yyyy-MM-dd')}">
+                </div>
+                <button type="submit" class="btn-filtrar">
+                    <i class="fas fa-filter"></i> Filtrar
+                </button>
+            </form>
+
+            <!-- Resumen total -->
+            <div class="resumen-total">
+                <span>Total de Ventas:</span>
+                <span class="monto">$<span th:text="${#numbers.formatDecimal(totalVentas, 1, 2)}">0.00</span></span>
+            </div>
+
+            <!-- Estadísticas de Créditos -->
+            <div class="creditos-container">
+                <h3 class="mb-4">Estadísticas de Créditos</h3>
+                <div class="creditos-stats">
+                    <div class="stat-card">
+                        <div class="stat-title">Total Créditos Otorgados</div>
+                        <div class="stat-value">$<span th:text="${#numbers.formatDecimal(estadisticasCreditos['Total Créditos'], 1, 2)}">0.00</span></div>
+                    </div>
+                    <div class="stat-card success">
+                        <div class="stat-title">Total Pagado</div>
+                        <div class="stat-value">$<span th:text="${#numbers.formatDecimal(estadisticasCreditos['Total Pagado'], 1, 2)}">0.00</span></div>
+                    </div>
+                    <div class="stat-card warning">
+                        <div class="stat-title">Total Pendiente</div>
+                        <div class="stat-value">$<span th:text="${#numbers.formatDecimal(estadisticasCreditos['Total Pendiente'], 1, 2)}">0.00</span></div>
+                    </div>
+                    <div class="stat-card danger">
+                        <div class="stat-title">Total Vencido</div>
+                        <div class="stat-value">$<span th:text="${#numbers.formatDecimal(estadisticasCreditos['Total Vencido'], 1, 2)}">0.00</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Gráficos -->
+            <div class="graficos-container">
+                <div class="grafico-card">
+                    <canvas id="graficoVentas"></canvas>
+                </div>
+                <div class="grafico-card">
+                    <canvas id="graficoCreditos"></canvas>
+                </div>
+            </div>
+
+            <!-- Tabla de ventas -->
+            <table class="tabla-ventas">
+                <thead>
+                    <tr>
+                        <th>Método de Pago</th>
+                        <th>Total</th>
+                        <th>Porcentaje</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="venta : ${ventasPorMetodoPago}">
+                        <td th:text="${venta.key}">Método</td>
+                        <td th:text="${'$' + #numbers.formatDecimal(venta.value, 1, 2)}">Total</td>
+                        <td th:text="${#numbers.formatDecimal((venta.value / totalVentas) * 100, 1, 1) + '%'}">Porcentaje</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <!-- Botones de exportación -->
+            <div class="botones-exportar">
+                <a th:href="@{/reportes/ventas/exportar/pdf(fechaInicio=${fechaInicio},fechaFin=${fechaFin})}" 
+                   class="btn-exportar">
+                    <i class="fas fa-file-pdf"></i> Exportar PDF
+                </a>
+                <a th:href="@{/reportes/ventas/exportar/excel(fechaInicio=${fechaInicio},fechaFin=${fechaFin})}" 
+                   class="btn-exportar">
+                    <i class="fas fa-file-excel"></i> Exportar Excel
+                </a>
+            </div>
+        </div>
+
+        <!-- Botón volver -->
+        <div class="text-center">
+            <a th:href="@{/dashboard}" class="btn-back">
+                <i class="fas fa-arrow-left"></i> Volver al Dashboard
+            </a>
+        </div>
+    </div>
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+
+    <script th:inline="javascript">
+        // Datos para los gráficos
+        const ventasPorMetodoPago = /*[[${ventasPorMetodoPago}]]*/ {};
+        const labels = Object.keys(ventasPorMetodoPago);
+        const data = Object.values(ventasPorMetodoPago);
+        const colores = [
+            '#2ecc71',
+            '#3498db',
+            '#9b59b6',
+            '#f1c40f',
+            '#e74c3c'
+        ];
+
+        // Gráfico de torta
+        new Chart(document.getElementById('graficoVentas'), {
+            type: 'pie',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: data,
+                    backgroundColor: colores
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'right'
+                    },
+                    title: {
+                        display: true,
+                        text: 'Ventas por Método de Pago',
+                        font: {
+                            size: 16
+                        }
+                    }
+                }
+            }
+        });
+
+        // Datos para el gráfico de créditos
+        const estadisticasCreditos = /*[[${estadisticasCreditos}]]*/ {};
+        const labelsCreditos = ['Pagado', 'Pendiente', 'Vencido'];
+        const dataCreditos = [
+            estadisticasCreditos['Total Pagado'],
+            estadisticasCreditos['Total Pendiente'],
+            estadisticasCreditos['Total Vencido']
+        ];
+        const coloresCreditos = ['#27ae60', '#f39c12', '#e74c3c'];
+
+        // Gráfico de torta para créditos
+        new Chart(document.getElementById('graficoCreditos'), {
+            type: 'pie',
+            data: {
+                labels: labelsCreditos,
+                datasets: [{
+                    data: dataCreditos,
+                    backgroundColor: coloresCreditos
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'right'
+                    },
+                    title: {
+                        display: true,
+                        text: 'Estado de Créditos',
+                        font: { size: 16 }
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html> 

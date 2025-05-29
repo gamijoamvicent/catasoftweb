@@ -7,6 +7,7 @@ import java.util.List;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 @Entity
 @Table(name = "clientes")
 public class Cliente {
@@ -152,4 +153,4 @@ public class Cliente {
     public Long getLicoreriaId() {
         return licoreria != null ? licoreria.getId() : null;
     }
-} 
+}

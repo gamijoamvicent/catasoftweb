@@ -3,6 +3,7 @@ package devforge.servicio;
 import devforge.model.Cliente;
 import devforge.model.Credito;
 import devforge.model.Venta;
+import devforge.model.enums.TipoVenta;
 import devforge.repository.CreditoRepository;
 import devforge.servicio.ClienteServicio;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,8 +29,9 @@ public class CreditoServicioImpl implements CreditoServicio {
     private ClienteServicio clienteServicio;
 
     @Override
+    @Transactional
     public Credito crearCredito(Venta venta) {
-        if (venta.getTipoVenta() != Venta.TipoVenta.CREDITO || venta.getCliente() == null) {
+        if (venta.getTipoVenta() != TipoVenta.CREDITO || venta.getCliente() == null) {
             throw new IllegalArgumentException("La venta debe ser a crédito y tener un cliente asociado");
         }
 
@@ -37,15 +39,10 @@ public class CreditoServicioImpl implements CreditoServicio {
         credito.setVenta(venta);
         credito.setCliente(venta.getCliente());
         credito.setLicoreria(venta.getLicoreria());
-        credito.setMontoTotal(venta.getTotalVenta());
-        credito.setSaldoPendiente(venta.getTotalVenta());
+        credito.setMontoTotal(new BigDecimal(venta.getTotalVenta().toString()));
+        credito.setSaldoPendiente(new BigDecimal(venta.getTotalVenta().toString()));
         credito.setFechaLimitePago(LocalDateTime.now().plusDays(30)); // Por defecto 30 días
-        
-        // Actualizar crédito disponible del cliente
-        Double creditoDisponible = venta.getCliente().getCreditoDisponible();
-        Double montoVenta = venta.getTotalVenta().doubleValue();
-        clienteServicio.actualizarCreditoDisponible(venta.getCliente().getId(), 
-            creditoDisponible - montoVenta);
+        credito.setEstado(Credito.EstadoCredito.PENDIENTE);
 
         return creditoRepository.save(credito);
     }

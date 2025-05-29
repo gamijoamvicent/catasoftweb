@@ -1,9 +1,12 @@
 package devforge.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.Data;
 import java.math.BigDecimal;
 
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 @Entity
 @Table(name = "detalle_venta")
 @Data
@@ -14,6 +17,7 @@ public class DetalleVenta {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "venta_id", nullable = false)
+    @JsonIgnore
     private Venta venta;
 
     @Column(name = "venta_id", insertable = false, updatable = false)

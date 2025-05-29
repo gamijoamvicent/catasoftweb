@@ -1,9 +1,21 @@
-// Funcionalidad para el módulo de ventas
+// Variables globales
 let productosDisponibles = []; // Array para almacenar todos los productos
 let productosSeleccionados = []; // Array para el carrito
 let tasas = {};
 
+// Inicialización de tokens CSRF
+let csrfToken = document.querySelector('meta[name="_csrf"]')?.content;
+let csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.content;
+
 document.addEventListener('DOMContentLoaded', function() {
+    // Inicializar tokens CSRF
+    csrfToken = document.querySelector('meta[name="_csrf"]')?.content;
+    csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.content;
+    
+    if (!csrfToken || !csrfHeader) {
+        console.error('No se encontraron los tokens CSRF');
+    }
+    
     cargarTasas(); // Cargar tasas primero
     initializeVentasModule();
     cargarProductos();
@@ -196,19 +208,48 @@ function generarTicketPdf() {
 // Función para confirmar la venta
 function confirmarVenta() {
     if (productosSeleccionados.length === 0) {
-        showNotification('No hay productos en el carrito', 'warning');
+        showNotification('Debe agregar al menos un producto al carrito', 'warning');
         return;
     }
 
-    const ventaData = prepararDatosVenta();
-    
+    // Verificar que tenemos los tokens CSRF
+    if (!csrfToken || !csrfHeader) {
+        showNotification('Error de seguridad: Tokens CSRF no encontrados', 'error');
+        return;
+    }
+
+    const metodoPago = document.getElementById('metodoPago').value;
+    const tipoVenta = document.getElementById('tipoVenta').value;
+    const clienteId = document.getElementById('clienteId')?.value;
+
+    // Validar cliente para ventas a crédito
+    if (tipoVenta === 'CREDITO' && !clienteId) {
+        showNotification('Debe seleccionar un cliente para ventas a crédito', 'warning');
+        return;
+    }
+
+    const ventaData = {
+        items: productosSeleccionados.map(p => ({
+            id: p.id,
+            cantidad: p.cantidad,
+            precioUnitario: p.precioVenta
+        })),
+        metodoPago,
+        tipoVenta,
+        clienteId: clienteId || null
+    };
+
+    // Mostrar indicador de carga
+    document.body.style.cursor = 'wait';
+
+    const headers = {
+        'Content-Type': 'application/json'
+    };
+    headers[csrfHeader] = csrfToken;
+
     fetch('/ventas/confirmar', {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            [document.querySelector('meta[name="_csrf_header"]').content]: 
-            document.querySelector('meta[name="_csrf"]').content
-        },
+        headers: headers,
         body: JSON.stringify(ventaData)
     })
     .then(response => response.json())
@@ -216,15 +257,23 @@ function confirmarVenta() {
         if (data.error) {
             throw new Error(data.error);
         }
+        showNotification('Venta realizada con éxito', 'success');
         
-        showNotification('✅ Venta registrada exitosamente', 'success');
+        // Limpiar el carrito después de una venta exitosa
+        productosSeleccionados = [];
+        actualizarTablaVentas();
         
-        // Imprimir el ticket inmediatamente después de confirmar la venta
-        imprimirTicket(data.ventaId);
+        // Imprimir ticket si está configurado
+        if (data.ventaId) {
+            imprimirTicket(data.ventaId);
+        }
     })
     .catch(error => {
         console.error('Error:', error);
-        showNotification(error.message || 'Error al procesar la venta', 'error');
+        showNotification('Error al procesar la venta: ' + error.message, 'error');
+    })
+    .finally(() => {
+        document.body.style.cursor = 'default';
     });
 }
 
@@ -620,6 +669,17 @@ function initializeReportes() {
     setupDateRangePicker();
     setupCharts();
     setupExport();
+    setupFilters();
+
+    // Inicializar con el mes actual
+    const today = new Date();
+    const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+    
+    document.getElementById('fecha-inicio').valueAsDate = firstDay;
+    document.getElementById('fecha-fin').valueAsDate = today;
+    
+    // Cargar datos iniciales
+    updateReporte();
 }
 
 function setupDateRangePicker() {
@@ -631,75 +691,675 @@ function setupDateRangePicker() {
     });
 }
 
+function setupFilters() {
+    const tipoVenta = document.getElementById('tipo-venta');
+    const metodoPago = document.getElementById('metodo-pago');
+    const fechaInicio = document.getElementById('fecha-inicio');
+    const fechaFin = document.getElementById('fecha-fin');
+    const filtrarBtn = document.getElementById('filtrar-reporte');
+
+    // Remover los event listeners automáticos
+    [tipoVenta, metodoPago, fechaInicio, fechaFin].forEach(filtro => {
+        if (filtro) {
+            // Remover los event listeners anteriores
+            const nuevoFiltro = filtro.cloneNode(true);
+            filtro.parentNode.replaceChild(nuevoFiltro, filtro);
+        }
+    });
+
+    // Configurar el botón de filtrar
+    if (filtrarBtn) {
+        filtrarBtn.addEventListener('click', () => {
+            console.log('Aplicando filtros...');
+            updateReporte();
+        });
+    }
+
+    // Validación de fechas
+    if (fechaInicio && fechaFin) {
+        fechaInicio.addEventListener('change', validarFechas);
+        fechaFin.addEventListener('change', validarFechas);
+    }
+}
+
+function validarFechas() {
+    const fechaInicio = document.getElementById('fecha-inicio');
+    const fechaFin = document.getElementById('fecha-fin');
+    const filtrarBtn = document.getElementById('filtrar-reporte');
+    
+    if (fechaInicio && fechaFin && filtrarBtn) {
+        const inicio = new Date(fechaInicio.value);
+        const fin = new Date(fechaFin.value);
+        const hoy = new Date();
+        
+        // Resetear estilos
+        fechaInicio.classList.remove('is-invalid');
+        fechaFin.classList.remove('is-invalid');
+        
+        let esValido = true;
+        
+        // Validar que la fecha de inicio no sea posterior a la fecha fin
+        if (inicio > fin) {
+            fechaInicio.classList.add('is-invalid');
+            fechaFin.classList.add('is-invalid');
+            showNotification('La fecha de inicio no puede ser posterior a la fecha fin', 'warning');
+            esValido = false;
+        }
+        
+        // Validar que las fechas no sean futuras
+        if (inicio > hoy || fin > hoy) {
+            if (inicio > hoy) fechaInicio.classList.add('is-invalid');
+            if (fin > hoy) fechaFin.classList.add('is-invalid');
+            showNotification('No se pueden seleccionar fechas futuras', 'warning');
+            esValido = false;
+        }
+        
+        // Habilitar o deshabilitar el botón de filtrar
+        filtrarBtn.disabled = !esValido;
+    }
+}
+
+// Agregar estilos para la validación
+const validationStyles = document.createElement('style');
+validationStyles.textContent = `
+    .is-invalid {
+        border-color: #dc3545;
+        background-color: #fff8f8;
+    }
+    
+    .is-invalid:focus {
+        border-color: #dc3545;
+        box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+    }
+`;
+document.head.appendChild(validationStyles);
+
 function updateReporte() {
     const fechaInicio = document.getElementById('fecha-inicio').value;
     const fechaFin = document.getElementById('fecha-fin').value;
+    const tipoVenta = document.getElementById('tipo-venta').value;
+    const metodoPago = document.getElementById('metodo-pago').value;
 
-    if (!fechaInicio || !fechaFin) return;
+    if (!fechaInicio || !fechaFin) {
+        showNotification('Seleccione un rango de fechas válido', 'warning');
+        return;
+    }
 
-    fetch(`/api/reportes/ventas?inicio=${fechaInicio}&fin=${fechaFin}`)
-        .then(response => response.json())
+    console.log('Aplicando filtros:', { fechaInicio, fechaFin, tipoVenta, metodoPago });
+
+    // Mostrar indicador de carga
+    document.body.style.cursor = 'wait';
+    const loadingOverlay = document.createElement('div');
+    loadingOverlay.className = 'loading-overlay';
+    loadingOverlay.innerHTML = '<div class="spinner"></div>';
+    document.body.appendChild(loadingOverlay);
+
+    // Limpiar datos actuales
+    mostrarEstadoVacio();
+
+    const params = new URLSearchParams({
+        fechaInicio: fechaInicio,
+        fechaFin: fechaFin,
+        tipoVenta: tipoVenta || '',
+        metodoPago: metodoPago || ''
+    });
+
+    fetch(`/reportes/ventas/data?${params.toString()}`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`Error del servidor: ${response.status}`);
+            }
+            return response.json();
+        })
         .then(data => {
+            console.log('Datos recibidos:', data);
+            if (data.error) {
+                throw new Error(data.error);
+            }
+
+            if (isDatosVacios(data)) {
+                mostrarEstadoVacio('No se encontraron datos para los filtros seleccionados');
+                return;
+            }
+
+            // Actualizar todos los componentes
             updateEstadisticas(data);
             updateGraficos(data);
+            updateTablaVentas(data.ventas || []);
+            
+            // Actualizar URL con los filtros
+            const newUrl = new URL(window.location.href);
+            params.forEach((value, key) => {
+                newUrl.searchParams.set(key, value);
+            });
+            window.history.pushState({}, '', newUrl);
+
+            showNotification('Reporte actualizado correctamente', 'success');
         })
         .catch(error => {
             console.error('Error actualizando reporte:', error);
-            showNotification('Error al actualizar el reporte', 'error');
+            showNotification('Error al actualizar el reporte: ' + error.message, 'error');
+            mostrarEstadoVacio('Error al cargar los datos');
+        })
+        .finally(() => {
+            document.body.style.cursor = 'default';
+            const overlay = document.querySelector('.loading-overlay');
+            if (overlay) overlay.remove();
         });
+}
+
+function isDatosVacios(data) {
+    return (!data.ventas || data.ventas.length === 0) &&
+           (!data.totalVentas || data.totalVentas === 0) &&
+           (!data.totalIngresos || data.totalIngresos === 0);
+}
+
+function mostrarEstadoVacio(mensaje = 'No hay datos disponibles') {
+    // Limpiar estadísticas
+    document.getElementById('total-ventas').textContent = '0';
+    document.getElementById('ingresos-totales').textContent = '$0.00';
+    document.getElementById('ticket-promedio').textContent = '$0.00';
+    document.getElementById('productos-vendidos').textContent = '0';
+
+    // Limpiar gráficos
+    const ctxMetodos = document.getElementById('metodosPagoChart');
+    const ctxCreditos = document.getElementById('creditosChart');
+
+    // Función auxiliar para mostrar mensaje en canvas
+    const mostrarMensajeEnCanvas = (canvas) => {
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        // Limpiar el canvas
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        // Configurar estilo del texto
+        ctx.font = '14px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillStyle = '#666';
+        // Dibujar el mensaje
+        ctx.fillText(mensaje, canvas.width / 2, canvas.height / 2);
+    };
+
+    // Destruir y limpiar gráfico de métodos de pago
+    if (ctxMetodos) {
+        if (window.metodosPagoChart && typeof window.metodosPagoChart.destroy === 'function') {
+            window.metodosPagoChart.destroy();
+        }
+        window.metodosPagoChart = null;
+        mostrarMensajeEnCanvas(ctxMetodos);
+    }
+
+    // Destruir y limpiar gráfico de créditos
+    if (ctxCreditos) {
+        if (window.creditosChart && typeof window.creditosChart.destroy === 'function') {
+            window.creditosChart.destroy();
+        }
+        window.creditosChart = null;
+        mostrarMensajeEnCanvas(ctxCreditos);
+    }
+
+    // Limpiar tabla
+    const tbody = document.getElementById('ventas-list');
+    if (tbody) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="8" class="text-center empty-state">
+                    <div class="empty-state-message">
+                        <i class="fas fa-search"></i>
+                        <p>${mensaje}</p>
+                    </div>
+                </td>
+            </tr>
+        `;
+    }
+}
+
+// Agregar estilos para el estado vacío
+const emptyStateStyles = document.createElement('style');
+emptyStateStyles.textContent = `
+    .empty-state {
+        padding: 40px !important;
+        text-align: center;
+        color: #666;
+    }
+
+    .empty-state-message {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .empty-state-message i {
+        font-size: 24px;
+        color: #999;
+    }
+
+    .empty-state-message p {
+        margin: 0;
+        font-size: 14px;
+    }
+`;
+document.head.appendChild(emptyStateStyles);
+
+function updateEstadisticas(data) {
+    // Actualizar cards de estadísticas
+    document.getElementById('total-ventas').textContent = data.totalVentas || 0;
+    document.getElementById('ingresos-totales').textContent = formatCurrency(data.totalIngresos || 0);
+    document.getElementById('ticket-promedio').textContent = formatCurrency(data.ticketPromedio || 0);
+    document.getElementById('productos-vendidos').textContent = data.productosVendidos || 0;
+}
+
+function updateGraficos(data) {
+    console.log('Actualizando gráficos con datos:', data);
+    
+    // Verificar si hay datos para los gráficos
+    const hayDatosMetodosPago = data.ventasPorMetodoPago && Object.keys(data.ventasPorMetodoPago).length > 0;
+    const hayDatosCreditos = data.estadisticasCreditos && Object.values(data.estadisticasCreditos).some(val => val > 0);
+
+    // Si no hay datos para ningún gráfico, mostrar estado vacío
+    if (!hayDatosMetodosPago && !hayDatosCreditos) {
+        mostrarEstadoVacio('No hay datos para mostrar en los gráficos');
+        return;
+    }
+
+    // Actualizar gráfico de métodos de pago si hay datos
+    if (hayDatosMetodosPago) {
+        updateMetodosPagoChart(data.ventasPorMetodoPago || {});
+    } else {
+        const ctxMetodos = document.getElementById('metodosPagoChart');
+        if (window.metodosPagoChart && typeof window.metodosPagoChart.destroy === 'function') {
+            window.metodosPagoChart.destroy();
+            window.metodosPagoChart = null;
+        }
+        if (ctxMetodos) {
+            const ctx = ctxMetodos.getContext('2d');
+            ctx.clearRect(0, 0, ctxMetodos.width, ctxMetodos.height);
+            ctx.font = '14px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillStyle = '#666';
+            ctx.fillText('No hay datos de métodos de pago', ctxMetodos.width / 2, ctxMetodos.height / 2);
+        }
+    }
+
+    // Actualizar gráfico de créditos si hay datos
+    if (hayDatosCreditos) {
+        updateCreditosChart(data.estadisticasCreditos || {});
+    } else {
+        const ctxCreditos = document.getElementById('creditosChart');
+        if (window.creditosChart && typeof window.creditosChart.destroy === 'function') {
+            window.creditosChart.destroy();
+            window.creditosChart = null;
+        }
+        if (ctxCreditos) {
+            const ctx = ctxCreditos.getContext('2d');
+            ctx.clearRect(0, 0, ctxCreditos.width, ctxCreditos.height);
+            ctx.font = '14px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillStyle = '#666';
+            ctx.fillText('No hay datos de créditos', ctxCreditos.width / 2, ctxCreditos.height / 2);
+        }
+    }
+}
+
+function updateMetodosPagoChart(data) {
+    const ctx = document.getElementById('metodosPagoChart');
+    if (!ctx) {
+        console.error('No se encontró el elemento canvas para el gráfico de métodos de pago');
+        return;
+    }
+
+    console.log('Actualizando gráfico de métodos de pago con datos:', data);
+
+    // Destruir el gráfico existente si existe
+    if (window.metodosPagoChart && typeof window.metodosPagoChart.destroy === 'function') {
+        window.metodosPagoChart.destroy();
+    }
+
+    const labels = Object.keys(data);
+    const valores = Object.values(data);
+    const total = valores.reduce((a, b) => a + b, 0);
+    const porcentajes = valores.map(v => ((v / total) * 100).toFixed(1));
+
+    // Colores modernos y atractivos con transparencia
+    const colores = [
+        'rgba(21, 101, 192, 0.8)',     // Azul principal
+        'rgba(0, 191, 165, 0.8)',      // Verde acento
+        'rgba(25, 118, 210, 0.8)',     // Azul secundario
+        'rgba(13, 71, 161, 0.8)',      // Azul oscuro
+        'rgba(0, 121, 107, 0.8)'       // Verde oscuro
+    ];
+
+    const bordeColores = [
+        'rgb(21, 101, 192)',     // Bordes sólidos
+        'rgb(0, 191, 165)',
+        'rgb(25, 118, 210)',
+        'rgb(13, 71, 161)',
+        'rgb(0, 121, 107)'
+    ];
+
+    window.metodosPagoChart = new Chart(ctx, {
+        type: 'doughnut', // Cambiado de 'pie' a 'doughnut' para un aspecto más moderno
+        data: {
+            labels: labels,
+            datasets: [{
+                data: valores,
+                backgroundColor: colores,
+                borderColor: bordeColores,
+                borderWidth: 2,
+                hoverOffset: 15,
+                borderRadius: 5,
+                spacing: 5
+            }]
+        },
+        options: {
+            responsive: true,
+            cutout: '60%', // Tamaño del agujero en el centro
+            plugins: {
+                legend: {
+                    position: 'right',
+                    labels: {
+                        padding: 20,
+                        usePointStyle: true,
+                        pointStyle: 'circle',
+                        font: {
+                            size: 12,
+                            family: "'Segoe UI', 'Arial', sans-serif"
+                        }
+                    }
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                    titleColor: '#333',
+                    titleFont: {
+                        size: 14,
+                        weight: 'bold'
+                    },
+                    bodyColor: '#666',
+                    bodyFont: {
+                        size: 13
+                    },
+                    borderColor: '#ddd',
+                    borderWidth: 1,
+                    padding: 12,
+                    boxPadding: 6,
+                    callbacks: {
+                        label: function(context) {
+                            const label = context.label || '';
+                            const value = context.raw || 0;
+                            const percentage = porcentajes[context.dataIndex];
+                            return ` ${label}: $${value.toFixed(2)} (${percentage}%)`;
+                        }
+                    }
+                }
+            },
+            animation: {
+                animateRotate: true,
+                animateScale: true
+            }
+        }
+    });
+}
+
+function updateCreditosChart(data) {
+    const ctx = document.getElementById('creditosChart');
+    if (!ctx) {
+        console.error('No se encontró el elemento canvas para el gráfico de créditos');
+        return;
+    }
+
+    console.log('Actualizando gráfico de créditos con datos:', data);
+
+    // Destruir el gráfico existente si existe
+    if (window.creditosChart && typeof window.creditosChart.destroy === 'function') {
+        window.creditosChart.destroy();
+    }
+
+    const colores = [
+        '#1565C0', // Principal
+        '#00BFA5', // Acento
+        '#1976D2'  // Secundario
+    ];
+
+    window.creditosChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: ['Créditos Otorgados', 'Pagos Recibidos', 'Pendiente por Cobrar'],
+            datasets: [{
+                label: 'Monto en USD',
+                data: [
+                    data.creditosOtorgados || 0,
+                    data.pagosRecibidos || 0,
+                    data.pendienteCobro || 0
+                ],
+                backgroundColor: colores
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return '$' + value.toFixed(2);
+                        }
+                    }
+                }
+            },
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return '$' + context.raw.toFixed(2);
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+function updateTablaVentas(ventas) {
+    const tbody = document.getElementById('ventas-list');
+    if (!tbody) return;
+
+    tbody.innerHTML = '';
+    
+    ventas.forEach(venta => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${formatDate(venta.fechaVenta)}</td>
+            <td>#${venta.id}</td>
+            <td>${venta.cliente ? venta.cliente.nombre : 'Venta al contado'}</td>
+            <td>${venta.tipoVenta}</td>
+            <td>${venta.metodoPago}</td>
+            <td>${formatCurrency(venta.totalVenta)}</td>
+            <td>${formatCurrency(venta.totalVentaBs, true)}</td>
+            <td>
+                <button class="btn btn-sm btn-info" onclick="verDetalle(${venta.id})">
+                    <span class="icon">👁️</span>
+                </button>
+                <button class="btn btn-sm btn-secondary" onclick="imprimirTicket(${venta.id})">
+                    <span class="icon">🖨️</span>
+                </button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
 }
 
 // Exportación de reportes
 function setupExport() {
-    const exportBtn = document.querySelector('.export-btn');
-    if (!exportBtn) return;
+    const exportButtons = document.querySelectorAll('.export-btn');
+    if (!exportButtons) return;
 
-    exportBtn.addEventListener('click', function() {
-        const fechaInicio = document.getElementById('fecha-inicio').value;
-        const fechaFin = document.getElementById('fecha-fin').value;
-        
-        window.location.href = `/api/reportes/ventas/exportar?inicio=${fechaInicio}&fin=${fechaFin}`;
+    exportButtons.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const format = this.getAttribute('data-format');
+            const fechaInicio = document.getElementById('fecha-inicio').value;
+            const fechaFin = document.getElementById('fecha-fin').value;
+            const tipoVenta = document.getElementById('tipo-venta').value;
+            const metodoPago = document.getElementById('metodo-pago').value;
+
+            const params = new URLSearchParams({
+                fechaInicio: fechaInicio,
+                fechaFin: fechaFin,
+                tipoVenta: tipoVenta,
+                metodoPago: metodoPago
+            });
+            
+            window.location.href = `/reportes/ventas/exportar/${format}?${params.toString()}`;
+        });
     });
 }
 
-// Agregar estilos dinámicamente
-const style = document.createElement('style');
-style.textContent = `
-    .tasa-badge {
-        display: inline-block;
-        padding: 2px 6px;
-        border-radius: 4px;
-        background-color: #e9ecef;
-        color: #495057;
-        font-size: 0.75rem;
-        margin-left: 4px;
+function formatCurrency(value, isBs = false) {
+    if (isBs) {
+        return Number(value).toFixed(2) + ' Bs';
     }
-    
-    .subtotal-amounts {
-        display: flex;
-        flex-direction: column;
-        gap: 2px;
+    return '$' + Number(value).toFixed(2);
+}
+
+function formatDate(dateString) {
+    const date = new Date(dateString);
+    return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+}
+
+function verDetalle(ventaId) {
+    window.location.href = `/ventas/detalle/${ventaId}`;
+}
+
+function setupCharts() {
+    // Asegurarse de que Chart.js esté disponible
+    if (typeof Chart === 'undefined') {
+        console.error('Chart.js no está cargado');
+        return;
     }
-    
-    .total-amounts {
-        display: flex;
-        flex-direction: column;
-        align-items: flex-end;
-        gap: 4px;
+
+    // Crear contenedores para los gráficos si no existen
+    const statsContainer = document.querySelector('.stats-grid');
+    if (!statsContainer) return;
+
+    const chartsContainer = document.createElement('div');
+    chartsContainer.className = 'charts-container';
+    chartsContainer.innerHTML = `
+        <div class="chart-card">
+            <h3>Ventas por Método de Pago</h3>
+            <canvas id="metodosPagoChart"></canvas>
+        </div>
+        <div class="chart-card">
+            <h3>Estado de Créditos</h3>
+            <canvas id="creditosChart"></canvas>
+        </div>
+    `;
+
+    statsContainer.insertAdjacentElement('afterend', chartsContainer);
+}
+
+// Agregar estilos para los gráficos
+const chartStyles = document.createElement('style');
+chartStyles.textContent = `
+    .charts-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+        gap: 20px;
+        margin: 20px 0;
     }
-    
-    .total-amounts span {
-        font-weight: bold;
-        font-size: 1.1em;
+
+    .chart-card {
+        background: white;
+        border-radius: 8px;
+        padding: 20px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
-    
-    .cantidad-input {
-        width: 70px;
-        text-align: center;
+
+    .chart-card h3 {
+        margin-top: 0;
+        margin-bottom: 15px;
+        color: #333;
+        font-size: 1.2em;
     }
-    
-    .precio-bs-col {
-        white-space: nowrap;
+
+    canvas {
+        width: 100% !important;
+        height: 300px !important;
     }
 `;
-document.head.appendChild(style); 
+document.head.appendChild(chartStyles);
+
+// Agregar estilos para el overlay de carga
+const loadingStyles = document.createElement('style');
+loadingStyles.textContent = `
+    .loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(255, 255, 255, 0.8);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+    }
+
+    .spinner {
+        width: 50px;
+        height: 50px;
+        border: 5px solid #f3f3f3;
+        border-top: 5px solid #1565c0;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+`;
+document.head.appendChild(loadingStyles);
+
+// Funciones para manejo de clientes
+function toggleClienteSelector() {
+    const tipoVenta = document.getElementById('tipoVenta').value;
+    const clienteSelector = document.getElementById('clienteSelector');
+    clienteSelector.style.display = tipoVenta === 'CREDITO' ? 'block' : 'none';
+    if (tipoVenta === 'CONTADO') {
+        document.getElementById('clienteId').value = '';
+        document.getElementById('buscarCliente').value = '';
+    }
+}
+
+function buscarClientes() {
+    const input = document.getElementById('buscarCliente');
+    const termino = input.value.trim();
+    if (!termino) {
+        document.getElementById('clientesList').innerHTML = '';
+        return;
+    }
+
+    fetch(`/clientes/buscar?termino=${encodeURIComponent(termino)}`)
+        .then(response => response.json())
+        .then(clientes => {
+            const lista = document.getElementById('clientesList');
+            lista.innerHTML = '';
+            clientes.forEach(cliente => {
+                const li = document.createElement('li');
+                li.textContent = `${cliente.nombre} ${cliente.apellido} - ${cliente.cedula}`;
+                li.onclick = () => seleccionarCliente(cliente);
+                lista.appendChild(li);
+            });
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotification('Error al buscar clientes', 'error');
+        });
+}
+
+function seleccionarCliente(cliente) {
+    document.getElementById('clienteId').value = cliente.id;
+    document.getElementById('buscarCliente').value = 
+        `${cliente.nombre} ${cliente.apellido} - ${cliente.cedula}`;
+    document.getElementById('clientesList').innerHTML = '';
+} 

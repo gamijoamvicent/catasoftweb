@@ -1,6 +1,8 @@
 package devforge.web;
 
 import devforge.model.*;
+import devforge.model.enums.MetodoPago;
+import devforge.model.enums.TipoVenta;
 import devforge.servicio.*;
 import devforge.config.LicoreriaContext;
 import org.springframework.stereotype.Controller;
@@ -15,6 +17,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.HttpStatus;
 import org.springframework.beans.factory.annotation.Autowired;
+import java.math.RoundingMode;
 
 @Controller
 @RequestMapping("/ventas")
@@ -92,11 +95,11 @@ public class NuevaVentaController {
                     .body(Map.of("error", "Datos de venta incompletos"));
             }
 
-            Venta.TipoVenta tipoVenta = Venta.TipoVenta.valueOf(tipoVentaStr);
+            TipoVenta tipoVenta = TipoVenta.valueOf(tipoVentaStr);
             
             // Validación de cliente para venta a crédito
             Cliente cliente = null;
-            if (tipoVenta == Venta.TipoVenta.CREDITO) {
+            if (tipoVenta == TipoVenta.CREDITO) {
                 if (clienteId == null) {
                     return ResponseEntity.badRequest()
                         .body(Map.of("error", "Debe seleccionar un cliente para ventas a crédito"));
@@ -150,7 +153,7 @@ public class NuevaVentaController {
             }
 
             // Validar límite de crédito si es venta a crédito
-            if (tipoVenta == Venta.TipoVenta.CREDITO) {
+            if (tipoVenta == TipoVenta.CREDITO) {
                 if (totalVenta.doubleValue() > cliente.getCreditoDisponible()) {
                     return ResponseEntity.badRequest()
                         .body(Map.of("error", 
@@ -165,7 +168,7 @@ public class NuevaVentaController {
             
             venta.setLicoreria(licoreriaContext.getLicoreriaActual());
             venta.setTotalVenta(totalVenta);
-            venta.setMetodoPago(Venta.MetodoPago.valueOf(metodoPagoStr));
+            venta.setMetodoPago(MetodoPago.valueOf(metodoPagoStr));
             venta.setTipoVenta(tipoVenta);
             venta.setCliente(cliente);
             venta.setFechaVenta(LocalDateTime.now());
@@ -183,6 +186,13 @@ public class NuevaVentaController {
                 detalle.setSubtotal(BigDecimal.valueOf(producto.getPrecioVenta())
                     .multiply(BigDecimal.valueOf(item.getCantidad())));
                 
+                // Obtener la tasa de cambio actual para la licorería y tipo de tasa del producto
+                PrecioDolar.TipoTasa tipoTasa = producto.getTipoTasa() != null ?
+                    PrecioDolar.TipoTasa.valueOf(producto.getTipoTasa().toUpperCase()) : PrecioDolar.TipoTasa.BCV;
+                PrecioDolar tasa = precioDolarServicio.obtenerUltimoPrecioPorTipo(licoreriaContext.getLicoreriaId(), tipoTasa);
+                detalle.setTasaCambioUsado(BigDecimal.valueOf(tasa.getPrecioDolar()));
+                detalle.setTipoTasaUsado(tipoTasa);
+
                 detalles.add(detalle);
             }
             venta.setDetalles(detalles);
@@ -191,7 +201,7 @@ public class NuevaVentaController {
             ventaServicio.guardar(venta);
 
             // Si es venta a crédito, crear el crédito
-            if (tipoVenta == Venta.TipoVenta.CREDITO) {
+            if (tipoVenta == TipoVenta.CREDITO) {
                 creditoServicio.crearCredito(venta);
             }
 
@@ -301,8 +311,8 @@ public class NuevaVentaController {
                 .replace("{licoreria}", licoreria != null ? licoreria.getNombre() : "-")
                 .replace("{fecha}", venta.getFechaVenta().toString())
                 .replace("{detalle_productos}", detalle.toString().trim())
-                .replace("{subtotal}", "$" + subtotal.setScale(2, BigDecimal.ROUND_HALF_UP))
-                .replace("{total}", "$" + venta.getTotalVenta().setScale(2, BigDecimal.ROUND_HALF_UP));
+                .replace("{subtotal}", "$" + subtotal.setScale(2, RoundingMode.HALF_UP))
+                .replace("{total}", "$" + BigDecimal.valueOf(venta.getTotalVenta()).setScale(2, RoundingMode.HALF_UP));
             return ResponseEntity.ok(Map.of(
                 "ticket", ticket,
                 "impresora", impresora

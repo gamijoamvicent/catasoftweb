@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lista de Ventas - InventSoft</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" th:href="@{/css/dashboard.css}">
+    <link rel="stylesheet" th:href="@{/css/reportes.css}">
+    
+    <style>
+        :root {
+            --primary-color: #1565c0;
+            --accent-color: #00BFA5;
+            --secondary-color: #1976D2;
+            --background-color: #E3F2FD;
+            --text-primary: #333333;
+            --text-light: #ffffff;
+            --card-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            background-color: var(--background-color);
+            font-family: 'Segoe UI', Arial, sans-serif;
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        .lista-container {
+            flex: 1;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+            width: 100%;
+        }
+
+        .header {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: var(--card-shadow);
+            margin-bottom: 20px;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            color: var(--primary-color);
+            margin: 0;
+            font-size: 1.8em;
+        }
+
+        .filtros-container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: var(--card-shadow);
+            margin-bottom: 20px;
+        }
+
+        .table-container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: var(--card-shadow);
+            margin-bottom: 20px;
+            overflow-x: auto;
+        }
+
+        .ventas-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 0;
+        }
+
+        .ventas-table th,
+        .ventas-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+
+        .ventas-table th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+            color: var(--secondary-color);
+        }
+
+        .ventas-table th.sortable {
+            cursor: pointer;
+            position: relative;
+            padding-right: 25px;
+        }
+
+        .ventas-table th.sortable::after {
+            content: '⇅';
+            position: absolute;
+            right: 8px;
+            color: #999;
+        }
+
+        .ventas-table th.sortable.asc::after {
+            content: '↑';
+            color: var(--primary-color);
+        }
+
+        .ventas-table th.sortable.desc::after {
+            content: '↓';
+            color: var(--primary-color);
+        }
+
+        .ventas-table tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        .pagination-container {
+            background: white;
+            padding: 15px 20px;
+            border-radius: 10px;
+            box-shadow: var(--card-shadow);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 20px;
+        }
+
+        .page-size-control {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border-radius: 5px;
+            border: none;
+            cursor: pointer;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            pointer-events: none;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            border-radius: 5px;
+            background: white;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            transform: translateX(120%);
+            transition: transform 0.3s ease;
+            z-index: 10000;
+            pointer-events: none;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .empty-state-message {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .empty-state-message i {
+            font-size: 48px;
+            color: #999;
+        }
+
+        .form-control, .form-select {
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 8px 12px;
+            width: 100%;
+        }
+
+        .form-label {
+            font-weight: 500;
+            margin-bottom: 8px;
+            color: var(--text-primary);
+        }
+    </style>
+</head>
+<body>
+    <div class="lista-container">
+        <div class="header">
+            <div class="header-content">
+                <div>
+                    <h1>Lista de Ventas</h1>
+                    <p>Registro detallado de ventas</p>
+                </div>
+                <div>
+                    <a href="/dashboard" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Volver al Dashboard
+                    </a>
+                    <a href="/reportes/ventas" class="btn btn-primary">
+                        <i class="fas fa-chart-bar"></i> Ver Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="filtros-container">
+            <div class="row">
+                <div class="col-md-3">
+                    <label for="fecha-inicio" class="form-label">Fecha Inicio</label>
+                    <input type="date" class="form-control" id="fecha-inicio" name="fechaInicio">
+                </div>
+                <div class="col-md-3">
+                    <label for="fecha-fin" class="form-label">Fecha Fin</label>
+                    <input type="date" class="form-control" id="fecha-fin" name="fechaFin">
+                </div>
+                <div class="col-md-2">
+                    <label for="tipo-venta" class="form-label">Tipo de Venta</label>
+                    <select class="form-select" id="tipo-venta" name="tipoVenta">
+                        <option value="TODAS">Todas</option>
+                        <option value="CONTADO">Contado</option>
+                        <option value="CREDITO">Crédito</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label for="metodo-pago" class="form-label">Método de Pago</label>
+                    <select class="form-select" id="metodo-pago" name="metodoPago">
+                        <option value="TODOS">Todos</option>
+                        <option value="EFECTIVO">Efectivo</option>
+                        <option value="TRANSFERENCIA">Transferencia</option>
+                        <option value="PUNTO_VENTA">Punto de Venta</option>
+                        <option value="PAGO_MOVIL">Pago Móvil</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">&nbsp;</label>
+                    <button type="button" class="btn btn-primary w-100" id="filtrar-ventas">
+                        <i class="fas fa-filter"></i> Filtrar
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="table-container">
+            <table class="ventas-table">
+                <thead>
+                    <tr>
+                        <th class="sortable" data-field="fechaVenta">Fecha</th>
+                        <th class="sortable" data-field="id">Nro. Venta</th>
+                        <th class="sortable" data-field="cliente.nombre">Cliente</th>
+                        <th class="sortable" data-field="tipoVenta">Tipo</th>
+                        <th class="sortable" data-field="metodoPago">Método Pago</th>
+                        <th class="sortable" data-field="totalVenta">Total USD</th>
+                        <th class="sortable" data-field="totalVentaBs">Total Bs</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="ventas-list">
+                    <!-- Las ventas se cargarán dinámicamente -->
+                </tbody>
+            </table>
+        </div>
+
+        <div class="pagination-container">
+            <div class="pagination-info">
+                <span id="results-count">Cargando resultados...</span>
+            </div>
+            <div class="pagination-controls">
+                <div class="page-size-control">
+                    <label for="page-size">Mostrar:</label>
+                    <select id="page-size" class="form-select">
+                        <option value="10">10</option>
+                        <option value="25">25</option>
+                        <option value="50">50</option>
+                        <option value="100">100</option>
+                    </select>
+                </div>
+                <button id="prev-page" class="btn btn-secondary" disabled>
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+                <span>Página <span id="current-page">1</span> de <span id="total-pages">1</span></span>
+                <button id="next-page" class="btn btn-secondary" disabled>
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script th:src="@{/js/ventas-list.js}"></script>
+</body>
+</html>

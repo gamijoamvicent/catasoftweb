@@ -1,11 +1,13 @@
 package devforge.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.Data;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
 @Data
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 @Entity
 @Table(name = "licorerias")
 public class Licoreria implements Serializable {
