@@ -483,7 +483,7 @@ function actualizarTablaVentas() {
                 </div>
             </td>
             <td class="acciones-col">
-                <button onclick="eliminarProducto('${prod.id}')" 
+                <button onclick="eliminarProducto(${prod.id})" 
                         class="btn btn-danger btn-sm">❌</button>
             </td>
         `;
@@ -535,8 +535,17 @@ function actualizarCantidad(id, nuevaCantidad) {
 function eliminarProducto(id) {
     if (!confirm('¿Desea quitar este producto del carrito?')) return;
     
-    productosSeleccionados = productosSeleccionados.filter(p => p.id !== id);
+    // Convertir el ID a número si es string
+    const productoId = typeof id === 'string' ? parseInt(id) : id;
+    
+    // Filtrar el producto del array
+    productosSeleccionados = productosSeleccionados.filter(p => p.id !== productoId);
+    
+    // Actualizar la tabla
     actualizarTablaVentas();
+    
+    // Mostrar notificación
+    showNotification('Producto eliminado del carrito', 'success');
 }
 
 // Limpiar carrito
