@@ -41,7 +41,7 @@ public class Licoreria implements Serializable {
     @PrePersist
     protected void onCreate() {
         fechaCreacion = LocalDateTime.now();
-        if (estado == false) {
+        if (!estado) {
             estado = true; // Por defecto, las licorerías se crean activas
         }
     }
@@ -68,5 +68,16 @@ public class Licoreria implements Serializable {
         clone.setEstado(this.estado);
         clone.setFechaCreacion(this.fechaCreacion);
         return clone;
+    }
+
+    @Override
+    public String toString() {
+        return "Licoreria{" +
+                "id=" + id +
+                ", nombre='" + nombre + '\'' +
+                ", direccion='" + direccion + '\'' +
+                ", telefono='" + telefono + '\'' +
+                ", estado=" + estado +
+                '}';
     }
 }

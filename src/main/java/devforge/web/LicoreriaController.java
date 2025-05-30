@@ -6,11 +6,13 @@ import devforge.model.Usuario;
 import devforge.servicio.LicoreriaServicio;
 import devforge.servicio.UsuarioServicio;
 import jakarta.servlet.http.HttpSession;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -35,30 +37,42 @@ public class LicoreriaController {
     // Vista de selección de licorería
     @GetMapping("/seleccionar")
     public String mostrarSeleccionLicoreria(Model model, Authentication auth) {
-        String username = auth.getName();
-        Usuario usuario = usuarioServicio.obtenerPorUsername(username);
-        logger.info("Mostrando selección de licorería para usuario: {}", username);
-        
-        if (usuario.getRol() == Usuario.Rol.SUPER_ADMIN) {
-            model.addAttribute("licorerias", licoreriaServicio.listarTodas());
-        } else {
-            model.addAttribute("licorerias", licoreriaServicio.listarActivas());
+        try {
+            String username = auth.getName();
+            Usuario usuario = usuarioServicio.obtenerPorUsername(username);
+            logger.info("Mostrando selección de licorería para usuario: {}", username);
+            
+            if (usuario.getRol() == Usuario.Rol.SUPER_ADMIN) {
+                model.addAttribute("licorerias", licoreriaServicio.listarTodas());
+            } else {
+                model.addAttribute("licorerias", licoreriaServicio.listarActivas());
+            }
+            
+            return "licorerias/seleccionar";
+        } catch (Exception e) {
+            logger.error("Error al mostrar selección de licorería: {}", e.getMessage(), e);
+            return "redirect:/error?mensaje=Error al cargar las licorerías";
         }
-        
-        return "licorerias/seleccionar";
     }
 
     // Procesar selección de licorería
     @PostMapping("/seleccionar")
     public String seleccionarLicoreria(@RequestParam Long licoreriaId, 
                                      RedirectAttributes redirectAttrs, 
-                                     Authentication auth) {
-        String username = auth.getName();
-        Usuario usuario = usuarioServicio.obtenerPorUsername(username);
-        
+                                     Authentication auth,
+                                     HttpServletRequest request) {
         try {
+            logger.info("Iniciando selección de licorería ID: {}", licoreriaId);
+            
+            String username = auth.getName();
+            logger.info("Usuario autenticado: {}", username);
+            
+            Usuario usuario = usuarioServicio.obtenerPorUsername(username);
+            logger.info("Usuario encontrado: {}, Rol: {}", username, usuario.getRol());
+            
             Licoreria licoreria = licoreriaServicio.obtenerPorId(licoreriaId)
                 .orElseThrow(() -> new RuntimeException("Licorería no encontrada"));
+            logger.info("Licorería encontrada: {}", licoreria.getNombre());
 
             // Verificar que la licorería está activa
             if (!licoreria.isActiva()) {
@@ -77,12 +91,13 @@ public class LicoreriaController {
             }
 
             // Establecer la licorería en el contexto
+            logger.info("Estableciendo licorería en el contexto: {}", licoreria.getNombre());
             licoreriaContext.setLicoreriaActual(licoreria);
-            logger.info("Usuario {} seleccionó licorería: {}", username, licoreria.getNombre());
+            logger.info("Licorería establecida exitosamente en el contexto");
             
             return "redirect:/dashboard";
         } catch (Exception e) {
-            logger.error("Error al seleccionar licorería: {}", e.getMessage());
+            logger.error("Error al seleccionar licorería: {}", e.getMessage(), e);
             redirectAttrs.addFlashAttribute("error", "Error al seleccionar la licorería: " + e.getMessage());
             return "redirect:/licorerias/seleccionar";
         }
