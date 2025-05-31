@@ -1143,28 +1143,38 @@ function updateCreditosChart(data) {
         window.creditosChart.destroy();
     }
 
+    // Preparar los datos para el gráfico
+    const labels = ['Total Créditos', 'Total Pagado', 'Total Pendiente', 'Total Vencido'];
+    const valores = [
+        data['Total Créditos'] || 0,
+        data['Total Pagado'] || 0,
+        data['Total Pendiente'] || 0,
+        data['Total Vencido'] || 0
+    ];
+
+    // Colores para cada sección
     const colores = [
-        '#1565C0', // Principal
-        '#00BFA5', // Acento
-        '#1976D2'  // Secundario
+        'rgba(21, 101, 192, 0.8)',  // Azul para Total Créditos
+        'rgba(0, 191, 165, 0.8)',   // Verde para Total Pagado
+        'rgba(255, 152, 0, 0.8)',   // Naranja para Total Pendiente
+        'rgba(244, 67, 54, 0.8)'    // Rojo para Total Vencido
     ];
 
     window.creditosChart = new Chart(ctx, {
         type: 'bar',
         data: {
-            labels: ['Créditos Otorgados', 'Pagos Recibidos', 'Pendiente por Cobrar'],
+            labels: labels,
             datasets: [{
                 label: 'Monto en USD',
-                data: [
-                    data.creditosOtorgados || 0,
-                    data.pagosRecibidos || 0,
-                    data.pendienteCobro || 0
-                ],
-                backgroundColor: colores
+                data: valores,
+                backgroundColor: colores,
+                borderColor: colores.map(color => color.replace('0.8', '1')),
+                borderWidth: 1
             }]
         },
         options: {
             responsive: true,
+            maintainAspectRatio: false,
             scales: {
                 y: {
                     beginAtZero: true,
@@ -1176,11 +1186,22 @@ function updateCreditosChart(data) {
                 }
             },
             plugins: {
+                legend: {
+                    display: false
+                },
                 tooltip: {
                     callbacks: {
                         label: function(context) {
                             return '$' + context.raw.toFixed(2);
                         }
+                    }
+                },
+                title: {
+                    display: true,
+                    text: 'Estado de Créditos',
+                    font: {
+                        size: 16,
+                        weight: 'bold'
                     }
                 }
             }

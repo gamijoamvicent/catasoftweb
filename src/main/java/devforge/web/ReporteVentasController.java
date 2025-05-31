@@ -141,7 +141,7 @@ public class ReporteVentasController {
             // Obtener lista de ventas y calcular subtotales en Bs
             List<Venta> ventas = ventaServicio.listarVentasPorLicoreriaYFecha(
                 licoreriaActual.getId(), fechaInicioDateTime, fechaFinDateTime);
-
+            
             // Filtrar ventas anuladas
             ventas = ventas.stream()
                 .filter(v -> !v.isAnulada())

@@ -11,8 +11,7 @@ let currentFilters = {
 };
 
 let charts = {
-    metodosPago: null,
-    creditos: null
+    metodosPago: null
 };
 
 // Inicialización
@@ -174,7 +173,6 @@ function updateDashboard(data) {
 function isDashboardEmpty(data) {
     return !data || (
         (!data.ventasPorMetodoPago || Object.keys(data.ventasPorMetodoPago).length === 0) &&
-        (!data.estadisticasCreditos || Object.values(data.estadisticasCreditos).every(v => v === 0)) &&
         (!data.totalVentas || data.totalVentas === 0)
     );
 }
@@ -203,7 +201,6 @@ function updateStats(data) {
 
 function updateCharts(data) {
     updateMetodosPagoChart(data.ventasPorMetodoPago || {});
-    updateCreditosChart(data.estadisticasCreditos || {});
 }
 
 function updateMetodosPagoChart(data) {
@@ -254,44 +251,6 @@ function updateMetodosPagoChart(data) {
     });
 }
 
-function updateCreditosChart(data) {
-    const ctx = document.getElementById('creditosChart');
-    if (!ctx) return;
-
-    if (charts.creditos) {
-        charts.creditos.destroy();
-    }
-
-    const chartData = prepareCreditosChartData(data);
-
-    charts.creditos = new Chart(ctx, {
-        type: 'bar',
-        data: chartData,
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    ticks: {
-                        callback: value => '$' + value.toFixed(2)
-                    }
-                }
-            },
-            plugins: {
-                legend: {
-                    display: false
-                },
-                tooltip: {
-                    callbacks: {
-                        label: context => '$' + context.raw.toFixed(2)
-                    }
-                }
-            }
-        }
-    });
-}
-
 function prepareMetodosPagoChartData(data) {
     const colors = [
         'rgba(21, 101, 192, 0.8)',
@@ -315,30 +274,6 @@ function prepareMetodosPagoChartData(data) {
     };
 }
 
-function prepareCreditosChartData(data) {
-    return {
-        labels: ['Créditos Otorgados', 'Pagos Recibidos', 'Pendiente por Cobrar'],
-        datasets: [{
-            data: [
-                data.creditosOtorgados || 0,
-                data.pagosRecibidos || 0,
-                data.pendienteCobro || 0
-            ],
-            backgroundColor: [
-                'rgba(21, 101, 192, 0.8)',
-                'rgba(0, 191, 165, 0.8)',
-                'rgba(25, 118, 210, 0.8)'
-            ],
-            borderColor: [
-                'rgb(21, 101, 192)',
-                'rgb(0, 191, 165)',
-                'rgb(25, 118, 210)'
-            ],
-            borderWidth: 1
-        }]
-    };
-}
-
 function showEmptyState(message = 'No hay datos disponibles') {
     // Limpiar estadísticas
     ['total-ventas', 'ingresos-totales', 'ticket-promedio', 'productos-vendidos'].forEach(id => {
@@ -349,7 +284,7 @@ function showEmptyState(message = 'No hay datos disponibles') {
     });
 
     // Limpiar y mostrar mensaje en gráficos
-    ['metodosPagoChart', 'creditosChart'].forEach(id => {
+    ['metodosPagoChart'].forEach(id => {
         const canvas = document.getElementById(id);
         if (!canvas) return;
 

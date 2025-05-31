@@ -350,7 +350,7 @@ async function imprimirTicket(ventaId) {
         if (!response.ok) {
             throw new Error('Error al generar el ticket');
         }
-
+        
         const blob = await response.blob();
         const url = window.URL.createObjectURL(blob);
         const printWindow = window.open(url, '_blank');
