@@ -138,13 +138,43 @@ public class ReporteVentasController {
             // Validar y ajustar método de pago
             final String metodoPagoFinal = (metodoPago == null || metodoPago.isEmpty() || metodoPago.equals("TODOS")) ? "TODOS" : metodoPago;
 
-            // Obtener estadísticas de ventas
-            Map<String, Double> ventasPorMetodoPago = ventaServicio.obtenerVentasPorMetodoPago(
+            // Obtener lista de ventas y calcular subtotales en Bs
+            List<Venta> ventas = ventaServicio.listarVentasPorLicoreriaYFecha(
                 licoreriaActual.getId(), fechaInicioDateTime, fechaFinDateTime);
-            
-            double totalVentas = ventasPorMetodoPago.values().stream()
-                .mapToDouble(Double::doubleValue)
+
+            // Filtrar ventas anuladas
+            ventas = ventas.stream()
+                .filter(v -> !v.isAnulada())
+                .collect(Collectors.toList());
+
+            // Filtrar por tipo de venta si es necesario
+            if (!"TODAS".equals(tipoVentaFinal)) {
+                ventas = ventas.stream()
+                    .filter(v -> v.getTipoVenta() == TipoVenta.valueOf(tipoVentaFinal))
+                    .collect(Collectors.toList());
+            }
+            // Filtrar por método de pago si es necesario
+            if (!"TODOS".equals(metodoPagoFinal)) {
+                ventas = ventas.stream()
+                    .filter(v -> v.getMetodoPago() == MetodoPago.valueOf(metodoPagoFinal))
+                    .collect(Collectors.toList());
+            }
+
+            // Calcular totales
+            double subtotalDolares = ventas.stream()
+                .mapToDouble(v -> v.getTotalVenta().doubleValue())
                 .sum();
+
+            double subtotalBolivares = ventas.stream()
+                .mapToDouble(v -> v.getTotalVentaBs() != null ? v.getTotalVentaBs().doubleValue() : 0.0)
+                .sum();
+
+            // Obtener estadísticas de ventas por método de pago
+            Map<String, Double> ventasPorMetodoPago = ventas.stream()
+                .collect(Collectors.groupingBy(
+                    v -> v.getMetodoPago().toString(),
+                    Collectors.summingDouble(v -> v.getTotalVenta().doubleValue())
+                ));
 
             // Obtener estadísticas de créditos
             Map<String, Double> estadisticasCreditos = creditoServicio.obtenerEstadisticasCreditos(
@@ -161,56 +191,14 @@ public class ReporteVentasController {
             tasasMap.putIfAbsent("PROMEDIO", 0.0);
             tasasMap.putIfAbsent("PARALELA", 0.0);
 
-            // Obtener lista de ventas y calcular subtotales en Bs
-            List<Venta> ventas = ventaServicio.listarVentasPorLicoreriaYFecha(
-                licoreriaActual.getId(), fechaInicioDateTime, fechaFinDateTime);
-
-            // Filtrar por tipo de venta si es necesario
-            if (!"TODAS".equals(tipoVentaFinal)) {
-                ventas = ventas.stream()
-                    .filter(v -> v.getTipoVenta() == TipoVenta.valueOf(tipoVentaFinal))
-                    .toList();
-            }
-            // Filtrar por método de pago si es necesario
-            if (!"TODOS".equals(metodoPagoFinal)) {
-                ventas = ventas.stream()
-                    .filter(v -> v.getMetodoPago() == MetodoPago.valueOf(metodoPagoFinal))
-                    .toList();
-            }
-
-            double subtotalDolares = 0.0;
-            double subtotalBolivares = 0.0;
-            for (Venta venta : ventas) {
-                for (DetalleVenta detalle : venta.getDetalles()) {
-                    Producto producto = detalle.getProducto();
-                    double precioDolar = detalle.getPrecioUnitario().doubleValue();
-                    int cantidad = detalle.getCantidad();
-                    String tipoTasa = producto.getTipoTasa();
-                    double tasa = tasasMap.getOrDefault(tipoTasa != null ? tipoTasa.toUpperCase() : "BCV", 0.0);
-                    subtotalDolares += precioDolar * cantidad;
-                    subtotalBolivares += precioDolar * cantidad * tasa;
-                }
-            }
-
-            // Calcular estadísticas adicionales
-            int totalProductosVendidos = ventas.stream()
-                .flatMap(v -> v.getDetalles().stream())
-                .mapToInt(DetalleVenta::getCantidad)
-                .sum();
-
-            double ticketPromedio = ventas.isEmpty() ? 0 : 
-                totalVentas / ventas.size();
-
+            // Preparar respuesta
             Map<String, Object> response = new HashMap<>();
-            response.put("ventasPorMetodoPago", ventasPorMetodoPago);
-            response.put("estadisticasCreditos", estadisticasCreditos);
-            response.put("totalVentas", ventas.size());
-            response.put("totalIngresos", totalVentas);
-            response.put("ticketPromedio", ticketPromedio);
-            response.put("productosVendidos", totalProductosVendidos);
-            response.put("tasas", tasasMap);
             response.put("subtotalDolares", subtotalDolares);
             response.put("subtotalBolivares", subtotalBolivares);
+            response.put("ventasPorMetodoPago", ventasPorMetodoPago);
+            response.put("estadisticasCreditos", estadisticasCreditos);
+            response.put("tasas", tasasMap);
+            response.put("totalVentas", ventas.size());
 
             return ResponseEntity.ok(response);
         } catch (Exception e) {
@@ -267,7 +255,7 @@ public class ReporteVentasController {
             // Crear objeto Pageable
             Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortField));
 
-            // Obtener página de ventas
+            // Obtener página de ventas (excluyendo las anuladas)
             Page<Venta> ventasPage = ventaServicio.listarVentasPaginadas(
                 licoreriaActual.getId(),
                 fechaInicioDateTime,
@@ -280,6 +268,7 @@ public class ReporteVentasController {
             // Transformar los datos para evitar problemas de serialización
             Map<String, Object> response = new HashMap<>();
             response.put("content", ventasPage.getContent().stream()
+                .filter(venta -> !venta.isAnulada()) // Filtrar ventas anuladas
                 .map(venta -> {
                     Map<String, Object> ventaMap = new HashMap<>();
                     ventaMap.put("id", venta.getId());
@@ -589,6 +578,83 @@ public class ReporteVentasController {
             logger.error("Error al generar ticket de venta", e);
             return ResponseEntity.internalServerError()
                 .body(Map.of("error", "Error al generar ticket: " + e.getMessage()));
+        }
+    }
+
+    @PostMapping("/{ventaId}/anular")
+    @PreAuthorize("hasAnyRole('ADMIN_LOCAL', 'SUPER_ADMIN')")
+    public ResponseEntity<?> anularVenta(
+            @PathVariable Long ventaId,
+            @RequestBody Map<String, String> request,
+            Authentication authentication) {
+        try {
+            logger.info("Iniciando anulación de venta ID: {}", ventaId);
+            
+            Licoreria licoreriaActual = licoreriaContext.getLicoreriaActual();
+            if (licoreriaActual == null) {
+                logger.error("No hay licorería seleccionada");
+                return ResponseEntity.badRequest()
+                    .body(Map.of("error", "No hay licorería seleccionada"));
+            }
+
+            // Obtener la venta
+            Optional<Venta> ventaOpt = ventaServicio.buscarPorId(ventaId);
+            if (ventaOpt.isEmpty()) {
+                logger.error("Venta no encontrada con ID: {}", ventaId);
+                return ResponseEntity.badRequest()
+                    .body(Map.of("error", "Venta no encontrada"));
+            }
+            Venta venta = ventaOpt.get();
+
+            // Verificar que la venta pertenece a la licorería actual
+            if (!venta.getLicoreriaId().equals(licoreriaActual.getId())) {
+                logger.error("Intento de anular venta de otra licorería. Venta ID: {}, Licorería actual: {}", 
+                    ventaId, licoreriaActual.getId());
+                return ResponseEntity.badRequest()
+                    .body(Map.of("error", "No tiene permiso para anular esta venta"));
+            }
+
+            // Verificar que la venta no esté ya anulada
+            if (venta.isAnulada()) {
+                logger.error("Intento de anular una venta ya anulada. Venta ID: {}", ventaId);
+                return ResponseEntity.badRequest()
+                    .body(Map.of("error", "Esta venta ya está anulada"));
+            }
+
+            // Obtener el usuario actual
+            String username = authentication.getName();
+            Usuario usuario = usuarioServicio.buscarPorUsername(username);
+            if (usuario == null) {
+                logger.error("Usuario no encontrado: {}", username);
+                return ResponseEntity.badRequest()
+                    .body(Map.of("error", "Usuario no encontrado"));
+            }
+
+            // Obtener el motivo de anulación
+            String motivo = request.get("motivo");
+            if (motivo == null || motivo.trim().isEmpty()) {
+                logger.error("Intento de anular venta sin motivo. Venta ID: {}", ventaId);
+                return ResponseEntity.badRequest()
+                    .body(Map.of("error", "Debe proporcionar un motivo para la anulación"));
+            }
+
+            try {
+                logger.info("Procediendo a anular venta ID: {} por usuario: {}", ventaId, username);
+                // Anular la venta
+                ventaServicio.anularVenta(ventaId, usuario.getId(), motivo);
+                logger.info("Venta ID: {} anulada exitosamente", ventaId);
+                return ResponseEntity.ok(Map.of("message", "Venta anulada exitosamente"));
+            } catch (RuntimeException e) {
+                logger.error("Error al anular venta ID: {}. Error: {}", ventaId, e.getMessage(), e);
+                String errorMessage = e.getMessage() != null ? e.getMessage() : "Error desconocido al anular la venta";
+                return ResponseEntity.badRequest()
+                    .body(Map.of("error", errorMessage));
+            }
+        } catch (Exception e) {
+            logger.error("Error inesperado al anular venta ID: {}. Error: {}", ventaId, e.getMessage(), e);
+            String errorMessage = e.getMessage() != null ? e.getMessage() : "Error inesperado al anular la venta";
+            return ResponseEntity.internalServerError()
+                .body(Map.of("error", errorMessage));
         }
     }
 

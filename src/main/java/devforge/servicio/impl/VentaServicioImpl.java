@@ -5,6 +5,14 @@ import devforge.model.enums.TipoVenta;
 import devforge.model.enums.MetodoPago;
 import devforge.repository.VentaRepository;
 import devforge.servicio.VentaServicio;
+import devforge.servicio.UsuarioServicio;
+import devforge.servicio.CreditoServicio;
+import devforge.model.Cliente;
+import devforge.servicio.ClienteServicio;
+import devforge.model.Usuario;
+import devforge.model.DetalleVenta;
+import devforge.model.Producto;
+import devforge.servicio.ProductoServicio;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -44,9 +52,21 @@ import java.math.BigDecimal;
 public class VentaServicioImpl implements VentaServicio {
 
     private final VentaRepository ventaRepository;
+    private final UsuarioServicio usuarioServicio;
+    private final CreditoServicio creditoServicio;
+    private final ClienteServicio clienteServicio;
+    private final ProductoServicio productoServicio;
 
-    public VentaServicioImpl(VentaRepository ventaRepository) {
+    public VentaServicioImpl(VentaRepository ventaRepository, 
+                            UsuarioServicio usuarioServicio,
+                            CreditoServicio creditoServicio,
+                            ClienteServicio clienteServicio,
+                            ProductoServicio productoServicio) {
         this.ventaRepository = ventaRepository;
+        this.usuarioServicio = usuarioServicio;
+        this.creditoServicio = creditoServicio;
+        this.clienteServicio = clienteServicio;
+        this.productoServicio = productoServicio;
     }
 
     @Override
@@ -73,6 +93,7 @@ public class VentaServicioImpl implements VentaServicio {
     public Map<String, Double> obtenerVentasPorMetodoPago(Long licoreriaId, LocalDateTime fechaInicio, LocalDateTime fechaFin) {
         List<Venta> ventas = listarVentasPorLicoreriaYFecha(licoreriaId, fechaInicio, fechaFin);
         return ventas.stream()
+            .filter(v -> !v.isAnulada())
             .collect(Collectors.groupingBy(
                 venta -> venta.getMetodoPago().toString(),
                 Collectors.summingDouble(Venta::getTotalVenta)
@@ -106,6 +127,9 @@ public class VentaServicioImpl implements VentaServicio {
             if (!"TODOS".equals(metodoPago)) {
                 predicates.add(cb.equal(root.get("metodoPago"), MetodoPago.valueOf(metodoPago)));
             }
+
+            // Excluir ventas anuladas
+            predicates.add(cb.equal(root.get("anulada"), false));
             
             return cb.and(predicates.toArray(new Predicate[0]));
         };
@@ -261,11 +285,65 @@ public class VentaServicioImpl implements VentaServicio {
             if (!"TODOS".equals(metodoPago)) {
                 predicates.add(cb.equal(root.get("metodoPago"), MetodoPago.valueOf(metodoPago)));
             }
+
+            // Excluir ventas anuladas
+            predicates.add(cb.equal(root.get("anulada"), false));
             
             return cb.and(predicates.toArray(new Predicate[0]));
         };
         
         return ventaRepository.findAll(spec);
+    }
+
+    @Override
+    @Transactional
+    public void anularVenta(Long ventaId, Long usuarioId, String motivo) {
+        try {
+            Venta venta = ventaRepository.findById(ventaId)
+                .orElseThrow(() -> new RuntimeException("Venta no encontrada"));
+
+            if (venta.isAnulada()) {
+                throw new RuntimeException("La venta ya está anulada");
+            }
+
+            // Actualizar estado de la venta
+            venta.setAnulada(true);
+            venta.setFechaAnulacion(LocalDateTime.now());
+            venta.setMotivoAnulacion(motivo);
+            
+            Usuario usuario = usuarioServicio.obtenerPorId(usuarioId);
+            if (usuario == null) {
+                throw new RuntimeException("Usuario no encontrado");
+            }
+            venta.setUsuarioAnulacion(usuario);
+
+            // Devolver productos al inventario
+            for (DetalleVenta detalle : venta.getDetalles()) {
+                Producto producto = detalle.getProducto();
+                int cantidadDevuelta = detalle.getCantidad();
+                producto.setCantidad(producto.getCantidad() + cantidadDevuelta);
+                productoServicio.guardar(producto);
+            }
+
+            // Si es una venta a crédito, actualizar el crédito
+            if (venta.getTipoVenta() == TipoVenta.CREDITO && venta.getCredito() != null) {
+                // Actualizar el crédito disponible del cliente
+                Cliente cliente = venta.getCliente();
+                if (cliente != null) {
+                    Double creditoDisponible = cliente.getCreditoDisponible();
+                    if (creditoDisponible == null) {
+                        creditoDisponible = 0.0;
+                    }
+                    clienteServicio.actualizarCreditoDisponible(cliente.getId(), 
+                        creditoDisponible + venta.getTotalVenta());
+                }
+            }
+
+            // Guardar los cambios
+            ventaRepository.save(venta);
+        } catch (Exception e) {
+            throw new RuntimeException("Error al anular la venta: " + e.getMessage(), e);
+        }
     }
 }
  

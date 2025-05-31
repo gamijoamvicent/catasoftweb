@@ -15,6 +15,7 @@ public interface VentaServicio {
     List<Venta> listarVentasPorLicoreriaYFecha(Long licoreriaId, LocalDateTime fechaInicio, LocalDateTime fechaFin);
     Map<String, Double> obtenerVentasPorMetodoPago(Long licoreriaId, LocalDateTime fechaInicio, LocalDateTime fechaFin);
     Optional<Venta> buscarPorId(Long id);
+    void anularVenta(Long ventaId, Long usuarioId, String motivo);
 
     Page<Venta> listarVentasPaginadas(
             Long licoreriaId,

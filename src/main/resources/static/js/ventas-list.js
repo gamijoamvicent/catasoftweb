@@ -235,6 +235,9 @@ function updateVentasTable(ventas) {
                     <button class="btn btn-sm btn-secondary" onclick="imprimirTicket(${venta.id})">
                         <i class="fas fa-print"></i>
                     </button>
+                    <button class="btn btn-sm btn-danger" onclick="confirmarAnularVenta(${venta.id})">
+                        <i class="fas fa-ban"></i>
+                    </button>
                 </div>
             </td>
         `;
@@ -393,4 +396,102 @@ function showNotification(message, type = 'info') {
             notification.remove();
         }, 300);
     }, 3000);
+}
+
+function confirmarAnularVenta(ventaId) {
+    // Crear modal de confirmación
+    const modal = document.createElement('div');
+    modal.className = 'modal fade';
+    modal.id = 'modalAnularVenta';
+    modal.innerHTML = `
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Confirmar Anulación</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>¿Está seguro que desea anular esta venta?</p>
+                    <p>Esta acción no se puede deshacer.</p>
+                    <div class="form-group mb-3">
+                        <label for="motivoAnulacion">Motivo de la anulación:</label>
+                        <textarea class="form-control" id="motivoAnulacion" rows="3" required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-danger" onclick="anularVenta(${ventaId})">Anular</button>
+                </div>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+    
+    // Inicializar modal de Bootstrap
+    const modalInstance = new bootstrap.Modal(modal);
+    modalInstance.show();
+    
+    // Limpiar modal cuando se cierre
+    modal.addEventListener('hidden.bs.modal', () => {
+        modal.remove();
+    });
+}
+
+async function anularVenta(ventaId) {
+    try {
+        const motivo = document.getElementById('motivoAnulacion').value;
+        if (!motivo) {
+            showNotification('Debe proporcionar un motivo para la anulación', 'error');
+            return;
+        }
+
+        // Obtener el token CSRF
+        const csrfToken = document.querySelector('meta[name="_csrf"]')?.getAttribute('content');
+        const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.getAttribute('content');
+
+        // Configurar los headers
+        const headers = {
+            'Content-Type': 'application/json'
+        };
+
+        // Agregar el token CSRF si está disponible
+        if (csrfToken && csrfHeader) {
+            headers[csrfHeader] = csrfToken;
+        }
+
+        // Mostrar indicador de carga
+        showLoading(true);
+
+        const response = await fetch(`/reportes/ventas/${ventaId}/anular`, {
+            method: 'POST',
+            headers: headers,
+            body: JSON.stringify({ motivo: motivo })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.error || 'Error al anular la venta');
+        }
+
+        // Ocultar el modal y mostrar notificación de éxito
+        const modalElement = document.getElementById('modalAnularVenta');
+        if (modalElement) {
+            const modal = bootstrap.Modal.getInstance(modalElement);
+            if (modal) {
+                modal.hide();
+            }
+        }
+        showNotification('Venta anulada exitosamente', 'success');
+        
+        // Recargar la tabla
+        loadVentasData();
+
+    } catch (error) {
+        console.error('Error al anular venta:', error);
+        showNotification(error.message || 'Error al anular la venta', 'error');
+    } finally {
+        // Ocultar indicador de carga
+        showLoading(false);
+    }
 } 

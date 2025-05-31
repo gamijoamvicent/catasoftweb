@@ -50,11 +50,33 @@ public class Venta {
     @Column(name = "licoreria_id", insertable = false, updatable = false)
     private Long licoreriaId;
 
+    @Column(name = "anulada", nullable = false)
+    private boolean anulada = false;
+
+    @Column(name = "fecha_anulacion")
+    private LocalDateTime fechaAnulacion;
+
+    @Column(name = "motivo_anulacion")
+    private String motivoAnulacion;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "usuario_anulacion_id")
+    private Usuario usuarioAnulacion;
+
+    @Column(name = "usuario_anulacion_id", insertable = false, updatable = false)
+    private Long usuarioAnulacionId;
+
     @OneToMany(mappedBy = "venta", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<DetalleVenta> detalles = new ArrayList<>();
 
     @OneToOne(mappedBy = "venta", cascade = CascadeType.ALL)
     private Credito credito;
+
+    @OneToOne(mappedBy = "venta", cascade = CascadeType.ALL)
+    private Factura factura;
+
+    @OneToOne(mappedBy = "ventaAnulada", cascade = CascadeType.ALL)
+    private Factura facturaAnulacion;
 
     @PrePersist
     protected void onCreate() {

@@ -9,4 +9,6 @@ public interface UsuarioServicio {
     Usuario obtenerPorUsername(String username);
     void eliminar(Long id);
     Usuario obtenerPorId(Long id);
+    Usuario buscarPorUsername(String username);
+    boolean validarPassword(Usuario usuario, String password);
 }
