@@ -31,16 +31,25 @@ public class CreditoController {
     }
 
     @GetMapping
-    public String listarCreditos(Model model) {
+    public String listarCreditos(
+            @RequestParam(required = false) String estado,
+            Model model) {
         if (licoreriaContext.getLicoreriaActual() == null) {
             return "redirect:/licorerias/seleccionar";
         }
 
-        List<Credito> creditos = creditoServicio.listarCreditosPorLicoreria(
-            licoreriaContext.getLicoreriaId());
+        List<Credito> creditos;
+        if (estado != null && !estado.isEmpty()) {
+            creditos = creditoServicio.listarCreditosPorLicoreriaYEstado(
+                licoreriaContext.getLicoreriaId(), estado);
+        } else {
+            creditos = creditoServicio.listarCreditosPorLicoreria(
+                licoreriaContext.getLicoreriaId());
+        }
 
         model.addAttribute("creditos", creditos);
         model.addAttribute("licoreriaActual", licoreriaContext.getLicoreriaActual());
+        model.addAttribute("estadoSeleccionado", estado);
 
         return "creditos/listar";
     }

@@ -114,6 +114,16 @@ public class CreditoServicioImpl implements CreditoServicio {
     }
 
     @Override
+    public List<Credito> listarCreditosPorLicoreriaYEstado(Long licoreriaId, String estado) {
+        try {
+            Credito.EstadoCredito estadoCredito = Credito.EstadoCredito.valueOf(estado);
+            return creditoRepository.findByLicoreriaIdAndEstado(licoreriaId, estadoCredito);
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Estado de crédito inválido: " + estado);
+        }
+    }
+
+    @Override
     public Map<String, Double> obtenerEstadisticasCreditos(Long licoreriaId, LocalDateTime fechaInicio, LocalDateTime fechaFin) {
         List<Credito> creditos = creditoRepository.findByLicoreriaId(licoreriaId).stream()
             .filter(credito -> {

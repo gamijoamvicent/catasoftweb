@@ -601,14 +601,9 @@
                         <td th:text="${usuario.rol.name()}">ADMIN</td>
                         <td th:text="${usuario.licoreria?.nombre ?: 'Sin licorería'}">Licorería</td>
                         <td>
-                            <a th:href="@{/usuarios/editar/{id}(id=${usuario.id})}" 
-                               class="btn-action btn-editar"
-                               th:unless="${usuario.rol.name() == 'SUPER_ADMIN'}">
-                                <span class="icon">✏️</span>
-                                Editar
-                            </a>
                             <a th:href="@{/usuarios/eliminar/{id}(id=${usuario.id})}"
                                class="btn-action btn-eliminar"
+                               th:if="${esSuperAdmin || (usuario.licoreria != null && usuario.licoreria.id == licoreriaUsuarioActual.id)}"
                                th:unless="${usuario.rol.name() == 'SUPER_ADMIN'}"
                                onclick="return confirm('¿Estás seguro de eliminar este usuario?')">
                                 <span class="icon">🗑️</span>

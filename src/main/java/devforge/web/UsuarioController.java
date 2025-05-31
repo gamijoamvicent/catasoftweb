@@ -35,6 +35,7 @@ public class UsuarioController {
         model.addAttribute("usuarioNuevo", new Usuario());
         model.addAttribute("usuarios", usuarioServicio.listarUsuarios());
         model.addAttribute("esSuperAdmin", usuarioActual.getRol() == Usuario.Rol.SUPER_ADMIN);
+        model.addAttribute("licoreriaUsuarioActual", usuarioActual.getLicoreria());
         
         if (usuarioActual.getRol() == Usuario.Rol.SUPER_ADMIN) {
             model.addAttribute("licorerias", licoreriaServicio.listarTodas());
@@ -118,6 +119,14 @@ public class UsuarioController {
                 return "redirect:/usuarios/registrar";
             }
 
+            // Validar que el usuario pertenezca a la misma licorería o sea super admin
+            if (usuarioActual.getRol() != Usuario.Rol.SUPER_ADMIN && 
+                (usuarioAEliminar.getLicoreria() == null || 
+                 !usuarioAEliminar.getLicoreria().getId().equals(usuarioActual.getLicoreria().getId()))) {
+                redirectAttrs.addFlashAttribute("mensajeError", "❌ No tienes permisos para eliminar usuarios de otras licorerías");
+                return "redirect:/usuarios/registrar";
+            }
+
             usuarioServicio.eliminar(id);
             redirectAttrs.addFlashAttribute("mensajeExito", "✅ Usuario eliminado exitosamente");
 
@@ -133,10 +142,24 @@ public class UsuarioController {
         String username = auth.getName();
         Usuario usuarioActual = usuarioServicio.obtenerPorUsername(username);
         Usuario usuario = usuarioServicio.obtenerPorId(id);
+
+        // Validar permisos
+        if (usuario.getRol() == Usuario.Rol.SUPER_ADMIN && 
+            usuarioActual.getRol() != Usuario.Rol.SUPER_ADMIN) {
+            return "redirect:/usuarios/registrar";
+        }
+
+        // Validar que el usuario pertenezca a la misma licorería o sea super admin
+        if (usuarioActual.getRol() != Usuario.Rol.SUPER_ADMIN && 
+            (usuario.getLicoreria() == null || 
+             !usuario.getLicoreria().getId().equals(usuarioActual.getLicoreria().getId()))) {
+            return "redirect:/usuarios/registrar";
+        }
         
         model.addAttribute("usuarioNuevo", usuario);
         model.addAttribute("usuarios", usuarioServicio.listarUsuarios());
         model.addAttribute("esSuperAdmin", usuarioActual.getRol() == Usuario.Rol.SUPER_ADMIN);
+        model.addAttribute("licoreriaUsuarioActual", usuarioActual.getLicoreria());
         
         if (usuarioActual.getRol() == Usuario.Rol.SUPER_ADMIN) {
             model.addAttribute("licorerias", licoreriaServicio.listarTodas());

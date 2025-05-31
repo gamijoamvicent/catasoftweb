@@ -21,4 +21,7 @@ public interface CreditoRepository extends JpaRepository<Credito, Long> {
     
     @Query("SELECT c FROM Credito c WHERE c.licoreria.id = :licoreriaId")
     List<Credito> findByLicoreriaId(@Param("licoreriaId") Long licoreriaId);
+
+    @Query("SELECT c FROM Credito c WHERE c.licoreria.id = :licoreriaId AND c.estado = :estado")
+    List<Credito> findByLicoreriaIdAndEstado(@Param("licoreriaId") Long licoreriaId, @Param("estado") EstadoCredito estado);
 } 

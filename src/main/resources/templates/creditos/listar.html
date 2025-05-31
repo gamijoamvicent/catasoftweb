@@ -16,6 +16,15 @@
                         <div class="card-header bg-white py-3">
                             <div class="d-flex justify-content-between align-items-center">
                                 <h5 class="mb-0">Lista de Créditos</h5>
+                                <div class="d-flex gap-2">
+                                    <form th:action="@{/creditos}" method="get" class="d-flex gap-2">
+                                        <select name="estado" class="form-select" onchange="this.form.submit()">
+                                            <option value="">Todos los Estados</option>
+                                            <option value="PAGADO_TOTAL" th:selected="${estadoSeleccionado == 'PAGADO_TOTAL'}">Pagados</option>
+                                            <option value="PENDIENTE" th:selected="${estadoSeleccionado == 'PENDIENTE'}">Pendientes</option>
+                                        </select>
+                                    </form>
+                                </div>
                             </div>
                         </div>
                         <div class="card-body">
