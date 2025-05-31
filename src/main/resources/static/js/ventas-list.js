@@ -223,11 +223,14 @@ function updateVentasTable(ventas) {
             <td>${venta.tipoVenta}</td>
             <td>${venta.metodoPago}</td>
             <td>${formatCurrency(venta.totalVenta)}</td>
-            <td>${formatCurrency(venta.totalVentaBs)} Bs</td>
+            <td>${formatCurrency(venta.totalVentaBs, true)}</td>
             <td>
                 <div class="btn-group">
                     <button class="btn btn-sm btn-info" onclick="verDetalle(${venta.id})">
                         <i class="fas fa-eye"></i>
+                    </button>
+                    <button class="btn btn-sm btn-primary" onclick="descargarPDF(${venta.id})">
+                        <i class="fas fa-file-pdf"></i>
                     </button>
                     <button class="btn btn-sm btn-secondary" onclick="imprimirTicket(${venta.id})">
                         <i class="fas fa-print"></i>
@@ -299,52 +302,65 @@ function verDetalle(ventaId) {
     window.location.href = `/ventas/detalle/${ventaId}`;
 }
 
+async function descargarPDF(ventaId) {
+    try {
+        showLoading(true);
+        const response = await fetch(`/reportes/ventas/pdf/${ventaId}`, {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/pdf'
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error('Error al generar el PDF');
+        }
+
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `venta-${ventaId}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+        showNotification('PDF descargado exitosamente', 'success');
+    } catch (error) {
+        console.error('Error al descargar PDF:', error);
+        showNotification('Error al descargar el PDF: ' + error.message, 'error');
+    } finally {
+        showLoading(false);
+    }
+}
+
 async function imprimirTicket(ventaId) {
     try {
-        const response = await fetch(`/ventas/ticket/${ventaId}`);
+        showLoading(true);
+        const response = await fetch(`/reportes/ventas/ticket/${ventaId}`, {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/pdf'
+            }
+        });
+
         if (!response.ok) {
-            throw new Error(`Error al obtener el ticket: ${response.status}`);
+            throw new Error('Error al generar el ticket');
         }
-        
-        const data = await response.json();
-        if (data.error) {
-            throw new Error(data.error);
-        }
-        
-        // Abrir ventana de impresión
-        const printWindow = window.open('', '_blank');
-        printWindow.document.write(`
-            <html>
-                <head>
-                    <title>Ticket de Venta #${ventaId}</title>
-                    <style>
-                        body {
-                            font-family: monospace;
-                            width: 300px;
-                            margin: 0 auto;
-                            padding: 10px;
-                        }
-                        .ticket-content {
-                            white-space: pre-line;
-                        }
-                    </style>
-                </head>
-                <body>
-                    <div class="ticket-content">${data.ticket}</div>
-                    <script>
-                        window.onload = function() {
-                            window.print();
-                            setTimeout(function() { window.close(); }, 500);
-                        };
-                    </script>
-                </body>
-            </html>
-        `);
-        printWindow.document.close();
-        
+
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const printWindow = window.open(url, '_blank');
+        printWindow.onload = function() {
+            printWindow.print();
+            window.URL.revokeObjectURL(url);
+        };
+        showNotification('Ticket generado exitosamente', 'success');
     } catch (error) {
-        console.error('Error imprimiendo ticket:', error);
-        showNotification('Error al imprimir ticket: ' + error.message, 'error');
+        console.error('Error al imprimir ticket:', error);
+        showNotification('Error al imprimir el ticket: ' + error.message, 'error');
+    } finally {
+        showLoading(false);
     }
 }
 
@@ -353,7 +369,10 @@ function formatDate(dateString) {
     return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
 }
 
-function formatCurrency(value) {
+function formatCurrency(value, isBs = false) {
+    if (isBs) {
+        return Number(value).toFixed(2) + ' Bs';
+    }
     return '$' + Number(value).toFixed(2);
 }
 

@@ -141,6 +141,16 @@
                     </excludes>
                 </configuration>
             </plugin>
+            <plugin>
+                <groupId>org.flywaydb</groupId>
+                <artifactId>flyway-maven-plugin</artifactId>
+                <version>9.22.3</version>
+                <configuration>
+                    <url>jdbc:mariadb://localhost:3306/papeleria_db</url>
+                    <user>SERVER</user>
+                    <password>SERVER</password>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
 

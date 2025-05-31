@@ -43,6 +43,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.HashMap;
 import java.math.BigDecimal;
+import java.util.Optional;
 
 import com.itextpdf.text.Document;
 import com.itextpdf.text.Element;
@@ -377,5 +378,236 @@ public class ReporteVentasController {
             return ResponseEntity.internalServerError()
                 .body(Map.of("error", "Error al exportar reporte: " + e.getMessage()));
         }
+    }
+
+    @GetMapping("/pdf/{ventaId}")
+    @PreAuthorize("hasAnyRole('ADMIN_LOCAL', 'SUPER_ADMIN')")
+    public ResponseEntity<?> generarPDFVenta(@PathVariable Long ventaId) {
+        try {
+            Licoreria licoreriaActual = licoreriaContext.getLicoreriaActual();
+            if (licoreriaActual == null) {
+                return ResponseEntity.badRequest()
+                    .body(Map.of("error", "No hay licorería seleccionada"));
+            }
+
+            Optional<Venta> ventaOpt = ventaServicio.buscarPorId(ventaId);
+            if (ventaOpt.isEmpty()) {
+                return ResponseEntity.notFound().build();
+            }
+            Venta venta = ventaOpt.get();
+
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            Document document = new Document();
+            PdfWriter.getInstance(document, baos);
+
+            document.open();
+
+            // Configurar fuentes
+            Font titleFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 16);
+            Font headerFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 12);
+            Font normalFont = FontFactory.getFont(FontFactory.HELVETICA, 10);
+
+            // Título
+            Paragraph title = new Paragraph("Detalle de Venta", titleFont);
+            title.setAlignment(Element.ALIGN_CENTER);
+            title.setSpacingAfter(20);
+            document.add(title);
+
+            // Información de la venta
+            PdfPTable infoTable = new PdfPTable(2);
+            infoTable.setWidthPercentage(100);
+            infoTable.setSpacingBefore(10);
+            infoTable.setSpacingAfter(10);
+
+            addTableRow(infoTable, "Número de Venta:", "#" + venta.getId(), headerFont, normalFont);
+            addTableRow(infoTable, "Fecha:", venta.getFechaVenta().toString(), headerFont, normalFont);
+            addTableRow(infoTable, "Cliente:", venta.getCliente() != null ? venta.getCliente().getNombre() : "Venta al contado", headerFont, normalFont);
+            addTableRow(infoTable, "Tipo de Venta:", venta.getTipoVenta().toString(), headerFont, normalFont);
+            addTableRow(infoTable, "Método de Pago:", venta.getMetodoPago().toString(), headerFont, normalFont);
+
+            document.add(infoTable);
+
+            // Tabla de productos
+            PdfPTable table = new PdfPTable(4);
+            table.setWidthPercentage(100);
+            table.setSpacingBefore(10);
+            table.setSpacingAfter(10);
+
+            // Encabezados
+            String[] headers = {"Producto", "Cantidad", "Precio Unit.", "Subtotal"};
+            for (String header : headers) {
+                PdfPCell cell = new PdfPCell(new Phrase(header, headerFont));
+                cell.setHorizontalAlignment(Element.ALIGN_CENTER);
+                cell.setBackgroundColor(BaseColor.LIGHT_GRAY);
+                table.addCell(cell);
+            }
+
+            // Detalles de la venta
+            for (DetalleVenta detalle : venta.getDetalles()) {
+                table.addCell(new Phrase(detalle.getProducto().getNombre(), normalFont));
+                table.addCell(new Phrase(String.valueOf(detalle.getCantidad()), normalFont));
+                table.addCell(new Phrase(String.format("%.2f", detalle.getPrecioUnitario().doubleValue()), normalFont));
+                table.addCell(new Phrase(String.format("%.2f", detalle.getSubtotal().doubleValue()), normalFont));
+            }
+
+            document.add(table);
+
+            // Totales
+            PdfPTable totalesTable = new PdfPTable(2);
+            totalesTable.setWidthPercentage(100);
+            totalesTable.setSpacingBefore(10);
+
+            addTableRow(totalesTable, "Total en USD:", String.format("%.2f", new BigDecimal(venta.getTotalVenta().toString()).doubleValue()), headerFont, normalFont);
+            addTableRow(totalesTable, "Total en Bs:", String.format("%.2f Bs", new BigDecimal(venta.getTotalVentaBs().toString()).doubleValue()), headerFont, normalFont);
+
+            document.add(totalesTable);
+
+            document.close();
+
+            HttpHeaders responseHeaders = new HttpHeaders();
+            responseHeaders.setContentType(MediaType.APPLICATION_PDF);
+            responseHeaders.setContentDispositionFormData("attachment", "venta-" + ventaId + ".pdf");
+
+            return ResponseEntity.ok()
+                .headers(responseHeaders)
+                .body(baos.toByteArray());
+
+        } catch (Exception e) {
+            logger.error("Error al generar PDF de venta", e);
+            return ResponseEntity.internalServerError()
+                .body(Map.of("error", "Error al generar PDF: " + e.getMessage()));
+        }
+    }
+
+    @GetMapping("/ticket/{ventaId}")
+    @PreAuthorize("hasAnyRole('ADMIN_LOCAL', 'SUPER_ADMIN')")
+    public ResponseEntity<?> generarTicketVenta(@PathVariable Long ventaId) {
+        try {
+            Licoreria licoreriaActual = licoreriaContext.getLicoreriaActual();
+            if (licoreriaActual == null) {
+                return ResponseEntity.badRequest()
+                    .body(Map.of("error", "No hay licorería seleccionada"));
+            }
+
+            Optional<Venta> ventaOpt = ventaServicio.buscarPorId(ventaId);
+            if (ventaOpt.isEmpty()) {
+                return ResponseEntity.notFound().build();
+            }
+            Venta venta = ventaOpt.get();
+
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            Document document = new Document();
+            PdfWriter.getInstance(document, baos);
+
+            document.open();
+
+            // Configurar fuentes
+            Font titleFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 12);
+            Font headerFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10);
+            Font normalFont = FontFactory.getFont(FontFactory.HELVETICA, 8);
+
+            // Encabezado
+            Paragraph title = new Paragraph(licoreriaActual.getNombre(), titleFont);
+            title.setAlignment(Element.ALIGN_CENTER);
+            title.setSpacingAfter(5);
+            document.add(title);
+
+            Paragraph subtitle = new Paragraph("Ticket de Venta", headerFont);
+            subtitle.setAlignment(Element.ALIGN_CENTER);
+            subtitle.setSpacingAfter(10);
+            document.add(subtitle);
+
+            // Información de la venta
+            PdfPTable infoTable = new PdfPTable(2);
+            infoTable.setWidthPercentage(100);
+            infoTable.setSpacingBefore(5);
+            infoTable.setSpacingAfter(5);
+
+            addTableRow(infoTable, "Venta #:", String.valueOf(venta.getId()), headerFont, normalFont);
+            addTableRow(infoTable, "Fecha:", venta.getFechaVenta().toString(), headerFont, normalFont);
+            addTableRow(infoTable, "Cliente:", venta.getCliente() != null ? venta.getCliente().getNombre() : "Venta al contado", headerFont, normalFont);
+
+            document.add(infoTable);
+
+            // Línea separadora
+            document.add(new Paragraph("----------------------------------------"));
+
+            // Tabla de productos
+            PdfPTable table = new PdfPTable(4);
+            table.setWidthPercentage(100);
+            table.setSpacingBefore(5);
+            table.setSpacingAfter(5);
+
+            // Encabezados
+            String[] headers = {"Producto", "Cant.", "P.Unit.", "Subtotal"};
+            for (String header : headers) {
+                PdfPCell cell = new PdfPCell(new Phrase(header, headerFont));
+                cell.setHorizontalAlignment(Element.ALIGN_CENTER);
+                table.addCell(cell);
+            }
+
+            // Detalles de la venta
+            for (DetalleVenta detalle : venta.getDetalles()) {
+                table.addCell(new Phrase(detalle.getProducto().getNombre(), normalFont));
+                table.addCell(new Phrase(String.valueOf(detalle.getCantidad()), normalFont));
+                table.addCell(new Phrase(String.format("%.2f", detalle.getPrecioUnitario().doubleValue()), normalFont));
+                table.addCell(new Phrase(String.format("%.2f", detalle.getSubtotal().doubleValue()), normalFont));
+            }
+
+            document.add(table);
+
+            // Línea separadora
+            document.add(new Paragraph("----------------------------------------"));
+
+            // Totales
+            PdfPTable totalesTable = new PdfPTable(2);
+            totalesTable.setWidthPercentage(100);
+            totalesTable.setSpacingBefore(5);
+
+            addTableRow(totalesTable, "Total USD:", String.format("%.2f", new BigDecimal(venta.getTotalVenta().toString()).doubleValue()), headerFont, normalFont);
+            addTableRow(totalesTable, "Total Bs:", String.format("%.2f Bs", new BigDecimal(venta.getTotalVentaBs().toString()).doubleValue()), headerFont, normalFont);
+
+            document.add(totalesTable);
+
+            // Pie de página
+            Paragraph footer = new Paragraph("¡Gracias por su compra!", normalFont);
+            footer.setAlignment(Element.ALIGN_CENTER);
+            footer.setSpacingBefore(10);
+            document.add(footer);
+
+            document.close();
+
+            HttpHeaders responseHeaders = new HttpHeaders();
+            responseHeaders.setContentType(MediaType.APPLICATION_PDF);
+            responseHeaders.setContentDispositionFormData("inline", "ticket-" + ventaId + ".pdf");
+
+            return ResponseEntity.ok()
+                .headers(responseHeaders)
+                .body(baos.toByteArray());
+
+        } catch (Exception e) {
+            logger.error("Error al generar ticket de venta", e);
+            return ResponseEntity.internalServerError()
+                .body(Map.of("error", "Error al generar ticket: " + e.getMessage()));
+        }
+    }
+
+    private void addTableRow(PdfPTable table, String label, String value, Font labelFont, Font valueFont) {
+        PdfPCell labelCell = new PdfPCell(new Phrase(label, labelFont));
+        labelCell.setBorder(0);
+        table.addCell(labelCell);
+
+        PdfPCell valueCell = new PdfPCell(new Phrase(value, valueFont));
+        valueCell.setBorder(0);
+        valueCell.setHorizontalAlignment(Element.ALIGN_RIGHT);
+        table.addCell(valueCell);
+    }
+
+    private String formatCurrency(BigDecimal amount) {
+        return String.format("$%.2f", amount.doubleValue());
+    }
+
+    private String formatCurrencyBs(BigDecimal amount) {
+        return String.format("%.2f Bs", amount.doubleValue());
     }
 }
