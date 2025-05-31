@@ -161,4 +161,13 @@ public class CreditoServicioImpl implements CreditoServicio {
 
         return estadisticas;
     }
+
+    @Override
+    @Transactional
+    public void eliminarCreditosPorLicoreria(Long licoreriaId) {
+        List<Credito> creditos = creditoRepository.findByLicoreriaId(licoreriaId);
+        for (Credito credito : creditos) {
+            creditoRepository.delete(credito);
+        }
+    }
 } 

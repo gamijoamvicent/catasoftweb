@@ -21,4 +21,7 @@ public interface ClienteRepository extends JpaRepository<Cliente, Long> {
     
     @Query("SELECT c FROM Cliente c WHERE c.estado = true AND c.licoreria.id = :licoreriaId")
     List<Cliente> findByEstadoTrueAndLicoreria(@Param("licoreriaId") Long licoreriaId);
+
+    @Query("SELECT c FROM Cliente c WHERE c.licoreria.id = :licoreriaId")
+    List<Cliente> findByLicoreriaId(@Param("licoreriaId") Long licoreriaId);
 } 

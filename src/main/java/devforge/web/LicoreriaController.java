@@ -11,6 +11,8 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
@@ -126,26 +128,54 @@ public class LicoreriaController {
 
     // Cambiar estado de licorería
     @PostMapping("/{id}/cambiar-estado")
-    public String cambiarEstado(@PathVariable Long id, @RequestParam boolean estado, RedirectAttributes redirectAttributes) {
+    @ResponseBody
+    public String cambiarEstado(@PathVariable Long id, @RequestParam boolean activar, RedirectAttributes redirectAttributes) {
         try {
-            licoreriaServicio.cambiarEstado(id, estado);
-            String mensaje = estado ? "Licorería activada exitosamente" : "Licorería desactivada exitosamente";
-            redirectAttributes.addFlashAttribute("mensaje", mensaje);
+            Licoreria licoreria = licoreriaServicio.obtenerPorId(id)
+                .orElseThrow(() -> new RuntimeException("Licorería no encontrada"));
+            
+            // Si se está desactivando, verificar que no sea la licorería actual
+            if (!activar && licoreriaContext.getLicoreriaActual() != null && 
+                licoreriaContext.getLicoreriaActual().getId().equals(id)) {
+                return "ERROR: No se puede desactivar la licorería actual";
+            }
+            
+            licoreria.setEstado(activar);
+            licoreriaServicio.guardar(licoreria);
+            return "OK";
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", "Error al cambiar el estado de la licorería");
+            logger.error("Error al cambiar estado de licorería: {}", e.getMessage(), e);
+            return "ERROR: " + e.getMessage();
         }
-        return "redirect:/licorerias";
     }
 
     // Eliminar licorería
     @PostMapping("/{id}/eliminar")
     @ResponseBody
-    public String eliminarLicoreria(@PathVariable Long id) {
+    public ResponseEntity<String> eliminarLicoreria(@PathVariable Long id) {
         try {
-            licoreriaServicio.eliminar(id);
-            return "OK";
+            logger.info("Iniciando proceso de eliminación de licorería ID: {}", id);
+            
+            Licoreria licoreria = licoreriaServicio.obtenerPorId(id)
+                .orElseThrow(() -> new RuntimeException("Licorería no encontrada"));
+            
+            // Verificar que no sea la licorería actual
+            if (licoreriaContext.getLicoreriaActual() != null && 
+                licoreriaContext.getLicoreriaActual().getId().equals(id)) {
+                logger.warn("Intento de eliminar la licorería actual");
+                return ResponseEntity.badRequest().body("No se puede eliminar la licorería actual");
+            }
+            
+            // Eliminar todos los datos asociados
+            logger.info("Eliminando licorería y sus datos asociados");
+            licoreriaServicio.eliminarLicoreriaCompleta(id);
+            
+            logger.info("Licorería eliminada exitosamente");
+            return ResponseEntity.ok("OK");
         } catch (Exception e) {
-            return "ERROR";
+            logger.error("Error al eliminar licorería: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body("Error al eliminar la licorería: " + e.getMessage());
         }
     }
 

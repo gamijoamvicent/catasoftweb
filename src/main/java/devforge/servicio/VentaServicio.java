@@ -38,4 +38,6 @@ public interface VentaServicio {
             LocalDateTime fechaFin,
             String tipoVenta,
             String metodoPago) throws IOException;
+
+    void eliminarVentasPorLicoreria(Long licoreriaId);
 } 

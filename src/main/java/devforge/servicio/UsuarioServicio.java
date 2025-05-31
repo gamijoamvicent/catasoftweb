@@ -11,4 +11,6 @@ public interface UsuarioServicio {
     Usuario obtenerPorId(Long id);
     Usuario buscarPorUsername(String username);
     boolean validarPassword(Usuario usuario, String password);
+    List<Usuario> listarUsuariosPorLicoreria(Long licoreriaId);
+    void eliminarUsuariosPorLicoreria(Long licoreriaId);
 }

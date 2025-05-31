@@ -25,7 +25,7 @@ public class ClienteServicioImpl implements ClienteServicio {
 
     @Override
     public List<Cliente> listarPorLicoreria(Long licoreriaId) {
-        return clienteRepository.findByLicoreria(licoreriaId);
+        return clienteRepository.findByLicoreriaId(licoreriaId);
     }
 
     @Override
@@ -64,5 +64,14 @@ public class ClienteServicioImpl implements ClienteServicio {
             cliente.setEstado(estado);
             clienteRepository.save(cliente);
         });
+    }
+
+    @Override
+    @Transactional
+    public void eliminarClientesPorLicoreria(Long licoreriaId) {
+        List<Cliente> clientes = clienteRepository.findByLicoreriaId(licoreriaId);
+        for (Cliente cliente : clientes) {
+            clienteRepository.delete(cliente);
+        }
     }
 } 

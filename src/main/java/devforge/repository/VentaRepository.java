@@ -13,7 +13,8 @@ import java.util.Map;
 
 @Repository
 public interface VentaRepository extends JpaRepository<Venta, Long>, JpaSpecificationExecutor<Venta> {
-    List<Venta> findByLicoreriaId(Long licoreriaId);
+    @Query("SELECT v FROM Venta v WHERE v.licoreria.id = :licoreriaId")
+    List<Venta> findByLicoreriaId(@Param("licoreriaId") Long licoreriaId);
     
     List<Venta> findByLicoreriaIdAndFechaVentaBetween(
         Long licoreriaId, LocalDateTime fechaInicio, LocalDateTime fechaFin);

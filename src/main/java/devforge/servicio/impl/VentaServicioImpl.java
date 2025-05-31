@@ -46,6 +46,8 @@ import java.util.Optional;
 import java.util.stream.Stream;
 import java.util.stream.Collectors;
 import java.math.BigDecimal;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Service
 @Transactional
@@ -56,6 +58,7 @@ public class VentaServicioImpl implements VentaServicio {
     private final CreditoServicio creditoServicio;
     private final ClienteServicio clienteServicio;
     private final ProductoServicio productoServicio;
+    private static final Logger logger = LoggerFactory.getLogger(VentaServicioImpl.class);
 
     public VentaServicioImpl(VentaRepository ventaRepository, 
                             UsuarioServicio usuarioServicio,
@@ -343,6 +346,77 @@ public class VentaServicioImpl implements VentaServicio {
             ventaRepository.save(venta);
         } catch (Exception e) {
             throw new RuntimeException("Error al anular la venta: " + e.getMessage(), e);
+        }
+    }
+
+    @Override
+    @Transactional
+    public void eliminarVentasPorLicoreria(Long licoreriaId) {
+        try {
+            logger.info("Iniciando eliminación de ventas para licorería ID: {}", licoreriaId);
+            List<Venta> ventas = ventaRepository.findByLicoreriaId(licoreriaId);
+            
+            for (Venta venta : ventas) {
+                logger.debug("Procesando venta ID: {}", venta.getId());
+                
+                // 1. Desvincular facturas
+                if (venta.getFactura() != null) {
+                    logger.debug("Desvinculando factura de venta ID: {}", venta.getId());
+                    venta.getFactura().setVenta(null);
+                    venta.setFactura(null);
+                }
+                if (venta.getFacturaAnulacion() != null) {
+                    logger.debug("Desvinculando factura de anulación de venta ID: {}", venta.getId());
+                    venta.getFacturaAnulacion().setVentaAnulada(null);
+                    venta.setFacturaAnulacion(null);
+                }
+                
+                // 2. Desvincular créditos
+                if (venta.getCredito() != null) {
+                    logger.debug("Desvinculando crédito de venta ID: {}", venta.getId());
+                    venta.getCredito().setVenta(null);
+                    venta.setCredito(null);
+                }
+                
+                // 3. Manejar detalles de venta y productos
+                for (DetalleVenta detalle : venta.getDetalles()) {
+                    Producto producto = detalle.getProducto();
+                    if (producto != null) {
+                        int cantidadDevuelta = detalle.getCantidad();
+                        producto.setCantidad(producto.getCantidad() + cantidadDevuelta);
+                        productoServicio.guardar(producto);
+                        logger.debug("Producto ID: {} actualizado con cantidad devuelta: {}", 
+                            producto.getId(), cantidadDevuelta);
+                    }
+                }
+                
+                // 4. Manejar cliente si es venta a crédito
+                if (venta.getTipoVenta() == TipoVenta.CREDITO && venta.getCliente() != null) {
+                    Cliente cliente = venta.getCliente();
+                    Double creditoDisponible = cliente.getCreditoDisponible();
+                    if (creditoDisponible == null) {
+                        creditoDisponible = 0.0;
+                    }
+                    clienteServicio.actualizarCreditoDisponible(cliente.getId(), 
+                        creditoDisponible + venta.getTotalVenta());
+                    logger.debug("Crédito actualizado para cliente ID: {}", cliente.getId());
+                }
+                
+                // 5. Limpiar referencias antes de eliminar
+                venta.setCliente(null);
+                venta.setLicoreria(null);
+                venta.setUsuarioAnulacion(null);
+                venta.getDetalles().clear();
+                
+                // 6. Eliminar la venta
+                ventaRepository.delete(venta);
+                logger.debug("Venta ID: {} eliminada", venta.getId());
+            }
+            
+            logger.info("Eliminación de ventas completada para licorería ID: {}", licoreriaId);
+        } catch (Exception e) {
+            logger.error("Error al eliminar ventas de la licorería: {}", e.getMessage(), e);
+            throw new RuntimeException("Error al eliminar ventas de la licorería: " + e.getMessage(), e);
         }
     }
 }

@@ -19,4 +19,5 @@ public interface CreditoServicio {
     List<Credito> listarCreditosPorLicoreria(Long licoreriaId);
     List<Credito> listarCreditosPorLicoreriaYEstado(Long licoreriaId, String estado);
     Map<String, Double> obtenerEstadisticasCreditos(Long licoreriaId, LocalDateTime fechaInicio, LocalDateTime fechaFin);
+    void eliminarCreditosPorLicoreria(Long licoreriaId);
 } 

@@ -109,4 +109,13 @@ public class ProductoServicioImpl implements ProductoServicio {
     public List<Producto> listarProductosPorLicoreriaYCategoria(Long licoreriaId, String categoria) {
         return productoRepository.findByLicoreriaIdAndCategoria(licoreriaId, categoria);
     }
+
+    @Override
+    @Transactional
+    public void eliminarProductosPorLicoreria(Long licoreriaId) {
+        List<Producto> productos = productoRepository.findByLicoreriaId(licoreriaId);
+        for (Producto producto : productos) {
+            productoRepository.delete(producto);
+        }
+    }
 }

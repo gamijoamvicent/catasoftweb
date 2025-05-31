@@ -13,4 +13,5 @@ public interface ClienteServicio {
     void actualizarCreditoDisponible(Long clienteId, Double nuevoMonto);
     List<Cliente> listarClientesActivos(Long licoreriaId);
     void cambiarEstado(Long clienteId, boolean estado);
+    void eliminarClientesPorLicoreria(Long licoreriaId);
 } 
