@@ -15,6 +15,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import java.nio.charset.StandardCharsets;
+import org.springframework.security.core.Authentication;
 
 @Controller
 public class InventarioController {
@@ -24,9 +25,17 @@ public class InventarioController {
 
     
     @GetMapping("/inventario")
-    public String mostrarInventario(Model model) {
+    public String mostrarInventario(Model model, Authentication authentication) {
         List<Producto> productos = productoServicio.listarProductos();
         model.addAttribute("productos", productos);
+        
+        // Obtener el rol del usuario actual
+        String rol = authentication.getAuthorities().stream()
+                .findFirst()
+                .map(authority -> authority.getAuthority())
+                .orElse("");
+        model.addAttribute("userRole", rol);
+        
         return "inventario";
     }
     

@@ -95,17 +95,6 @@
                     </div>
                 </div>
 
-                <div class="card inventario" sec:authorize="hasAnyRole('ADMIN_LOCAL', 'SUPER_ADMIN')">
-                    <div class="card-header">
-                        <img src="/icons/update.png" alt="Actualizar" class="card-icon">
-                        <h3 class="card-title">Actualizar Producto</h3>
-                    </div>
-                    <div class="card-content">
-                        <p>Modificar productos existentes</p>
-                        <a th:href="@{/producto/actualizar}" class="btn btn-primary">Actualizar</a>
-                    </div>
-                </div>
-
                 <div class="card inventario">
                     <div class="card-header">
                         <img src="/icons/inventory.png" alt="Inventario" class="card-icon">
@@ -114,17 +103,6 @@
                     <div class="card-content">
                         <p>Consultar el inventario actual</p>
                         <a th:href="@{/inventario}" class="btn btn-primary">Ver</a>
-                    </div>
-                </div>
-
-                <div class="card inventario" sec:authorize="hasAnyRole('BODEGA', 'ADMIN_LOCAL', 'SUPER_ADMIN')">
-                    <div class="card-header">
-                        <img src="/icons/delete.png" alt="Eliminar" class="card-icon">
-                        <h3 class="card-title">Eliminar Producto</h3>
-                    </div>
-                    <div class="card-content">
-                        <p>Eliminar productos del inventario</p>
-                        <a th:href="@{/producto/eliminar}" class="btn btn-danger">Eliminar</a>
                     </div>
                 </div>
 
@@ -209,5 +187,4 @@
 
     <script th:src="@{/js/dashboard.js}"></script>
 </body>
-</html>
 </html>

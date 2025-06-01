@@ -240,6 +240,8 @@
         <p>Revisa la lista completa de productos disponibles en esta sucursal.</p>
     </div>
 
+    <input type="hidden" id="userRole" th:value="${userRole}" />
+
     <div class="content-wrapper">
         <div class="buscador-container">
             <label for="buscarField">Buscar producto:</label>
@@ -363,6 +365,10 @@
             return;
         }
 
+        const userRole = document.getElementById('userRole').value;
+        const rolesPermitidos = ['ROLE_SUPER_ADMIN', 'ROLE_ADMIN_LOCAL', 'ROLE_BODEGA'];
+        const mostrarBotones = rolesPermitidos.includes(userRole);
+
         productos.forEach(prod => {
             const tr = document.createElement("tr");
             tr.innerHTML = `
@@ -374,8 +380,10 @@
                 <td>${prod.marca}</td>
                 <td>${prod.proveedor}</td>
                 <td>
-                    <button class="btn" style="background:var(--secondary);color:white" onclick="editarProducto(${prod.id})">Editar</button>
-                    <button class="btn" style="background:var(--error);color:white" onclick="eliminarProducto(${prod.id})">Eliminar</button>
+                    ${mostrarBotones ? `
+                        <button class="btn" style="background:var(--secondary);color:white" onclick="editarProducto(${prod.id})">Editar</button>
+                        <button class="btn" style="background:var(--error);color:white" onclick="eliminarProducto(${prod.id})">Eliminar</button>
+                    ` : ''}
                 </td>
             `;
             tbody.appendChild(tr);

@@ -27,7 +27,10 @@ public class ActualizarProductoController {
         if (licoreriaContext.getLicoreriaActual() == null) {
             return "redirect:/licorerias/seleccionar";
         }
-        List<Producto> productos = productoServicio.listarProductosPorLicoreria(licoreriaContext.getLicoreriaId());
+        List<Producto> productos = productoServicio.listarProductosPorLicoreria(licoreriaContext.getLicoreriaId())
+            .stream()
+            .filter(p -> p.isActivo())
+            .toList();
         model.addAttribute("productos", productos);
         model.addAttribute("producto", new Producto());
         model.addAttribute("licoreriaActual", licoreriaContext.getLicoreriaActual());
@@ -70,7 +73,10 @@ public class ActualizarProductoController {
             @RequestParam(required = false) Double precioMin,
             @RequestParam(required = false) Double precioMax) {
         
-        List<Producto> resultados = productoServicio.buscarPorNombreOCodigo(termino);
+        List<Producto> resultados = productoServicio.buscarPorNombreOCodigo(termino)
+            .stream()
+            .filter(p -> p.isActivo())
+            .toList();
         
         // Aplicar filtros adicionales
         if (categoria != null && !categoria.isEmpty()) {
