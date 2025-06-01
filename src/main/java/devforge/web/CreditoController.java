@@ -40,8 +40,27 @@ public class CreditoController {
 
         List<Credito> creditos;
         if (estado != null && !estado.isEmpty()) {
-            creditos = creditoServicio.listarCreditosPorLicoreriaYEstado(
-                licoreriaContext.getLicoreriaId(), estado);
+            switch (estado) {
+                case "PAGADO_TOTAL":
+                    creditos = creditoServicio.listarCreditosPorLicoreriaYEstado(
+                        licoreriaContext.getLicoreriaId(), "PAGADO_TOTAL");
+                    break;
+                case "PAGADO_PARCIAL":
+                    creditos = creditoServicio.listarCreditosPorLicoreriaYEstado(
+                        licoreriaContext.getLicoreriaId(), "PAGADO_PARCIAL");
+                    break;
+                case "PENDIENTE":
+                    creditos = creditoServicio.listarCreditosPorLicoreriaYEstado(
+                        licoreriaContext.getLicoreriaId(), "PENDIENTE");
+                    break;
+                case "VENCIDO":
+                    creditos = creditoServicio.listarCreditosVencidos(
+                        licoreriaContext.getLicoreriaId());
+                    break;
+                default:
+                    creditos = creditoServicio.listarCreditosPorLicoreria(
+                        licoreriaContext.getLicoreriaId());
+            }
         } else {
             creditos = creditoServicio.listarCreditosPorLicoreria(
                 licoreriaContext.getLicoreriaId());

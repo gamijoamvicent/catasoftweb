@@ -18,6 +18,8 @@ import org.springframework.http.MediaType;
 import org.springframework.http.HttpStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import java.math.RoundingMode;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 @Controller
 @RequestMapping("/ventas")
@@ -57,6 +59,14 @@ public class NuevaVentaController {
             return "redirect:/licorerias/seleccionar";
         }
 
+        // Obtener el usuario autenticado
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String username = auth.getName();
+        String rol = auth.getAuthorities().stream()
+                .findFirst()
+                .map(authority -> authority.getAuthority())
+                .orElse("Sin rol");
+
         // Obtener todas las tasas actuales
         List<PrecioDolar> tasasActuales = precioDolarServicio.obtenerUltimasTasas(licoreriaContext.getLicoreriaId());
         List<Producto> productos = productoServicio.listarProductosPorLicoreria(licoreriaContext.getLicoreriaId());
@@ -64,6 +74,8 @@ public class NuevaVentaController {
         model.addAttribute("tasasActuales", tasasActuales);
         model.addAttribute("productos", productos);
         model.addAttribute("licoreriaActual", licoreriaContext.getLicoreriaActual());
+        model.addAttribute("usuarioActivo", username);
+        model.addAttribute("rolUsuario", rol);
         
         return "ventas/nuevaVenta";
     }

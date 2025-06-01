@@ -9,6 +9,94 @@
     <meta th:name="_csrf_header" th:content="${_csrf.headerName}" />
     <link rel="stylesheet" th:href="@{/css/dashboard.css}">
     <link rel="stylesheet" th:href="@{/css/ventas.css}">
+    <style>
+        :root {
+            --background-dark: #181A1B;
+            --surface: #F8F9FA;
+            --card: #FFFFFF;
+            --primary: #1565C0;
+            --primary-dark: #0D47A1;
+            --accent: #00B8D9;
+            --danger: #D32F2F;
+            --success: #43A047;
+            --text-main: #181A1B;
+            --text-invert: #FFFFFF;
+            --text-muted: #6C757D;
+            --border: #E0E3E7;
+            --shadow: 0 4px 24px rgba(21, 101, 192, 0.08);
+        }
+
+        /* Estilos para la información del usuario */
+        .usuario-info {
+            background: var(--card);
+            color: var(--text-main);
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+            padding: 18px 24px;
+            margin-bottom: 24px;
+            max-width: 100%;
+        }
+
+        .usuario-info h3 {
+            color: var(--primary);
+            margin-bottom: 12px;
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        .rol-container {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .rol-container strong {
+            color: var(--primary-dark);
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        /* Estilo específico para el rol */
+        .rol-container span {
+            background: var(--primary);
+            color: var(--text-invert);
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            text-transform: capitalize;
+            text-align: center;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .usuario-info p {
+            margin: 8px 0;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .usuario-info strong {
+            color: var(--primary-dark);
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        /* Estilo específico para el rol */
+        .usuario-info p span {
+            background: var(--primary);
+            color: var(--text-invert);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            white-space: nowrap;
+            text-transform: capitalize;
+            flex: 1;
+            text-align: center;
+        }
+    </style>
 </head>
 <body>
     <div class="dashboard-container">
@@ -24,6 +112,17 @@
                     <p th:text="${licoreriaActual.nombre}"></p>
                     <p><strong>Ubicación:</strong> <span th:text="${licoreriaActual.direccion}"></span></p>
                     <p><strong>Teléfono:</strong> <span th:text="${licoreriaActual.telefono}"></span></p>
+                </div>
+            </div>
+
+            <!-- Información del usuario activo -->
+            <div class="user-info">
+                <div class="usuario-info">
+                    <h3>👤 Usuario Activo</h3>
+                    <div class="rol-container">
+                        <strong>Rol:</strong>
+                        <span th:text="${rolUsuario}"></span>
+                    </div>
                 </div>
             </div>
 

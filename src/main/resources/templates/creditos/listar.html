@@ -19,9 +19,11 @@
                                 <div class="d-flex gap-2">
                                     <form th:action="@{/creditos}" method="get" class="d-flex gap-2">
                                         <select name="estado" class="form-select" onchange="this.form.submit()">
-                                            <option value="">Todos los Estados</option>
-                                            <option value="PAGADO_TOTAL" th:selected="${estadoSeleccionado == 'PAGADO_TOTAL'}">Pagados</option>
-                                            <option value="PENDIENTE" th:selected="${estadoSeleccionado == 'PENDIENTE'}">Pendientes</option>
+                                            <option value="">Todos los Créditos</option>
+                                            <option value="PAGADO_TOTAL" th:selected="${estadoSeleccionado == 'PAGADO_TOTAL'}">Pagados Completamente</option>
+                                            <option value="PAGADO_PARCIAL" th:selected="${estadoSeleccionado == 'PAGADO_PARCIAL'}">Pagados Parcialmente</option>
+                                            <option value="PENDIENTE" th:selected="${estadoSeleccionado == 'PENDIENTE'}">Pendientes de Pago</option>
+                                            <option value="VENCIDO" th:selected="${estadoSeleccionado == 'VENCIDO'}">Vencidos</option>
                                         </select>
                                     </form>
                                 </div>
