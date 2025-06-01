@@ -107,28 +107,25 @@ function buscarProducto() {
     console.log('Buscando productos con valor:', valor);
 
     // Realizar búsqueda en el servidor
-    fetch(`/producto/buscar?q=${encodeURIComponent(valor)}`)
+    fetch(`/ventas/buscar?termino=${encodeURIComponent(valor)}`)
         .then(response => {
             console.log('Status:', response.status);
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            return response.text().then(text => {
-                try {
-                    return JSON.parse(text);
-                } catch (e) {
-                    console.log('Respuesta del servidor:', text);
-                    throw new Error('La respuesta no es JSON válido');
-                }
-            });
+            return response.json();
         })
         .then(productos => {
             console.log('Productos encontrados:', productos);
+            if (!Array.isArray(productos)) {
+                throw new Error('La respuesta no es un array de productos');
+            }
             mostrarSugerencias(productos);
         })
         .catch(error => {
             console.error('Error buscando productos:', error);
-            showNotification('Error al buscar productos', 'error');
+            showNotification('Error al buscar productos: ' + error.message, 'error');
+            ocultarSugerencias();
         });
 }
 
@@ -1207,7 +1204,8 @@ function updateCreditosChart(data) {
                     }
                 }
             }
-        });
+        }
+    });
 }
 
 function updateTablaVentas(ventas) {
