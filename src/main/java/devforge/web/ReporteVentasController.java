@@ -169,6 +169,17 @@ public class ReporteVentasController {
                 .mapToDouble(v -> v.getTotalVentaBs() != null ? v.getTotalVentaBs().doubleValue() : 0.0)
                 .sum();
 
+            // Calcular total de ventas y productos vendidos
+            int totalVentas = ventas.size();
+            int productosVendidos = ventas.stream()
+                .mapToInt(v -> v.getDetalles().stream()
+                    .mapToInt(DetalleVenta::getCantidad)
+                    .sum())
+                .sum();
+
+            // Calcular ticket promedio
+            double ticketPromedio = totalVentas > 0 ? subtotalDolares / totalVentas : 0.0;
+
             // Obtener estadísticas de ventas por método de pago
             Map<String, Double> ventasPorMetodoPago = ventas.stream()
                 .collect(Collectors.groupingBy(
@@ -195,10 +206,13 @@ public class ReporteVentasController {
             Map<String, Object> response = new HashMap<>();
             response.put("subtotalDolares", subtotalDolares);
             response.put("subtotalBolivares", subtotalBolivares);
+            response.put("totalVentas", totalVentas);
+            response.put("totalIngresos", subtotalDolares);
+            response.put("ticketPromedio", ticketPromedio);
+            response.put("productosVendidos", productosVendidos);
             response.put("ventasPorMetodoPago", ventasPorMetodoPago);
             response.put("estadisticasCreditos", estadisticasCreditos);
             response.put("tasas", tasasMap);
-            response.put("totalVentas", ventas.size());
 
             return ResponseEntity.ok(response);
         } catch (Exception e) {
