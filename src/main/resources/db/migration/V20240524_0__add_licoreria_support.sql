@@ -94,26 +94,31 @@ DEALLOCATE PREPARE stmt_alter_producto;
 DEALLOCATE PREPARE stmt_alter_precio_dolar;
 
 -- Agregar restricciones de clave foránea (sintaxis corregida para MariaDB)
-SET @fk_usuario = IF(@usuario_exists > 0,
+SET @fk_usuario_exists = (SELECT COUNT(*) FROM information_schema.table_constraints WHERE table_schema = 'papeleria_db' AND table_name = 'usuarios' AND constraint_name = 'fk_usuario_licoreria');
+SET @fk_usuario = IF(@usuario_exists > 0 AND @fk_usuario_exists = 0,
     'ALTER TABLE usuarios ADD CONSTRAINT fk_usuario_licoreria FOREIGN KEY (licoreria_id) REFERENCES licorerias(id) ON DELETE RESTRICT ON UPDATE CASCADE',
-    'SELECT "Tabla usuarios no existe"');
-SET @fk_producto = IF(@producto_exists > 0,
-    'ALTER TABLE producto ADD CONSTRAINT fk_producto_licoreria FOREIGN KEY (licoreria_id) REFERENCES licorerias(id) ON DELETE RESTRICT ON UPDATE CASCADE',
-    'SELECT "Tabla producto no existe"');
-SET @fk_precio_dolar = IF(@precio_dolar_exists > 0,
-    'ALTER TABLE preciodolar ADD CONSTRAINT fk_precio_dolar_licoreria FOREIGN KEY (licoreria_id) REFERENCES licorerias(id) ON DELETE RESTRICT ON UPDATE CASCADE',
-    'SELECT "Tabla preciodolar no existe"');
+    'SELECT "Restricción fk_usuario_licoreria ya existe o tabla usuarios no existe"');
 
 PREPARE stmt_fk_usuario FROM @fk_usuario;
-PREPARE stmt_fk_producto FROM @fk_producto;
-PREPARE stmt_fk_precio_dolar FROM @fk_precio_dolar;
-
 EXECUTE stmt_fk_usuario;
-EXECUTE stmt_fk_producto;
-EXECUTE stmt_fk_precio_dolar;
-
 DEALLOCATE PREPARE stmt_fk_usuario;
+
+SET @fk_producto_exists = (SELECT COUNT(*) FROM information_schema.table_constraints WHERE table_schema = 'papeleria_db' AND table_name = 'producto' AND constraint_name = 'fk_producto_licoreria');
+SET @fk_producto = IF(@producto_exists > 0 AND @fk_producto_exists = 0,
+    'ALTER TABLE producto ADD CONSTRAINT fk_producto_licoreria FOREIGN KEY (licoreria_id) REFERENCES licorerias(id) ON DELETE RESTRICT ON UPDATE CASCADE',
+    'SELECT "Restricción fk_producto_licoreria ya existe o tabla producto no existe"');
+
+PREPARE stmt_fk_producto FROM @fk_producto;
+EXECUTE stmt_fk_producto;
 DEALLOCATE PREPARE stmt_fk_producto;
+
+SET @fk_precio_dolar_exists = (SELECT COUNT(*) FROM information_schema.table_constraints WHERE table_schema = 'papeleria_db' AND table_name = 'preciodolar' AND constraint_name = 'fk_precio_dolar_licoreria');
+SET @fk_precio_dolar = IF(@precio_dolar_exists > 0 AND @fk_precio_dolar_exists = 0,
+    'ALTER TABLE preciodolar ADD CONSTRAINT fk_precio_dolar_licoreria FOREIGN KEY (licoreria_id) REFERENCES licorerias(id) ON DELETE RESTRICT ON UPDATE CASCADE',
+    'SELECT "Restricción fk_precio_dolar_licoreria ya existe o tabla preciodolar no existe"');
+
+PREPARE stmt_fk_precio_dolar FROM @fk_precio_dolar;
+EXECUTE stmt_fk_precio_dolar;
 DEALLOCATE PREPARE stmt_fk_precio_dolar;
 
 -- Crear índices para mejorar el rendimiento
@@ -146,4 +151,4 @@ SET @update_admin = IF(@usuario_exists > 0,
 
 PREPARE stmt_update_admin FROM @update_admin;
 EXECUTE stmt_update_admin;
-DEALLOCATE PREPARE stmt_update_admin; 
+DEALLOCATE PREPARE stmt_update_admin;

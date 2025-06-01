@@ -1,4 +1,5 @@
-CREATE TABLE configuraciones_impresora (
+-- Verificar si la tabla ya existe antes de crearla
+CREATE TABLE IF NOT EXISTS configuraciones_impresora (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     licoreria_id BIGINT NOT NULL,
     puerto_com VARCHAR(50),

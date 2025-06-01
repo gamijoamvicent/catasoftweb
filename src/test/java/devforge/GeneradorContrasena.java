@@ -7,8 +7,3 @@ public class GeneradorContrasena {
         System.out.println(encoder.encode("123"));
     }
 }
-
-/*los admin pueden ver  a los otros admin la idea es que 
- * no puedan verlos o en su defecto se bloque la accion de eliminarlo 
- * solo el super amin puede hacerlo
- */
