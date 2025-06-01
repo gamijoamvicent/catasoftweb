@@ -143,7 +143,6 @@ public class ProductoController {
             int cantidad = producto.getCantidad();
             String tipoTasa = producto.getTipoTasa() != null ? producto.getTipoTasa() : "BCV";
 
-            String codigoBase = generarCodigoBusqueda(nombre);
             Licoreria licoreriaActual = licoreriaContext.getLicoreriaActual();
 
             // Convertimos el string a lista
@@ -156,7 +155,6 @@ public class ProductoController {
                 Producto p = new Producto();
                 p.setNombre(nombre);
                 p.setDescripcion(descripcion);
-                p.setCodigoUnico(codigoBase);
                 p.setPrecioVenta(precioVenta);
                 p.setPrecioCosto(precioCosto);
                 p.setCategoria(categoria);
@@ -171,7 +169,6 @@ public class ProductoController {
                     Producto p = new Producto();
                     p.setNombre(nombre + "-" + color.trim());
                     p.setDescripcion(descripcion);
-                    p.setCodigoUnico(codigoBase + "-" + generarCodigoColor(color.trim()));
                     p.setPrecioVenta(precioVenta);
                     p.setPrecioCosto(precioCosto);
                     p.setCategoria(categoria);
@@ -194,41 +191,6 @@ public class ProductoController {
         return "redirect:/producto/agregar";
     }
 
-    // Genera un código base a partir del nombre del producto
-    private String generarCodigoBusqueda(String texto) {
-        if (texto == null || texto.isEmpty()) return "";
-
-        String[] palabras = texto.toUpperCase().split("\\s+");
-        StringBuilder codigo = new StringBuilder();
-        boolean primeraPalabraProcesada = false;
-
-        for (String palabra : palabras) {
-            if (palabra.equalsIgnoreCase("DE")) continue;
-
-            int longitud = Math.min(3, palabra.length());
-
-            if (primeraPalabraProcesada && codigo.length() > 0) {
-                codigo.append("-");
-            }
-
-            codigo.append(palabra.substring(0, longitud));
-
-            if (!primeraPalabraProcesada) {
-                primeraPalabraProcesada = true;
-            } else {
-                break;
-            }
-        }
-
-        return codigo.toString();
-    }
-
-    // Genera un código corto del color (máximo 3 letras)
-    private String generarCodigoColor(String color) {
-        if (color == null || color.isEmpty()) return "";
-        return color.length() >= 3 ? color.substring(0, 3).toUpperCase() : color.toUpperCase();
-    }
-
     @GetMapping("/buscar")
     @ResponseBody
     public List<Map<String, Object>> buscarProductos(@RequestParam String q) {
@@ -239,16 +201,15 @@ public class ProductoController {
         String busqueda = q.toLowerCase();
         return productoRepositorio.findByLicoreriaId(licoreriaContext.getLicoreriaId())
             .stream()
+            .filter(p -> p.isActivo()) // Solo productos activos
             .filter(p -> 
                 p.getNombre().toLowerCase().contains(busqueda) ||
-                (p.getCodigoUnico() != null && p.getCodigoUnico().toLowerCase().contains(busqueda)) ||
                 (p.getMarca() != null && p.getMarca().toLowerCase().contains(busqueda))
             )
             .map(p -> {
                 Map<String, Object> productoData = new HashMap<>();
                 productoData.put("id", p.getId());
                 productoData.put("nombre", p.getNombre());
-                productoData.put("codigoUnico", p.getCodigoUnico());
                 productoData.put("precioVenta", p.getPrecioVenta());
                 productoData.put("cantidad", p.getCantidad());
                 productoData.put("marca", p.getMarca());

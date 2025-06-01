@@ -28,8 +28,8 @@ public class Producto {
     @Column(name = "descripcion")
     private String descripcion;
 
-    @Column(name = "codigo_unico", unique = true)
-    private String codigoUnico;
+    // @Column(name = "codigo_unico", unique = true)
+    // private String codigoUnico;
 
     @Column(name = "precio_venta", nullable = false)
     private double precioVenta;
@@ -61,6 +61,9 @@ public class Producto {
 
     @Column(name = "tipo_tasa", nullable = false)
     private String tipoTasa; // BCV, PROMEDIO, PARALELA
+
+    @Column(name = "activo", nullable = false)
+    private boolean activo = true;
 
     public TipoTasa getTipoTasaEnum() {
         return TipoTasa.valueOf(tipoTasa);

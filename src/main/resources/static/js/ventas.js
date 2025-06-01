@@ -84,7 +84,7 @@ function cargarProductos() {
     productosDisponibles = Array.from(dataProductos).map(li => ({
         id: parseInt(li.getAttribute("data-id")),
         nombre: li.getAttribute("data-nombre") || "Producto sin nombre",
-        codigoUnico: li.getAttribute("data-codigo") || "",
+        // codigoUnico eliminado: li.getAttribute("data-codigo") || "",
         precioVenta: parseFloat(li.getAttribute("data-precio")) || 0,
         cantidad: parseInt(li.getAttribute("data-cantidad")) || 0,
         marca: li.getAttribute("data-marca") || "Sin marca",
@@ -144,23 +144,25 @@ function mostrarSugerencias(productos) {
     productos.forEach(prod => {
         const li = document.createElement('li');
         li.setAttribute('data-id', prod.id);
-        
-        const stockClass = prod.cantidad === 0 ? 'stock-rojo' : 
-                         prod.cantidad <= 10 ? 'stock-amarillo' : 'stock-verde';
-        
+        // Colores de stock más serios
+        let stockClass = '';
+        if (prod.cantidad === 0) {
+            stockClass = 'stock-gray'; // gris para agotado
+        } else if (prod.cantidad <= 10) {
+            stockClass = 'stock-amber'; // ámbar para bajo stock
+        } else {
+            stockClass = 'stock-blue'; // azul para suficiente stock
+        }
         li.className = `producto-item ${stockClass}`;
         li.innerHTML = `
             <strong>${prod.nombre}</strong><br>
-            <small>Código: ${prod.codigoUnico || 'Sin código'}</small><br>
             <small>Precio: $${prod.precioVenta.toFixed(2)} | Stock: ${prod.cantidad}</small>
         `;
-        
         if (prod.cantidad === 0) {
             li.style.cursor = 'not-allowed';
         } else {
             li.style.cursor = 'pointer';
         }
-        
         lista.appendChild(li);
     });
 }
@@ -457,7 +459,7 @@ function actualizarTablaVentas() {
         const tr = document.createElement('tr');
         tr.setAttribute('data-id', prod.id);
         tr.innerHTML = `
-            <td class="codigo-col">${prod.codigoUnico || 'Sin código'}</td>
+            <!-- <td class="codigo-col">${prod.codigoUnico || 'Sin código'}</td> -->
             <td class="producto-col">${prod.nombre}</td>
             <td class="marca-col">${prod.marca || 'Sin marca'}</td>
             <td class="precio-col">$${prod.precioVenta.toFixed(2)}</td>
@@ -1205,8 +1207,7 @@ function updateCreditosChart(data) {
                     }
                 }
             }
-        }
-    });
+        });
 }
 
 function updateTablaVentas(ventas) {
@@ -1411,6 +1412,15 @@ quantityStyles.textContent = `
     }
 `;
 document.head.appendChild(quantityStyles);
+
+// Nuevos estilos para los colores de stock
+const stockStyles = document.createElement('style');
+stockStyles.textContent = `
+    .stock-gray { background: #f3f3f3 !important; color: #888 !important; }
+    .stock-amber { background: #fff8e1 !important; color: #b08500 !important; }
+    .stock-blue { background: #e3f2fd !important; color: #1565c0 !important; }
+`;
+document.head.appendChild(stockStyles);
 
 // Funciones para manejo de clientes
 function toggleClienteSelector() {

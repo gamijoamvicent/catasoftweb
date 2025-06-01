@@ -22,4 +22,7 @@ public interface ProductoRepository extends JpaRepository<Producto, Long> {
 
     List<Producto> findByLicoreriaId(Long licoreriaId);
     List<Producto> findByLicoreriaIdAndCategoria(Long licoreriaId, String categoria);
+    List<Producto> findByLicoreriaIdAndActivoTrue(Long licoreriaId);
+    List<Producto> findByLicoreriaIdAndCategoriaAndActivoTrue(Long licoreriaId, String categoria);
+    Optional<Producto> findByIdAndActivoTrue(Long id);
 }

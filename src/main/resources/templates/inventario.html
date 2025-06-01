@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <title>Inventario de Productos - InventSoft</title>
     <link rel="stylesheet" th:href="@{/css/styles.css}">
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
     <style>
         /* Nueva paleta de colores */
         :root {
@@ -250,12 +252,12 @@
                 <tr>
                     <th>ID</th>
                     <th>Nombre</th>
-                    <th>Código</th>
                     <th>Precio Venta</th>
                     <th>Cantidad</th>
                     <th>Categoría</th>
                     <th>Marca</th>
                     <th>Proveedor</th>
+                    <th>Acciones</th>
                 </tr>
                 </thead>
                 <tbody id="tablaProductos">
@@ -269,6 +271,9 @@
         </div>
 
         <div class="action-buttons">
+            <button class="btn" style="background:var(--primary);color:white;margin-right:10px" onclick="exportarInventario()">
+                <span class="icon">⬇️</span> Exportar Inventario
+            </button>
             <button class="btn btn-back" onclick="window.location.href='/'">
                 <span class="icon">⬅️</span> Volver al Menú
             </button>
@@ -280,7 +285,6 @@
     <li th:each="producto : ${productos}"
         th:data-id="${producto.id}"
         th:data-nombre="${producto.nombre}"
-        th:data-codigo="${producto.codigoUnico}"
         th:data-precio="${producto.precioVenta}"
         th:data-cantidad="${producto.cantidad}"
         th:data-categoria="${producto.categoria}"
@@ -310,7 +314,6 @@
         todosLosProductos = Array.from(dataProductos).map(li => ({
             id: li.getAttribute("data-id"),
             nombre: li.getAttribute("data-nombre") || "N/A",
-            codigoUnico: li.getAttribute("data-codigo") || "N/A",
             precioVenta: parseFloat(li.getAttribute("data-precio")) || 0,
             cantidad: parseInt(li.getAttribute("data-cantidad")) || 0,
             categoria: li.getAttribute("data-categoria") || "N/A",
@@ -333,7 +336,6 @@
 
         const filtrados = todosLosProductos.filter(p =>
             p.nombre.toLowerCase().includes(valor) ||
-            p.codigoUnico.toLowerCase().includes(valor) ||
             p.categoria.toLowerCase().includes(valor) ||
             p.marca.toLowerCase().includes(valor) ||
             p.proveedor.toLowerCase().includes(valor)
@@ -342,7 +344,7 @@
         renderizarTabla(filtrados);
     }
 
-    // Renderizar tabla con scroll si hay muchos productos
+    // Renderizar tabla with scroll si hay muchos productos
     function renderizarTabla(productos) {
         const tbody = document.getElementById("tablaProductos");
         tbody.innerHTML = ""; // Limpiar tabla antes de mostrar nuevos resultados
@@ -366,15 +368,41 @@
             tr.innerHTML = `
                 <td>${prod.id}</td>
                 <td>${prod.nombre}</td>
-                <td>${prod.codigoUnico}</td>
                 <td>$${parseFloat(prod.precioVenta).toFixed(2)}</td>
                 <td>${prod.cantidad}</td>
                 <td>${prod.categoria}</td>
                 <td>${prod.marca}</td>
                 <td>${prod.proveedor}</td>
+                <td>
+                    <button class="btn" style="background:var(--secondary);color:white" onclick="editarProducto(${prod.id})">Editar</button>
+                    <button class="btn" style="background:var(--error);color:white" onclick="eliminarProducto(${prod.id})">Eliminar</button>
+                </td>
             `;
             tbody.appendChild(tr);
         });
+    }
+
+    function editarProducto(id) {
+        window.location.href = '/producto/actualizar?id=' + id;
+    }
+    function eliminarProducto(id) {
+        if(confirm('¿Seguro que desea eliminar este producto?')) {
+            const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+            const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+            fetch('/inventario/eliminar/' + id, {
+                method: 'POST',
+                headers: {
+                    [csrfHeader]: csrfToken
+                }
+            })
+            .then(resp => {
+                if(resp.ok) location.reload();
+                else resp.text().then(msg => alert('Error al eliminar producto: ' + msg));
+            });
+        }
+    }
+    function exportarInventario() {
+        window.location.href = '/inventario/exportar';
     }
 </script>
 

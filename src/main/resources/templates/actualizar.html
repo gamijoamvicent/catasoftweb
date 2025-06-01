@@ -391,8 +391,8 @@
                     <label for="descripcionInput">Descripción (Opcional)</label>
                     <input type="text" id="descripcionInput" name="descripcion" placeholder="Ej. Bebida espirituosa de alta calidad" autocomplete="off">
 
-                    <label for="codigoInput">Código Único</label>
-                    <input type="text" autocomplete="off" id="codigoInput" name="codigoUnico" placeholder="Generado automáticamente" readonly>
+                    <!-- <label for="codigoInput">Código Único</label> -->
+                    <!-- <input type="text" autocomplete="off" id="codigoInput" name="codigoUnico" placeholder="Generado automáticamente" readonly> -->
 
                     <label for="tipoTasaInput">Tipo de Tasa</label>
                     <select id="tipoTasaInput" name="tipoTasa" required>
@@ -440,7 +440,6 @@
         th:data-id="${producto.id}"
         th:data-nombre="${producto.nombre}"
         th:data-descripcion="${producto.descripcion}"
-        th:data-codigoUnico="${producto.codigoUnico}"
         th:data-precioVenta="${producto.precioVenta}"
         th:data-precioCosto="${producto.precioCosto}"
         th:data-categoria="${producto.categoria}"
@@ -471,7 +470,6 @@
             id: li.getAttribute("data-id"),
             nombre: li.getAttribute("data-nombre") || "",
             descripcion: li.getAttribute("data-descripcion") || "",
-            codigoUnico: li.getAttribute("data-codigoUnico") || "",
             precioVenta: parseFloat(li.getAttribute("data-precioVenta")) || 0,
             precioCosto: parseFloat(li.getAttribute("data-precioCosto")) || 0,
             categoria: li.getAttribute("data-categoria") || "",
@@ -499,7 +497,6 @@
         const filtrados = todosLosProductos.filter(p => {
             const cumpleBusqueda = !terminoBusqueda ||
                 p.nombre.toLowerCase().includes(terminoBusqueda) ||
-                p.codigoUnico.toLowerCase().includes(terminoBusqueda) ||
                 p.categoria.toLowerCase().includes(terminoBusqueda) ||
                 p.marca.toLowerCase().includes(terminoBusqueda) ||
                 p.descripcion.toLowerCase().includes(terminoBusqueda); // También buscar en descripción
@@ -534,7 +531,6 @@
             li.setAttribute("data-id", prod.id);
             li.setAttribute("data-nombre", prod.nombre);
             li.setAttribute("data-descripcion", prod.descripcion);
-            li.setAttribute("data-codigoUnico", prod.codigoUnico);
             li.setAttribute("data-precioVenta", prod.precioVenta);
             li.setAttribute("data-precioCosto", prod.precioCosto);
             li.setAttribute("data-categoria", prod.categoria);
@@ -543,8 +539,8 @@
             li.setAttribute("data-cantidad", prod.cantidad);
 
             // Mostrar el nombre del producto y el código único en la lista
+            // li.innerHTML = `<strong>${prod.nombre}</strong> <br>\n                            <small>Código: ${prod.codigoUnico}</small> <br>\n                            <small>Precio: $${parseFloat(prod.precioVenta).toFixed(2)} | Stock: ${prod.cantidad}</small>`;
             li.innerHTML = `<strong>${prod.nombre}</strong> <br>
-                            <small>Código: ${prod.codigoUnico}</small> <br>
                             <small>Precio: $${parseFloat(prod.precioVenta).toFixed(2)} | Stock: ${prod.cantidad}</small>`;
 
             sugerenciasList.appendChild(li);
@@ -571,7 +567,6 @@
         document.getElementById("idInput").value = producto.getAttribute("data-id");
         document.getElementById("nombreInput").value = producto.getAttribute("data-nombre");
         document.getElementById("descripcionInput").value = producto.getAttribute("data-descripcion");
-        document.getElementById("codigoInput").value = producto.getAttribute("data-codigoUnico");
         document.getElementById("precioVentaInput").value = producto.getAttribute("data-precioVenta");
         document.getElementById("precioCostoInput").value = producto.getAttribute("data-precioCosto");
         document.getElementById("categoriaInput").value = producto.getAttribute("data-categoria");

@@ -161,7 +161,6 @@
         <li th:each="producto : ${productos}"
             th:data-id="${producto.id}"
             th:data-nombre="${producto.nombre}"
-            th:data-codigo="${producto.codigoUnico}"
             th:data-precio="${producto.precioVenta}"
             th:data-cantidad="${producto.cantidad}"
             th:data-marca="${producto.marca ?: 'Sin marca'}"

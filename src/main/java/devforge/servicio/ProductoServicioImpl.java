@@ -3,7 +3,6 @@ package devforge.servicio;
 import devforge.config.LicoreriaContext;
 import devforge.model.ItemVentaDto;
 import devforge.model.Producto;
-import devforge.repository.PrecioDolarRepository;
 import devforge.repository.ProductoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -29,7 +28,7 @@ public class ProductoServicioImpl implements ProductoServicio {
         if (licoreriaContext.getLicoreriaId() == null) {
             return List.of();
         }
-        return productoRepository.findByLicoreriaId(licoreriaContext.getLicoreriaId());
+        return productoRepository.findByLicoreriaIdAndActivoTrue(licoreriaContext.getLicoreriaId());
     }
 
     @Override
@@ -60,13 +59,19 @@ public class ProductoServicioImpl implements ProductoServicio {
 
     @Override
     public void eliminar(Long id) {
-        var busqueda = productoRepository.findById(id).orElse(null);
-        productoRepository.delete(busqueda);
+        if (licoreriaContext == null || licoreriaContext.getLicoreriaId() == null) {
+            throw new RuntimeException("Debes seleccionar una licorería antes de eliminar productos.");
+        }
+        var producto = productoRepository.findById(id).orElse(null);
+        if (producto != null) {
+            producto.setActivo(false);
+            productoRepository.save(producto);
+        }
     }
 
     @Override
     public Producto obtenerPorId(Long id) {
-        return productoRepository.findById(id).orElse(null);
+        return productoRepository.findByIdAndActivoTrue(id).orElse(null);
     }
 
     @Override
@@ -74,11 +79,10 @@ public class ProductoServicioImpl implements ProductoServicio {
         if (licoreriaContext.getLicoreriaId() == null) {
             return List.of();
         }
-        List<Producto> productos = productoRepository.findByLicoreriaId(licoreriaContext.getLicoreriaId());
+        List<Producto> productos = productoRepository.findByLicoreriaIdAndActivoTrue(licoreriaContext.getLicoreriaId());
         String lowerTermino = termino.toLowerCase();
         return productos.stream()
-                .filter(p -> p.getNombre().toLowerCase().contains(lowerTermino)
-                        || (p.getCodigoUnico() != null && p.getCodigoUnico().toLowerCase().contains(lowerTermino)))
+                .filter(p -> p.getNombre().toLowerCase().contains(lowerTermino))
                 .toList();
     }
 
