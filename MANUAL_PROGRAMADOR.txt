@@ -1,0 +1,77 @@
+MANUAL DEL PROGRAMADOR - InventSoft
+===================================
+
+1. INTRODUCCIÓN
+---------------
+InventSoft es una aplicación web para la gestión de licorerías, desarrollada en Java con Spring Boot, Thymeleaf, MariaDB y soporte para impresión térmica (QZ Tray). Este manual describe la arquitectura, estructura del proyecto y buenas prácticas para su mantenimiento y extensión.
+
+2. TECNOLOGÍAS UTILIZADAS
+--------------------------
+- Java 17+
+- Spring Boot
+- Thymeleaf
+- MariaDB
+- Flyway (migraciones de base de datos)
+- QZ Tray (impresión térmica)
+- HTML5, CSS3, JavaScript (ES6)
+- Bootstrap (algunas vistas)
+
+3. ESTRUCTURA DEL PROYECTO
+--------------------------
+- `src/main/java/devforge/` - Código fuente principal
+  - `config/` - Configuración de Spring y seguridad
+  - `model/` - Entidades JPA
+  - `repositorio/` y `repository/` - Repositorios Spring Data
+  - `security/` - Seguridad y autenticación
+  - `servicio/` - Lógica de negocio
+  - `utilidades/` - Utilidades y helpers
+  - `web/` - Controladores MVC
+- `src/main/resources/`
+  - `application.properties` - Configuración de la aplicación
+  - `db/migration/` - Scripts SQL de migración (Flyway)
+  - `static/` - Recursos estáticos (CSS, JS, imágenes)
+  - `templates/` - Vistas Thymeleaf
+
+4. BASE DE DATOS Y MIGRACIONES
+------------------------------
+- Usa MariaDB. La configuración está en `application.properties`.
+- Las migraciones Flyway están en `src/main/resources/db/migration/`.
+- Para agregar cambios de esquema, crea un nuevo archivo SQL siguiendo la convención `VYYYYMMDD_N__descripcion.sql`.
+
+5. SEGURIDAD Y ROLES
+--------------------
+- Los roles principales son: SUPER_ADMIN, ADMIN_LOCAL, CAJERO, BODEGA.
+- La seguridad se configura en `security/` y en los controladores con anotaciones y expresiones Thymeleaf.
+- El sistema fuerza a los usuarios a operar solo en su licorería asignada.
+
+6. IMPRESIÓN TÉRMICA
+--------------------
+- Se integra con QZ Tray para impresión de tickets.
+- La configuración de la impresora se gestiona por licorería.
+- El JS relevante está en `/static/js/` y las vistas en `/templates/impresora/`.
+
+7. DESPLIEGUE Y EJECUCIÓN
+-------------------------
+- Requiere Java 17+ y MariaDB.
+- Ejecuta con `mvn spring-boot:run` o genera el JAR con `mvn package`.
+- Accede a la app en `http://localhost:8080/`.
+
+8. PRUEBAS
+----------
+- Las pruebas unitarias están en `src/test/java/devforge/`.
+- Usa JUnit y Spring Boot Test.
+
+9. BUENAS PRÁCTICAS
+-------------------
+- Usa migraciones Flyway para cambios de base de datos.
+- Mantén la lógica de negocio en servicios, no en controladores.
+- Usa DTOs para transferir datos si es necesario.
+- Documenta los endpoints y flujos críticos.
+
+10. PERSONALIZACIÓN Y EXTENSIÓN
+-------------------------------
+- Para agregar módulos, crea nuevos controladores, servicios y vistas.
+- Para nuevos roles, actualiza la configuración de seguridad y las vistas.
+- Para integraciones externas, usa servicios en `servicio/` y configura beans en `config/`.
+
+FIN DEL MANUAL DEL PROGRAMADOR

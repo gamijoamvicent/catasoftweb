@@ -1,0 +1,98 @@
+MANUAL DE USUARIO - InventSoft
+=============================
+
+1. INTRODUCCIÓN
+---------------
+InventSoft es un sistema de gestión para licorerías que permite controlar ventas, inventario, clientes, usuarios y configuración de impresoras térmicas. El sistema soporta múltiples sucursales (licorerías) y diferentes roles de usuario.
+
+2. ACCESO AL SISTEMA
+--------------------
+- Ingresa la URL del sistema en tu navegador por ejemplo: https://licoreriaweb.site/login 
+- Introduce tu usuario y contraseña.
+- Si tienes acceso a varias licorerías, selecciona la sucursal en la que deseas trabajar.
+
+3. ROLES Y PERMISOS
+-------------------
+- SUPER_ADMIN: Control total sobre todas las licorerías, usuarios, productos, ventas y configuración.
+- ADMIN_LOCAL: Control total solo sobre su(s) licorería(s) asignada(s). Puede gestionar usuarios, productos, ventas y configuración de su local.
+- CAJERO: Solo puede facturar (realizar ventas) y consultar inventario en su licorería asignada.
+- BODEGA: Solo puede ingresar productos al inventario de su licorería asignada.
+
+4. FUNCIONALIDADES PRINCIPALES
+------------------------------
+- **Ventas:**
+  - Realiza ventas seleccionando productos y clientes.
+  - El sistema calcula totales y permite imprimir tickets en impresora térmica.
+  - Solo los roles permitidos pueden acceder a esta función.
+- **Inventario:**
+  - Consulta el stock de productos.
+  - Ingresa nuevos productos (solo SUPER_ADMIN , ADMIN_LOCAL y BODEGA).
+- **Clientes:**
+  - Gestiona la información de clientes y sus créditos.
+- **Usuarios:**
+  - Crea, edita y elimina usuarios (según permisos).
+- **Reportes:**
+  - Visualiza reportes de ventas y exporta a PDF/
+- **Configuración de Impresora:**
+  - Configura la impresora térmica para la sucursal.
+
+5. FLUJO DE TRABAJO BÁSICO
+--------------------------
+- Inicia sesión y selecciona la licorería.
+- Accede al menú principal para navegar entre ventas, inventario, clientes, usuarios, reportes y configuración.
+- Realiza las operaciones según tu rol.
+- Cierra sesión cuando termines.
+
+6. RECOMENDACIONES
+------------------
+- No compartas tu usuario y contraseña.
+- Si tienes problemas con la impresora, revisa la configuración en el menú correspondiente.
+- Contacta al administrador si necesitas permisos adicionales.
+
+7. NAVEGACIÓN Y USO DE LA INTERFAZ
+----------------------------------
+- El menú principal se encuentra en la parte izquierda o superior de la pantalla, dependiendo del dispositivo.
+- Cada módulo (Ventas, Inventario, Clientes, Usuarios, Reportes, Configuración) tiene su propia sección y opciones.
+- Los formularios muestran mensajes de éxito o error según la operación realizada.
+- Puedes volver al menú principal en cualquier momento usando el botón "Volver" o el logo de la aplicación.
+
+8. PREGUNTAS FRECUENTES (FAQ)
+-----------------------------
+- **¿Qué hago si olvido mi contraseña?**
+  Contacta a un administrador para restablecerla.
+- **¿Por qué no veo ciertas opciones del menú?**
+  Solo los usuarios con permisos adecuados pueden ver y acceder a ciertas funciones.
+- **¿Cómo imprimo un ticket?**
+  Al finalizar una venta, el sistema permite imprimir el ticket automáticamente si la impresora está configurada.
+- **¿Puedo cambiar de licorería?**
+  Sí, si tienes acceso a varias, puedes cambiar desde el menú de selección de licorería.
+
+9. SOLUCIÓN DE PROBLEMAS COMUNES
+---------------------------------
+- **No puedo iniciar sesión:**
+  - Verifica tu usuario y contraseña.
+  - Asegúrate de estar en la URL correcta.
+  - Si el problema persiste, contacta al administrador.
+- **No se imprime el ticket:**
+  - Revisa la conexión de la impresora térmica y la configuración en el sistema.
+  - Asegúrate de tener QZ Tray instalado y en ejecución.
+- **No puedo ver productos o clientes:**
+  - Puede que no tengas permisos suficientes o que la licorería seleccionada no tenga datos cargados.
+
+10. EJEMPLOS DE USO
+-------------------
+- **Realizar una venta:**
+  1. Ingresa al sistema y selecciona la licorería.
+  2. Ve al módulo de Ventas.
+  3. Selecciona los productos y el cliente.
+  4. Confirma la venta y, si es necesario, imprime el ticket.
+- **Agregar un producto al inventario:**
+  1. Ingresa como ADMIN_LOCAL o BODEGA.
+  2. Ve a Inventario y selecciona "Agregar Producto".
+  3. Completa el formulario y guarda los cambios.
+- **Consultar reportes:**
+  1. Ingresa como ADMIN_LOCAL o SUPER_ADMIN.
+  2. Ve a Reportes y selecciona el rango de fechas.
+  3. Visualiza o exporta los resultados.
+
+FIN DEL MANUAL DE USUARIO

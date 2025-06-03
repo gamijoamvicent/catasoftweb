@@ -1,0 +1,239 @@
+Comandos para la Consola SSH del VPS (Conéctate a tu VPS con: ssh debugmaster@167.114.61.211)
+
+### Fase 1: Configuración Inicial del VPS (Ya completada)
+
+* Actualizar la lista de paquetes:
+    ```bash
+    sudo apt update
+    ```
+* Actualizar los paquetes instalados:
+    ```bash
+    sudo apt upgrade -y
+    ```
+* Instalar Java:
+    ```bash
+    sudo apt install openjdk-17-jre-headless -y
+    ```
+* Verificar la versión de Java:
+    ```bash
+    java -version
+    ```
+* Crear un usuario no-root:
+    ```bash
+    sudo adduser debugmaster
+    ```
+* Añadir el usuario al grupo sudo:
+    ```bash
+    sudo usermod -aG sudo debugmaster
+    ```
+* Configurar el firewall (UFW):
+    ```bash
+    sudo ufw enable
+    sudo ufw allow OpenSSH
+    sudo ufw allow 80/tcp
+    sudo ufw allow 443
+    sudo ufw allow 8080/tcp
+    sudo ufw status verbose
+    ```
+
+### Fase 2: Transferencia del Archivo JAR (Ya completada)
+
+* Crear el directorio para la aplicación:
+    ```bash
+    sudo mkdir -p /var/www/licoreriaweb.site
+    ```
+* (El comando scp para subir el archivo JAR se ejecuta en tu PC local, no en el VPS)
+
+### Fase 3: Configuración Nginx (En curso)
+
+* Crear el directorio para los certificados (si no existe):
+    ```bash
+    sudo mkdir -p /etc/ssl/cloudflare
+    ```
+* Crear los archivos para el certificado y la clave privada:
+    ```bash
+    sudo nano /etc/ssl/cloudflare/licoreriaweb.site.pem
+    sudo nano /etc/ssl/cloudflare/licoreriaweb.site.key
+    ```
+* Establecer permisos seguros para la clave privada:
+    ```bash
+    sudo chmod 600 /etc/ssl/cloudflare/licoreriaweb.site.key
+    ```
+* Instalar Nginx:
+    ```bash
+    sudo apt install nginx -y
+    sudo systemctl enable nginx
+    sudo systemctl start nginx
+    ```
+* Crear el archivo de configuración de Nginx para tu dominio:
+    ```bash
+    sudo nano /etc/nginx/sites-available/licoreriaweb.site
+    ```
+* Habilitar el sitio y recargar Nginx:
+    ```bash
+    sudo ln -s /etc/nginx/sites-available/licoreriaweb.site /etc/nginx/sites-enabled/
+    sudo nginx -t
+    sudo systemctl reload nginx
+    ```
+* Borrar el sitio "default" de Nginx (recomendado):
+    ```bash
+    sudo unlink /etc/nginx/sites-enabled/default
+    sudo systemctl reload nginx
+    ```
+
+### Fase 4: Configuración del Servicio systemd (En curso)
+
+* Crear el archivo de servicio:
+    ```bash
+    sudo nano /etc/systemd/system/mi-spring-boot-app.service
+    ```
+* Recargar los servicios de systemd:
+    ```bash
+    sudo systemctl daemon-reload
+    ```
+* Habilitar el servicio para que inicie al reiniciar:
+    ```bash
+    sudo systemctl enable mi-spring-boot-app.service
+    ```
+* Iniciar la aplicación ahora:
+    ```bash
+    sudo systemctl start mi-spring-boot-app.service
+    ```
+* Verificar el estado de la aplicación:
+    ```bash
+    sudo systemctl status mi-spring-boot-app.service
+    ```
+* Ver los logs de la aplicación:
+    ```bash
+    sudo journalctl -u mi-spring-boot-app.service -f
+    ```
+    o
+    ```bash
+    tail -f /var/log/spring-boot-app.log
+    tail -f /var/log/spring-boot-app-error.log
+    ```
+
+### Fase 5: Verificación Final (En curso)
+
+* Reiniciar el VPS (opcional, para probar el inicio automático):
+    ```bash
+    sudo reboot
+    ```
+
+### MariaDB (Base de Datos)
+
+* Instalar MariaDB:
+    ```bash
+    sudo apt install mariadb-server mariadb-client -y
+    sudo systemctl enable mariadb
+    sudo systemctl start mariadb
+    ```
+* Ejecutar el script de seguridad:
+    ```bash
+    sudo mysql_secure_installation
+    ```
+* Conectarse a la consola de MariaDB:
+    ```bash
+    sudo mysql -u root -p
+    ```
+* Crear una base de datos (ejemplo):
+    ```sql
+    CREATE DATABASE licoreria_db;
+    ```
+* Crear un usuario para la aplicación (ejemplo):
+    ```sql
+    CREATE USER 'licoreria_user'@'localhost' IDENTIFIED BY 'tu_contraseña_segura';
+    GRANT ALL PRIVILEGES ON licoreria_db.* TO 'licoreria_user'@'localhost';
+    FLUSH PRIVILEGES;
+    EXIT;
+    ```
+* Modificar la configuración de MariaDB (bind-address):
+    ```bash
+    sudo nano /etc/mysql/mariadb.conf.d/50-server.cnf
+    ```
+* Reiniciar MariaDB:
+    ```bash
+    sudo systemctl restart mariadb
+    ```
+
+### Conexión Remota a MariaDB (Desde tu PC Local)
+
+* Abrir el puerto 3306 en el firewall (UFW) en el VPS:
+    ```bash
+    sudo ufw allow 3306/tcp
+    ```
+    o (más seguro, con tu IP local):
+    ```bash
+    sudo ufw allow from TU_IP_LOCAL to any port 3306 proto tcp
+    ```
+* Recargar el firewall:
+    ```bash
+    sudo ufw reload
+    ```
+
+### Usuarios de MariaDB para Acceso Remoto (Dentro de la consola de MariaDB en el VPS)
+
+* Conectarse a la consola de MariaDB:
+    ```bash
+    sudo mysql -u root -p
+    ```
+* Verificar el usuario y host:
+    ```sql
+    SELECT user, host FROM mysql.user WHERE user = 'SERVER';
+    ```
+* Crear o modificar el usuario para acceso remoto (ejemplo):
+    ```sql
+    CREATE USER 'SERVER'@'%' IDENTIFIED BY 'tu_contraseña_segura';
+    GRANT ALL PRIVILEGES ON papeleria_db.* TO 'SERVER'@'%';
+    FLUSH PRIVILEGES;
+    EXIT;
+    ```
+
+### Actualizar la Aplicación
+
+* Detener el servicio:
+    ```bash
+    sudo systemctl stop mi-spring-boot-app.service
+    ```
+* Iniciar el servicio:
+    ```bash
+    sudo systemctl start mi-spring-boot-app.service
+    ```
+
+### Otros Comandos Útiles
+
+* Ver el estado del firewall:
+    ```bash
+    sudo ufw status verbose
+    ```
+* Ver los logs del sistema:
+    ```bash
+    sudo journalctl -b
+    ```
+
+---
+
+Comandos para la Consola Local (Zorin OS)
+
+### Conexión SSH al VPS
+
+* Conectarse al VPS:
+    ```bash
+    ssh debugmaster@167.114.61.211
+    ```
+
+### Transferencia de Archivos (SCP)
+
+* Copiar un archivo al VPS:
+    ```bash
+    scp /ruta/local/al/archivo.jar debugmaster@167.114.61.211:/ruta/en/el/vps/
+    ```
+
+### Conexión Remota a MariaDB
+
+* Conectarse a MariaDB desde la consola:
+    ```bash
+    mysql -h 167.114.61.211 -P 3306 -u SERVER -p
+    ```
+
+Recuerda reemplazar los valores genéricos (como `TU_IP_LOCAL`, `TU_CONTRASEÑA_DEL_USUARIO_SERVER`, nombres de bases de datos, rutas de archivos, etc.) con los valores específicos de tu configuración.
