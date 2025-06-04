@@ -3,6 +3,12 @@ let productosDisponibles = []; // Array para almacenar todos los productos
 let productosSeleccionados = []; // Array para el carrito
 let tasas = {};
 
+// Variables globales para la navegación
+let selectedProductIndex = -1;
+let searchResults = [];
+let selectedTableRow = -1;
+let isNavigatingTable = false;
+
 // Inicialización de tokens CSRF
 let csrfToken = document.querySelector('meta[name="_csrf"]')?.content;
 let csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.content;
@@ -138,9 +144,11 @@ function mostrarSugerencias(productos) {
         return;
     }
 
-    productos.forEach(prod => {
+    productos.forEach((prod, index) => {
         const li = document.createElement('li');
         li.setAttribute('data-id', prod.id);
+        li.setAttribute('data-index', index);
+        
         // Colores de stock más serios
         let stockClass = '';
         if (prod.cantidad === 0) {
@@ -150,17 +158,242 @@ function mostrarSugerencias(productos) {
         } else {
             stockClass = 'stock-blue'; // azul para suficiente stock
         }
+        
         li.className = `producto-item ${stockClass}`;
         li.innerHTML = `
             <strong>${prod.nombre}</strong><br>
             <small>Precio: $${prod.precioVenta.toFixed(2)} | Stock: ${prod.cantidad}</small>
         `;
+        
         if (prod.cantidad === 0) {
             li.style.cursor = 'not-allowed';
+            li.style.opacity = '0.7';
         } else {
             li.style.cursor = 'pointer';
+            // Remover el evento onclick anterior si existe
+            li.removeEventListener('click', handleProductClick);
+            // Agregar el nuevo evento click
+            li.addEventListener('click', handleProductClick);
         }
+        
         lista.appendChild(li);
+    });
+
+    // Agregar estilos para mejorar la visibilidad
+    const style = document.createElement('style');
+    style.textContent = `
+        .producto-item {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            transition: all 0.2s ease;
+        }
+        
+        .producto-item:hover {
+            background-color: #f5f5f5;
+        }
+        
+        .producto-item.selected {
+            background-color: #e3f2fd !important;
+            border-left: 4px solid #1565c0;
+        }
+        
+        .stock-gray {
+            background-color: #f5f5f5 !important;
+            color: #9e9e9e !important;
+        }
+        
+        .stock-amber {
+            background-color: #fff8e1 !important;
+            color: #ff8f00 !important;
+        }
+        
+        .stock-blue {
+            background-color: #e3f2fd !important;
+            color: #1565c0 !important;
+        }
+        
+        .producto-item strong {
+            display: block;
+            margin-bottom: 4px;
+        }
+        
+        .producto-item small {
+            color: inherit;
+            opacity: 0.8;
+        }
+    `;
+    document.head.appendChild(style);
+}
+
+// Función para manejar el clic en un producto
+function handleProductClick(event) {
+    event.preventDefault();
+    event.stopPropagation();
+    
+    const li = event.currentTarget;
+    const productoId = li.getAttribute('data-id');
+    const producto = productosDisponibles.find(p => p.id === parseInt(productoId));
+    
+    if (producto && producto.cantidad > 0) {
+        agregarAlCarrito(producto);
+        document.getElementById('buscarField').value = '';
+        document.getElementById('buscarField').focus();
+    }
+}
+
+function actualizarSeleccion(items) {
+    if (!items || items.length === 0) return;
+    
+    Array.from(items).forEach((item, index) => {
+        if (index === selectedProductIndex) {
+            item.classList.add('selected');
+            item.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+        } else {
+            item.classList.remove('selected');
+        }
+    });
+}
+
+document.addEventListener('keydown', function(e) {
+    // Prevenir comportamiento por defecto de teclas de función
+    if (['F1', 'F2', 'F3', 'F12'].includes(e.key)) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+
+    // Si estamos en la lista de sugerencias
+    const sugerenciasList = document.getElementById('sugerenciasList');
+    const items = sugerenciasList.getElementsByTagName('li');
+    
+    if (items.length > 0 && !isNavigatingTable) {
+        switch(e.key) {
+            case 'ArrowDown':
+                e.preventDefault();
+                selectedProductIndex = Math.min(selectedProductIndex + 1, items.length - 1);
+                actualizarSeleccion(items);
+                break;
+            case 'ArrowUp':
+                e.preventDefault();
+                selectedProductIndex = Math.max(selectedProductIndex - 1, 0);
+                actualizarSeleccion(items);
+                break;
+            case 'Enter':
+                e.preventDefault();
+                if (selectedProductIndex >= 0 && selectedProductIndex < items.length) {
+                    const productoId = items[selectedProductIndex].getAttribute('data-id');
+                    const producto = productosDisponibles.find(p => p.id === parseInt(productoId));
+                    if (producto && producto.cantidad > 0) {
+                        agregarAlCarrito(producto);
+                        document.getElementById('buscarField').value = '';
+                        document.getElementById('buscarField').focus();
+                    } else {
+                        showNotification('Este producto está agotado', 'warning');
+                    }
+                }
+                break;
+        }
+    }
+
+    // F1 para facturar
+    if (e.key === 'F1') {
+        e.preventDefault();
+        e.stopPropagation();
+        // Salir del modo de edición de tabla si está activo
+        if (isNavigatingTable) {
+            isNavigatingTable = false;
+            selectedTableRow = -1;
+            const rows = document.querySelectorAll('#ventasTableBody tr');
+            rows.forEach(row => row.classList.remove('selected'));
+        }
+        confirmarVenta();
+        return;
+    }
+
+    // F2 para enfocar el buscador
+    if (e.key === 'F2') {
+        e.preventDefault();
+        e.stopPropagation();
+        // Salir del modo de edición de tabla si está activo
+        if (isNavigatingTable) {
+            isNavigatingTable = false;
+            selectedTableRow = -1;
+            const rows = document.querySelectorAll('#ventasTableBody tr');
+            rows.forEach(row => row.classList.remove('selected'));
+        }
+        // Enfocar el buscador
+        const buscarField = document.getElementById('buscarField');
+        if (buscarField) {
+            buscarField.focus();
+        }
+        return;
+    }
+
+    // F3 para entrar en modo edición de tabla
+    if (e.key === 'F3') {
+        e.preventDefault();
+        e.stopPropagation();
+        isNavigatingTable = true;
+        selectedTableRow = 0;
+        const rows = document.querySelectorAll('#ventasTableBody tr');
+        if (rows.length > 0) {
+            actualizarSeleccionTabla(rows);
+        }
+        return;
+    }
+
+    // Si estamos en modo de edición de tabla
+    if (isNavigatingTable) {
+        const rows = document.querySelectorAll('#ventasTableBody tr');
+        if (rows.length === 0) return;
+
+        switch(e.key) {
+            case 'ArrowDown':
+                e.preventDefault();
+                selectedTableRow = Math.min(selectedTableRow + 1, rows.length - 1);
+                actualizarSeleccionTabla(rows);
+                break;
+            case 'ArrowUp':
+                e.preventDefault();
+                selectedTableRow = Math.max(selectedTableRow - 1, 0);
+                actualizarSeleccionTabla(rows);
+                break;
+            case 'Enter':
+                e.preventDefault();
+                const selectedRow = rows[selectedTableRow];
+                if (selectedRow) {
+                    const input = selectedRow.querySelector('.cantidad-input');
+                    if (input) {
+                        input.focus();
+                        input.select();
+                    }
+                }
+                break;
+            case 'Escape':
+                e.preventDefault();
+                isNavigatingTable = false;
+                selectedTableRow = -1;
+                rows.forEach(row => row.classList.remove('selected'));
+                break;
+        }
+    }
+});
+
+function actualizarSeleccionTabla(rows) {
+    if (!rows || rows.length === 0) return;
+    
+    Array.from(rows).forEach((row, index) => {
+        if (index === selectedTableRow) {
+            row.classList.add('selected');
+            row.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+            // Enfocar el input de cantidad
+            const input = row.querySelector('.cantidad-input');
+            if (input) {
+                input.focus();
+                input.select();
+            }
+        } else {
+            row.classList.remove('selected');
+        }
     });
 }
 
@@ -1568,3 +1801,127 @@ clienteStyles.textContent = `
     }
 `;
 document.head.appendChild(clienteStyles);
+
+// Función para manejar la búsqueda de productos
+function buscarProductos(query) {
+    if (query.length < 2) {
+        searchResults = [];
+        mostrarResultadosBusqueda([]);
+        return;
+    }
+
+    fetch(`/ventas/buscar?termino=${encodeURIComponent(query)}`)
+        .then(response => response.json())
+        .then(data => {
+            searchResults = data;
+            mostrarResultadosBusqueda(data);
+            selectedProductIndex = -1;
+        })
+        .catch(error => console.error('Error:', error));
+}
+
+function mostrarResultadosBusqueda(resultados) {
+    const sugerenciasList = document.getElementById('sugerenciasList');
+    sugerenciasList.innerHTML = '';
+    
+    resultados.forEach((producto, index) => {
+        const li = document.createElement('li');
+        li.textContent = `${producto.nombre} - $${producto.precioVenta}`;
+        li.dataset.index = index;
+        li.onclick = () => seleccionarProducto(producto);
+        sugerenciasList.appendChild(li);
+    });
+}
+
+function seleccionarProducto(producto) {
+    console.log('Seleccionando producto:', producto);
+    
+    // Verificar si el producto ya está en el carrito
+    const index = productosSeleccionados.findIndex(p => p.id === producto.id);
+    
+    if (index >= 0) {
+        // Si ya existe, incrementar la cantidad solo si hay stock disponible
+        const productoActual = productosDisponibles.find(p => p.id === producto.id);
+        if (productoActual && productosSeleccionados[index].cantidad < productoActual.cantidad) {
+            productosSeleccionados[index].cantidad++;
+        } else {
+            showNotification('No hay más unidades disponibles', 'warning');
+            return;
+        }
+    } else {
+        // Si no existe, agregarlo con cantidad 1
+        productosSeleccionados.push({
+            ...producto,
+            cantidad: 1
+        });
+    }
+    
+    actualizarTablaVentas();
+    ocultarSugerencias();
+    document.getElementById('buscarField').value = '';
+    showNotification('Producto agregado al carrito', 'success');
+}
+
+// Actualizar el indicador de navegación
+document.addEventListener('DOMContentLoaded', function() {
+    const buscarField = document.getElementById('buscarField');
+    if (buscarField) {
+        buscarField.addEventListener('input', debounce((e) => buscarProductos(e.target.value), 300));
+        buscarField.addEventListener('keydown', manejarNavegacionTeclado);
+    }
+    
+    // Agregar el indicador de navegación (invisible)
+    const indicator = document.createElement('div');
+    indicator.className = 'navigation-indicator';
+    indicator.style.display = 'none'; // Hacer invisible
+    indicator.style.pointerEvents = 'none'; // Deshabilitar interacción
+    indicator.innerHTML = `
+        <div class="shortcut"><kbd>F1</kbd> Facturar</div>
+        <div class="shortcut"><kbd>F2</kbd> Buscar</div>
+        <div class="shortcut"><kbd>F3</kbd> Tabla</div>
+        <div class="shortcut"><kbd>↑</kbd><kbd>↓</kbd> Navegar</div>
+        <div class="shortcut"><kbd>Enter</kbd> Seleccionar</div>
+        <div class="shortcut"><kbd>Esc</kbd> Salir</div>
+    `;
+    document.body.appendChild(indicator);
+});
+
+// Agregar estilos para el indicador de navegación
+const navigationStyles = document.createElement('style');
+navigationStyles.textContent = `
+    .navigation-indicator {
+        position: fixed;
+        bottom: 20px;
+        left: 20px;
+        background: rgba(0, 0, 0, 0.8);
+        color: white;
+        padding: 10px 15px;
+        border-radius: 8px;
+        font-size: 14px;
+        display: flex;
+        gap: 15px;
+        z-index: 1000;
+        opacity: 0.9;
+        transition: opacity 0.3s;
+    }
+
+    .navigation-indicator:hover {
+        opacity: 1;
+    }
+
+    .shortcut {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    .shortcut kbd {
+        background: #444;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-family: monospace;
+        font-size: 12px;
+        border: 1px solid #666;
+    }
+`;
+document.head.appendChild(navigationStyles);

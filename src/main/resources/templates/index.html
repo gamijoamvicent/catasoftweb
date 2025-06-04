@@ -183,5 +183,38 @@
     </div>
 
     <script th:src="@{/js/dashboard.js}"></script>
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Verificar si debemos activar pantalla completa
+        if (sessionStorage.getItem('fullscreen') === 'true') {
+            activarPantallaCompleta();
+        }
+
+        // Manejar la selección de licorería
+        const licoreriaSelect = document.querySelector('select[name="licoreriaId"]');
+        if (licoreriaSelect) {
+            licoreriaSelect.addEventListener('change', function() {
+                if (this.value) {
+                    activarPantallaCompleta();
+                }
+            });
+        }
+    });
+
+    async function activarPantallaCompleta() {
+        try {
+            if (document.documentElement.requestFullscreen) {
+                await document.documentElement.requestFullscreen();
+            } else if (document.documentElement.webkitRequestFullscreen) {
+                await document.documentElement.webkitRequestFullscreen();
+            } else if (document.documentElement.msRequestFullscreen) {
+                await document.documentElement.msRequestFullscreen();
+            }
+            sessionStorage.setItem('fullscreen', 'true');
+        } catch (error) {
+            console.log('No se pudo activar la pantalla completa:', error);
+        }
+    }
+    </script>
 </body>
 </html>

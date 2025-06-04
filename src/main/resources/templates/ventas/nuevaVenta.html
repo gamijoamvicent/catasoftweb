@@ -96,6 +96,62 @@
             flex: 1;
             text-align: center;
         }
+
+        /* Estilos para el botón de pantalla completa */
+        .fullscreen-button-container {
+            padding: 10px;
+            margin-bottom: 15px;
+        }
+
+        .fullscreen-btn {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .fullscreen-btn:hover {
+            background: var(--primary-dark);
+        }
+
+        .fullscreen-btn .icon {
+            font-size: 1.2em;
+        }
+
+        /* Indicador de pantalla completa */
+        .fullscreen-indicator {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+        }
+
+        .fullscreen-indicator.visible {
+            opacity: 1;
+        }
+
+        .fullscreen-indicator .icon {
+            font-size: 1.2em;
+        }
     </style>
 </head>
 <body>
@@ -106,6 +162,13 @@
                 <img src="/images/logo.png" alt="InventSoft Logo" class="logo">
             </div>
             
+            <!-- Botón de pantalla completa -->
+            <div class="fullscreen-button-container">
+                <button id="fullscreenButton" class="btn btn-primary fullscreen-btn">
+                    <span class="icon">⛶</span> Pantalla Completa
+                </button>
+            </div>
+
             <div class="user-info" th:if="${licoreriaActual != null}">
                 <div class="licoreria-info">
                     <h3>🏢 Licorería Actual</h3>
@@ -252,6 +315,17 @@
                 </div>
             </div>
         </main>
+
+        <!-- Indicador de atajos de teclado -->
+        <div class="keyboard-shortcuts">
+            <div><kbd>F2</kbd> Buscar</div>
+            <div><kbd>↑</kbd><kbd>↓</kbd> Navegar</div>
+            <div><kbd>Enter</kbd> Seleccionar</div>
+            <div><kbd>F1</kbd> Facturar</div>
+            <div><kbd>F3</kbd> Editar cantidades</div>
+            <div><kbd>F12</kbd> Pantalla completa</div>
+            <div><kbd>Esc</kbd> Salir</div>
+        </div>
     </div>
 
     <!-- Datos ocultos -->
@@ -269,5 +343,81 @@
     <script th:src="@{/js/qz-tray.js}"></script>
     <script th:src="@{/js/dashboard.js}"></script>
     <script th:src="@{/js/ventas.js}"></script>
+    <script>
+        // Función para activar pantalla completa
+        async function toggleFullscreen() {
+            try {
+                if (!document.fullscreenElement) {
+                    const docElm = document.documentElement;
+                    if (docElm.requestFullscreen) {
+                        await docElm.requestFullscreen();
+                    } else if (docElm.mozRequestFullScreen) {
+                        await docElm.mozRequestFullScreen();
+                    } else if (docElm.webkitRequestFullscreen) {
+                        await docElm.webkitRequestFullscreen();
+                    } else if (docElm.msRequestFullscreen) {
+                        await docElm.msRequestFullscreen();
+                    }
+                    showFullscreenIndicator(true);
+                } else {
+                    if (document.exitFullscreen) {
+                        await document.exitFullscreen();
+                    } else if (document.mozCancelFullScreen) {
+                        await document.mozCancelFullScreen();
+                    } else if (document.webkitExitFullscreen) {
+                        await document.webkitExitFullscreen();
+                    } else if (document.msExitFullscreen) {
+                        await document.msExitFullscreen();
+                    }
+                    showFullscreenIndicator(false);
+                }
+            } catch (error) {
+                console.error('Error al cambiar pantalla completa:', error);
+                showNotification('No se pudo cambiar el modo de pantalla completa', 'error');
+            }
+        }
+
+        // Función para mostrar/ocultar el indicador de pantalla completa
+        function showFullscreenIndicator(show) {
+            let indicator = document.querySelector('.fullscreen-indicator');
+            if (!indicator) {
+                indicator = document.createElement('div');
+                indicator.className = 'fullscreen-indicator';
+                indicator.innerHTML = '<span class="icon">⛶</span> Pantalla Completa';
+                document.body.appendChild(indicator);
+            }
+            
+            if (show) {
+                indicator.classList.add('visible');
+                setTimeout(() => {
+                    indicator.classList.remove('visible');
+                }, 2000);
+            } else {
+                indicator.classList.remove('visible');
+            }
+        }
+
+        // Agregar el botón de pantalla completa
+        document.addEventListener('DOMContentLoaded', function() {
+            const fullscreenButton = document.getElementById('fullscreenButton');
+            if (fullscreenButton) {
+                fullscreenButton.addEventListener('click', toggleFullscreen);
+            }
+
+            // Manejar el evento de cambio de pantalla completa
+            document.addEventListener('fullscreenchange', function() {
+                const isFullscreen = !!document.fullscreenElement;
+                showFullscreenIndicator(isFullscreen);
+            });
+
+            // Manejar F12 para pantalla completa
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'F12') {
+                    e.preventDefault();
+                    toggleFullscreen();
+                }
+            });
+        });
+    </script>
 </body>
 </html>

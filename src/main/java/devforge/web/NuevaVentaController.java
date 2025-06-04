@@ -197,6 +197,7 @@ public class NuevaVentaController {
                 detalle.setPrecioUnitario(BigDecimal.valueOf(producto.getPrecioVenta()));
                 detalle.setSubtotal(BigDecimal.valueOf(producto.getPrecioVenta())
                     .multiply(BigDecimal.valueOf(item.getCantidad())));
+                detalle.setFechaCreacion(LocalDateTime.now());
                 
                 // Obtener la tasa de cambio actual para la licorería y tipo de tasa del producto
                 PrecioDolar.TipoTasa tipoTasa = producto.getTipoTasa() != null ?
