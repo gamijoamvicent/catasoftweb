@@ -363,8 +363,19 @@ document.addEventListener('keydown', function(e) {
                 if (selectedRow) {
                     const input = selectedRow.querySelector('.cantidad-input');
                     if (input) {
-                        input.focus();
-                        input.select();
+                        // Si solo hay un item, salir del modo de edición
+                        if (productosSeleccionados.length === 1) {
+                            const productoId = selectedRow.getAttribute('data-id');
+                            actualizarCantidad(productoId, input.value);
+                            isNavigatingTable = false;
+                            selectedTableRow = -1;
+                            rows.forEach(row => row.classList.remove('selected'));
+                            document.getElementById('buscarField').focus();
+                        } else {
+                            // Si hay más de un item, mantener el modo de edición
+                            input.focus();
+                            input.select();
+                        }
                     }
                 }
                 break;
@@ -829,6 +840,15 @@ function setupQuantityControls() {
                 e.preventDefault();
                 const productoId = input.closest('tr').getAttribute('data-id');
                 actualizarCantidad(productoId, input.value);
+                
+                // Si solo hay un item, salir del modo de edición y enfocar el buscador
+                if (productosSeleccionados.length === 1) {
+                    isNavigatingTable = false;
+                    selectedTableRow = -1;
+                    const rows = document.querySelectorAll('#ventasTableBody tr');
+                    rows.forEach(row => row.classList.remove('selected'));
+                    document.getElementById('buscarField').focus();
+                }
             }
         });
     });
