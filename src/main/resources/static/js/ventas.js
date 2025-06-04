@@ -462,14 +462,19 @@ function confirmarVenta() {
     }
 
     const metodoPago = document.getElementById('metodoPago').value;
-    const tipoVenta = document.getElementById('tipoVenta').value;
+    const tipoVentaSelect = document.getElementById('tipoVenta');
     const clienteId = document.getElementById('clienteId')?.value;
+    const clienteSelector = document.getElementById('clienteSelector');
+    const buscarClienteInput = document.getElementById('buscarCliente');
+    const clientesList = document.getElementById('clientesList');
 
-    // Validar cliente para ventas a crédito
-    if (tipoVenta === 'CREDITO' && !clienteId) {
-        showNotification('Debe seleccionar un cliente para ventas a crédito', 'warning');
-        return;
-    }
+    // Cambiar el tipo de venta a contado en el formulario
+    tipoVentaSelect.value = 'CONTADO';
+    
+    // Ocultar el selector de cliente y limpiar sus campos
+    if (clienteSelector) clienteSelector.style.display = 'none';
+    if (buscarClienteInput) buscarClienteInput.value = '';
+    if (clientesList) clientesList.innerHTML = '';
 
     const ventaData = {
         items: productosSeleccionados.map(p => ({
@@ -478,8 +483,8 @@ function confirmarVenta() {
             precioUnitario: p.precioVenta
         })),
         metodoPago,
-        tipoVenta,
-        clienteId: clienteId || null
+        tipoVenta: 'CONTADO',
+        clienteId: null // Forzar clienteId a null ya que es venta a contado
     };
 
     // Mostrar indicador de carga
