@@ -152,6 +152,44 @@
         .fullscreen-indicator .icon {
             font-size: 1.2em;
         }
+
+        /* Estilos para el selector de método de pago */
+        .metodo-pago-selector {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .metodo-pago-selector select {
+            flex: 1;
+        }
+
+        .metodo-pago-selector button {
+            padding: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 40px;
+            height: 38px;
+        }
+
+        .metodo-pago-selector button .icon {
+            font-size: 1.2em;
+        }
+
+        /* Estilos para el input de búsqueda de clientes */
+        .cliente-selector input {
+            background-color: white !important;
+        }
+
+        .cliente-selector input:-webkit-autofill,
+        .cliente-selector input:-webkit-autofill:hover,
+        .cliente-selector input:-webkit-autofill:focus,
+        .cliente-selector input:-webkit-autofill:active {
+            -webkit-box-shadow: 0 0 0 30px white inset !important;
+            -webkit-text-fill-color: #333 !important;
+            transition: background-color 5000s ease-in-out 0s;
+        }
     </style>
 </head>
 <body>
@@ -256,12 +294,17 @@
                     <div class="metodo-pago-container">
                         <div class="form-group">
                             <label for="metodoPago">Método de Pago:</label>
-                            <select id="metodoPago" class="form-select" required>
-                                <option value="EFECTIVO">Efectivo</option>
-                                <option value="TRANSFERENCIA">Transferencia</option>
-                                <option value="PUNTO_VENTA">Punto de Venta</option>
-                                <option value="PAGO_MOVIL">Pago Móvil</option>
-                            </select>
+                            <div class="metodo-pago-selector">
+                                <select id="metodoPago" class="form-select" required>
+                                    <option value="EFECTIVO">Efectivo</option>
+                                    <option value="TRANSFERENCIA">Transferencia</option>
+                                    <option value="PUNTO_VENTA">Punto de Venta</option>
+                                    <option value="PAGO_MOVIL">Pago Móvil</option>
+                                </select>
+                                <button type="button" class="btn btn-secondary btn-sm" onclick="cambiarMetodoPago()">
+                                    <span class="icon">🔄</span>
+                                </button>
+                            </div>
                         </div>
                         <div class="form-group">
                             <label for="tipoVenta">Tipo de Venta:</label>
@@ -278,7 +321,8 @@
                             <label for="buscarCliente">Buscar Cliente:</label>
                             <input type="text" id="buscarCliente" class="form-control" 
                                    placeholder="Nombre o cédula del cliente" 
-                                   onkeyup="buscarClientes()">
+                                   onkeyup="buscarClientes()"
+                                   autocomplete="off">
                             <ul id="clientesList" class="sugerencias-list">
                                 <!-- Los clientes se agregarán dinámicamente -->
                             </ul>
@@ -324,6 +368,7 @@
             <div><kbd>F1</kbd> Facturar</div>
             <div><kbd>F3</kbd> Editar cantidades</div>
             <div><kbd>F12</kbd> Pantalla completa</div>
+            <div><kbd>Alt</kbd> + <kbd>M</kbd> Cambiar método de pago</div>
             <div><kbd>Esc</kbd> Salir</div>
         </div>
     </div>
@@ -417,6 +462,31 @@
                     toggleFullscreen();
                 }
             });
+        });
+
+        // Función para cambiar el método de pago
+        function cambiarMetodoPago() {
+            const select = document.getElementById('metodoPago');
+            const options = select.options;
+            const currentIndex = select.selectedIndex;
+            const nextIndex = (currentIndex + 1) % options.length;
+            
+            select.selectedIndex = nextIndex;
+            
+            // Disparar el evento change para que otros listeners sepan del cambio
+            const event = new Event('change');
+            select.dispatchEvent(event);
+            
+            // Mostrar notificación del cambio
+            showNotification(`Método de pago cambiado a: ${options[nextIndex].text}`, 'info');
+        }
+
+        // Agregar atajo de teclado para cambiar método de pago (Alt + M)
+        document.addEventListener('keydown', function(e) {
+            if (e.altKey && e.key.toLowerCase() === 'm') {
+                e.preventDefault();
+                cambiarMetodoPago();
+            }
         });
     </script>
 </body>
