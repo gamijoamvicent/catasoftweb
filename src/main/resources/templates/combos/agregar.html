@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Agregar Combo</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css">
+    <style>
+        .select2-container {
+            width: 100% !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-4">
+        <h2>Agregar Nuevo Combo</h2>
+        <form id="comboForm" class="mt-4">
+            <div class="form-group">
+                <label for="nombre">Nombre del Combo</label>
+                <input type="text" class="form-control" id="nombre" name="nombre" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="precio">Precio</label>
+                <input type="number" class="form-control" id="precio" name="precio" step="0.01" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="productos">Productos</label>
+                <select class="form-control" id="productos" name="productoIds" multiple="multiple" required>
+                    <option value="1">Ron</option>
+                    <option value="2">Agua</option>
+                    <option value="3">Bebida</option>
+                    <option value="4">Gabrielin</option>
+                </select>
+            </div>
+            
+            <button type="submit" class="btn btn-primary">Guardar Combo</button>
+            <a href="/" class="btn btn-secondary">Cancelar</a>
+        </form>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            // Inicializar Select2
+            $('#productos').select2({
+                placeholder: 'Seleccione los productos',
+                allowClear: true
+            });
+
+            // Manejar el envío del formulario
+            $('#comboForm').on('submit', function(e) {
+                e.preventDefault();
+                
+                const combo = {
+                    nombre: $('#nombre').val(),
+                    precio: parseFloat($('#precio').val()),
+                    productoIds: $('#productos').val()
+                };
+
+                $.ajax({
+                    url: '/api/combos',
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Basic ' + btoa('admin:123')
+                    },
+                    data: JSON.stringify(combo),
+                    success: function(response) {
+                        alert('Combo creado exitosamente');
+                        window.location.href = '/';
+                    },
+                    error: function(error) {
+                        console.error('Error al crear combo:', error);
+                        alert('Error al crear el combo');
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html> 

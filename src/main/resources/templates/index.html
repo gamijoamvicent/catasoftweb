@@ -92,6 +92,17 @@
                     </div>
                 </div>
 
+                <div class="card inventario" sec:authorize="hasAnyRole('ADMIN_LOCAL', 'SUPER_ADMIN')">
+                    <div class="card-header">
+                        <img src="/icons/combo.png" alt="AgregarCombo" class="card-icon">
+                        <h3 class="card-title">Agregar Combo</h3>
+                    </div>
+                    <div class="card-content">
+                        <p>Crear un nuevo combo de productos</p>
+                        <a th:href="@{/combos/agregar}" class="btn btn-primary">Agregar Combo</a>
+                    </div>
+                </div>
+
                 <div class="card inventario">
                     <div class="card-header">
                         <img src="/icons/inventory.png" alt="Inventario" class="card-icon">
