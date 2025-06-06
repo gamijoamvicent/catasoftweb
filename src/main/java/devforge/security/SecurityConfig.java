@@ -9,6 +9,8 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 @Configuration
 @EnableWebSecurity
@@ -32,6 +34,7 @@ public class SecurityConfig {
         http
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/", "/login", "/css/**", "/js/**").permitAll()
+                .requestMatchers("/api/**").hasAnyRole("ADMIN_LOCAL", "SUPER_ADMIN")
                 .requestMatchers("/ventas/**").hasAnyRole("CAJERO", "ADMIN_LOCAL", "SUPER_ADMIN")
                 .requestMatchers("/ventas/confirmar").hasAnyAuthority("ROLE_CAJERO", "ROLE_ADMIN_LOCAL", "ROLE_SUPER_ADMIN")
                 .requestMatchers("/producto/actualizar").hasAnyRole("ADMIN_LOCAL", "SUPER_ADMIN", "BODEGA")
@@ -54,8 +57,13 @@ public class SecurityConfig {
                 .permitAll()
             )
             .csrf(csrf -> csrf
-                .ignoringRequestMatchers("/ventas/confirmar")
-                .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse()));
+                .ignoringRequestMatchers("/api/**", "/ventas/confirmar")
+                .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse()))
+            .httpBasic(basic -> {})
+            .sessionManagement(session -> session
+                .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
+                .maximumSessions(1)
+                .expiredUrl("/login?expired"));
 
         // Configurar el manejador de errores
         http.exceptionHandling(handling -> handling

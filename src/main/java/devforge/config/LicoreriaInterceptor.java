@@ -102,6 +102,7 @@ public class LicoreriaInterceptor implements HandlerInterceptor {
                requestURI.startsWith("/css/") || 
                requestURI.startsWith("/js/") ||
                requestURI.startsWith("/error") ||
+               requestURI.startsWith("/api/") ||
                requestURI.equals("/");
     }
 } 
