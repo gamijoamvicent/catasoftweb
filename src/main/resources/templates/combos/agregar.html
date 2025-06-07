@@ -2,66 +2,18 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Agregar Combo</title>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Combos - InventSoft</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         .producto-item {
+            display: flex;
+            align-items: center;
             padding: 10px;
             border: 1px solid #ddd;
             margin-bottom: 5px;
             border-radius: 4px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background-color: white;
-            transition: background-color 0.2s;
-        }
-        .producto-item:hover {
-            background-color: #f8f9fa;
-            cursor: pointer;
-        }
-        .carrito-item {
-            padding: 10px;
-            border: 1px solid #ddd;
-            margin-bottom: 5px;
-            border-radius: 4px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background-color: white;
-        }
-        .cantidad-control {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .cantidad-control input {
-            width: 60px;
-            text-align: center;
-        }
-        #resultadosBusqueda {
-            max-height: 300px;
-            overflow-y: auto;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            margin-top: 5px;
-            background-color: white;
-            position: absolute;
-            width: 100%;
-            z-index: 1000;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        #carrito {
-            max-height: 400px;
-            overflow-y: auto;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            padding: 10px;
-            margin-top: 20px;
-            background-color: white;
-        }
-        .search-container {
-            position: relative;
         }
         .producto-info {
             flex-grow: 1;
@@ -83,227 +35,157 @@
             align-items: center;
             justify-content: center;
         }
+        .combos-list {
+            margin-top: 2rem;
+        }
+        .card {
+            transition: all 0.3s ease;
+        }
+        .card:hover {
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .card-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+        .productos-list {
+            max-height: 150px;
+            overflow-y: auto;
+        }
+        .productos-list::-webkit-scrollbar {
+            width: 4px;
+        }
+        .productos-list::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        .productos-list::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 2px;
+        }
     </style>
 </head>
 <body>
     <div class="container mt-4">
-        <h2>Agregar Nuevo Combo</h2>
-        <form id="comboForm" class="mt-4">
-            <div class="form-group">
-                <label for="nombre">Nombre del Combo</label>
-                <input type="text" class="form-control" id="nombre" name="nombre" required>
-            </div>
-            
-            <div class="form-group">
-                <label for="precio">Precio ($)</label>
-                <input type="number" class="form-control" id="precio" name="precio" step="0.01" required>
-            </div>
-            
-            <div class="form-group">
-                <label for="tipoTasa">Tipo de Tasa</label>
-                <select class="form-control" id="tipoTasa" name="tipoTasa" required>
-                    <option value="BCV">BCV</option>
-                    <option value="PARALELO">Paralelo</option>
-                    <option value="PROMEDIO">Promedio</option>
-                </select>
-            </div>
-            
-            <div class="form-group search-container">
-                <label for="buscarProducto">Buscar Productos</label>
-                <input type="text" class="form-control" id="buscarProducto" placeholder="Escribe para buscar productos...">
-                <div id="resultadosBusqueda"></div>
-            </div>
+        <div class="row">
+            <div class="col-md-6">
+                <h2>Agregar Nuevo Combo</h2>
+                <form id="comboForm" class="mt-4">
+                    <div class="form-group mb-3">
+                        <label for="nombre">Nombre del Combo</label>
+                        <input type="text" class="form-control" id="nombre" name="nombre" required>
+                    </div>
+                    
+                    <div class="form-group mb-3">
+                        <label for="precio">Precio ($)</label>
+                        <input type="number" class="form-control" id="precio" name="precio" step="0.01" required>
+                    </div>
+                    
+                    <div class="form-group mb-3">
+                        <label for="tipoTasa">Tipo de Tasa</label>
+                        <select class="form-control" id="tipoTasa" name="tipoTasa" required>
+                            <option value="BCV">BCV</option>
+                            <option value="PARALELA">Paralela</option>
+                            <option value="PROMEDIO">Promedio</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group mb-3">
+                        <label for="buscarProducto">Buscar Productos</label>
+                        <input type="text" class="form-control" id="buscarProducto" placeholder="Escribe para buscar productos...">
+                        <div id="resultadosBusqueda"></div>
+                    </div>
 
-            <div class="form-group">
-                <label>Productos en el Combo</label>
-                <div id="carrito"></div>
+                    <div class="form-group mb-3">
+                        <label>Productos en el Combo</label>
+                        <div id="carrito"></div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">Guardar Combo</button>
+                </form>
             </div>
             
-            <button type="submit" class="btn btn-primary">Guardar Combo</button>
-            <a href="/" class="btn btn-secondary">Cancelar</a>
-        </form>
+            <div class="col-md-6">
+                <div class="combos-list">
+                    <h2>Combos Existentes</h2>
+                    <div id="listaCombos" class="row">
+                        <!-- Los combos se cargarán dinámicamente aquí -->
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const buscarInput = document.getElementById('buscarProducto');
-            const resultadosDiv = document.getElementById('resultadosBusqueda');
-            const carritoDiv = document.getElementById('carrito');
-            const comboForm = document.getElementById('comboForm');
-            let carrito = [];
-            let timeoutId;
+        $(document).ready(function() {
+            // Cargar combos existentes
+            function cargarCombos() {
+                $.get('/combos/api/combos', function(combos) {
+                    const $listaCombos = $('#listaCombos');
+                    $listaCombos.empty();
+                    
+                    combos.forEach(combo => {
+                        const $combo = $(`
+                            <div class="col-md-6 mb-3">
+                                <div class="card h-100">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <h5 class="card-title mb-0">${combo.nombre}</h5>
+                                            <button class="btn btn-sm ${combo.activo ? 'btn-danger' : 'btn-success'}" 
+                                                    onclick="toggleEstadoCombo(${combo.id}, ${combo.activo})">
+                                                ${combo.activo ? 'Desactivar' : 'Activar'}
+                                            </button>
+                                        </div>
+                                        <p class="card-text text-success mb-2">$${combo.precio}</p>
+                                        <div class="productos-list">
+                                            <div id="productos-${combo.id}">
+                                                <!-- Los productos se cargarán dinámicamente -->
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        `);
+                        
+                        $listaCombos.append($combo);
+                        
+                        // Cargar productos del combo
+                        $.get(`/combos/api/combos/${combo.id}/productos`, function(productos) {
+                            const $productos = $(`#productos-${combo.id}`);
+                            productos.forEach(producto => {
+                                $productos.append(`
+                                    <div class="d-flex justify-content-between small">
+                                        <span>${producto.nombre}</span>
+                                        <span>x${producto.cantidad}</span>
+                                    </div>
+                                `);
+                            });
+                        });
+                    });
+                });
+            }
 
-            // Función para buscar productos
-            async function buscarProductos(termino) {
-                try {
-                    const response = await fetch(`/producto/buscar?termino=${encodeURIComponent(termino)}`, {
-                        headers: {
-                            'Authorization': 'Basic ' + btoa('admin:123')
+            // Función para cambiar el estado del combo
+            window.toggleEstadoCombo = function(id, estadoActual) {
+                const accion = estadoActual ? 'desactivar' : 'activar';
+                if (confirm(`¿Está seguro de que desea ${accion} este combo?`)) {
+                    const endpoint = estadoActual ? 'eliminar' : 'reactivar';
+                    $.ajax({
+                        url: `/combos/api/combos/${id}/${endpoint}`,
+                        method: 'POST',
+                        success: function() {
+                            alert(`Combo ${accion}do exitosamente`);
+                            cargarCombos();
+                        },
+                        error: function() {
+                            alert(`Error al ${accion} el combo`);
                         }
                     });
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-                    const productos = await response.json();
-                    mostrarResultados(productos);
-                } catch (error) {
-                    console.error('Error al buscar productos:', error);
-                    resultadosDiv.innerHTML = '<div class="p-2 text-danger">Error al buscar productos</div>';
-                }
-            }
-
-            // Función para mostrar resultados
-            function mostrarResultados(productos) {
-                resultadosDiv.innerHTML = '';
-                if (productos.length === 0) {
-                    resultadosDiv.innerHTML = '<div class="p-2">No se encontraron productos</div>';
-                    return;
-                }
-
-                productos.forEach(producto => {
-                    const item = document.createElement('div');
-                    item.className = 'producto-item';
-                    item.innerHTML = `
-                        <div class="producto-info">
-                            <div>${producto.nombre}</div>
-                            <div class="producto-precio">$${producto.precioVenta}</div>
-                            <div class="producto-stock">Stock: ${producto.cantidad}</div>
-                        </div>
-                    `;
-                    item.addEventListener('click', () => agregarAlCarrito(producto));
-                    resultadosDiv.appendChild(item);
-                });
-            }
-
-            // Función para agregar al carrito
-            function agregarAlCarrito(producto) {
-                const existente = carrito.findIndex(p => p.id === producto.id);
-                if (existente === -1) {
-                    carrito.push({
-                        id: producto.id,
-                        nombre: producto.nombre,
-                        precio: producto.precioVenta,
-                        cantidad: 1
-                    });
-                } else {
-                    carrito[existente].cantidad++;
-                }
-                actualizarCarrito();
-                buscarInput.value = '';
-                resultadosDiv.innerHTML = '';
-            }
-
-            // Función para actualizar el carrito
-            function actualizarCarrito() {
-                carritoDiv.innerHTML = '';
-                carrito.forEach((item, index) => {
-                    const carritoItem = document.createElement('div');
-                    carritoItem.className = 'carrito-item';
-                    carritoItem.innerHTML = `
-                        <div class="producto-info">
-                            <div>${item.nombre}</div>
-                            <div class="producto-precio">$${item.precio}</div>
-                        </div>
-                        <div class="cantidad-control">
-                            <button class="btn btn-sm btn-secondary btn-cantidad" onclick="decrementarCantidad(${index})">-</button>
-                            <input type="number" class="form-control form-control-sm" value="${item.cantidad}" 
-                                   onchange="actualizarCantidad(${index}, this.value)">
-                            <button class="btn btn-sm btn-secondary btn-cantidad" onclick="incrementarCantidad(${index})">+</button>
-                            <button class="btn btn-sm btn-danger ml-2" onclick="eliminarProducto(${index})">Eliminar</button>
-                        </div>
-                    `;
-                    carritoDiv.appendChild(carritoItem);
-                });
-            }
-
-            // Funciones para manejar el carrito
-            window.decrementarCantidad = function(index) {
-                if (carrito[index].cantidad > 1) {
-                    carrito[index].cantidad--;
-                    actualizarCarrito();
                 }
             };
 
-            window.incrementarCantidad = function(index) {
-                carrito[index].cantidad++;
-                actualizarCarrito();
-            };
-
-            window.actualizarCantidad = function(index, valor) {
-                const nuevaCantidad = parseInt(valor);
-                if (nuevaCantidad > 0) {
-                    carrito[index].cantidad = nuevaCantidad;
-                    actualizarCarrito();
-                }
-            };
-
-            window.eliminarProducto = function(index) {
-                carrito.splice(index, 1);
-                actualizarCarrito();
-            };
-
-            // Event listeners
-            buscarInput.addEventListener('input', function() {
-                clearTimeout(timeoutId);
-                const termino = this.value.trim();
-                
-                if (termino.length < 1) {
-                    resultadosDiv.innerHTML = '';
-                    return;
-                }
-
-                timeoutId = setTimeout(() => buscarProductos(termino), 300);
-            });
-
-            // Cerrar resultados al hacer clic fuera
-            document.addEventListener('click', function(e) {
-                if (!e.target.closest('.search-container')) {
-                    resultadosDiv.innerHTML = '';
-                }
-            });
-
-            // Manejar el envío del formulario
-            comboForm.addEventListener('submit', async function(e) {
-                e.preventDefault();
-                
-                if (carrito.length === 0) {
-                    alert('Debe agregar al menos un producto al combo');
-                    return;
-                }
-
-                const combo = {
-                    nombre: document.getElementById('nombre').value,
-                    precio: parseFloat(document.getElementById('precio').value),
-                    tipoTasa: document.getElementById('tipoTasa').value,
-                    productos: carrito.map(item => ({
-                        id: item.id,
-                        cantidad: item.cantidad
-                    }))
-                };
-                console.log('Combo a enviar:', combo);
-
-                try {
-                    const response = await fetch('/combos/api/combos', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': 'Basic ' + btoa('admin:123')
-                        },
-                        body: JSON.stringify(combo)
-                    });
-
-                    if (response.ok) {
-                        alert('Combo creado exitosamente');
-                        window.location.href = '/';
-                    } else {
-                        const error = await response.text();
-                        throw new Error(error);
-                    }
-                } catch (error) {
-                    console.error('Error:', error);
-                    alert('Error al crear el combo: ' + error.message);
-                }
-            });
+            // Cargar combos al iniciar
+            cargarCombos();
         });
     </script>
 </body>

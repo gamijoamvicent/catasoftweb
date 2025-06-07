@@ -65,6 +65,7 @@ public class ComboController {
             combo.setPrecio(precio);
             combo.setTipoTasa(Combo.TipoTasa.valueOf(tipoTasaStr));
             combo.setLicoreria(licoreriaContext.getLicoreriaActual());
+            combo.setActivo(true); // Por defecto, los combos nuevos están activos
             combo = comboRepository.save(combo);
 
             for (Map<String, Object> productoData : productos) {
@@ -105,6 +106,7 @@ public class ComboController {
                 comboData.put("precio", combo.getPrecio());
                 comboData.put("tipoTasa", combo.getTipoTasa().toString());
                 comboData.put("fechaCreacion", combo.getFechaCreacion());
+                comboData.put("activo", combo.getActivo());
                 return comboData;
             })
             .toList();
@@ -114,7 +116,6 @@ public class ComboController {
     @ResponseBody
     public List<Map<String, Object>> obtenerProductosCombo(@PathVariable Long id) {
         List<ComboProducto> productosCombo = comboProductoRepository.findByComboId(id);
-        System.out.println("[DEBUG] Productos encontrados para combo " + id + ": " + productosCombo.size());
         return productosCombo
             .stream()
             .map(cp -> {
@@ -197,6 +198,60 @@ public class ComboController {
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.badRequest().body("Error al procesar la venta: " + e.getMessage());
+        }
+    }
+
+    @PostMapping("/api/combos/{id}/eliminar")
+    @ResponseBody
+    public ResponseEntity<?> eliminarCombo(@PathVariable Long id) {
+        try {
+            if (licoreriaContext.getLicoreriaActual() == null) {
+                return ResponseEntity.badRequest().body("Debe seleccionar una licorería primero");
+            }
+
+            Combo combo = comboRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Combo no encontrado"));
+
+            if (!combo.getLicoreria().getId().equals(licoreriaContext.getLicoreriaId())) {
+                return ResponseEntity.badRequest().body("No tiene permiso para eliminar este combo");
+            }
+
+            combo.setActivo(false);
+            comboRepository.save(combo);
+
+            return ResponseEntity.ok(Map.of(
+                "mensaje", "Combo eliminado exitosamente",
+                "fecha", new java.util.Date()
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Error al eliminar el combo: " + e.getMessage());
+        }
+    }
+
+    @PostMapping("/api/combos/{id}/reactivar")
+    @ResponseBody
+    public ResponseEntity<?> reactivarCombo(@PathVariable Long id) {
+        try {
+            if (licoreriaContext.getLicoreriaActual() == null) {
+                return ResponseEntity.badRequest().body("Debe seleccionar una licorería primero");
+            }
+
+            Combo combo = comboRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Combo no encontrado"));
+
+            if (!combo.getLicoreria().getId().equals(licoreriaContext.getLicoreriaId())) {
+                return ResponseEntity.badRequest().body("No tiene permiso para reactivar este combo");
+            }
+
+            combo.setActivo(true);
+            comboRepository.save(combo);
+
+            return ResponseEntity.ok(Map.of(
+                "mensaje", "Combo reactivado exitosamente",
+                "fecha", new java.util.Date()
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Error al reactivar el combo: " + e.getMessage());
         }
     }
 }
