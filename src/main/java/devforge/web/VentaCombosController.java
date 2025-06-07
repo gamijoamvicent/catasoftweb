@@ -37,6 +37,7 @@ public class VentaCombosController {
 
         List<Combo> combos = comboServicio.listarCombosPorLicoreria(licoreriaContext.getLicoreriaId());
         model.addAttribute("combos", combos);
+        model.addAttribute("licoreriaActual", licoreriaContext.getLicoreriaActual());
         
         return "ventas/nuevaVentaCombo";
     }

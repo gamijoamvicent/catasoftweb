@@ -372,6 +372,12 @@
     font-size: 1.1rem;
 }
 
+.subtotal-bs {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    margin-top: 0.25rem;
+}
+
 #btnConfirmarVenta {
     width: 100%;
     padding: 1rem;

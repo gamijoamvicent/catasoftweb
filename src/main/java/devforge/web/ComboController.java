@@ -56,12 +56,14 @@ public class ComboController {
 
             String nombre = (String) payload.get("nombre");
             BigDecimal precio = new BigDecimal(payload.get("precio").toString());
+            String tipoTasaStr = (String) payload.get("tipoTasa");
             @SuppressWarnings("unchecked")
             List<Map<String, Object>> productos = (List<Map<String, Object>>) payload.get("productos");
 
             Combo combo = new Combo();
             combo.setNombre(nombre);
             combo.setPrecio(precio);
+            combo.setTipoTasa(Combo.TipoTasa.valueOf(tipoTasaStr));
             combo.setLicoreria(licoreriaContext.getLicoreriaActual());
             combo = comboRepository.save(combo);
 
@@ -101,6 +103,7 @@ public class ComboController {
                 comboData.put("id", combo.getId());
                 comboData.put("nombre", combo.getNombre());
                 comboData.put("precio", combo.getPrecio());
+                comboData.put("tipoTasa", combo.getTipoTasa().toString());
                 comboData.put("fechaCreacion", combo.getFechaCreacion());
                 return comboData;
             })

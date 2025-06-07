@@ -1,32 +1,39 @@
 $(document).ready(function() {
     let carrito = [];
-    let tasaDolar = 0;
-    let fechaTasa = null;
+    let tasasDolar = {
+        BCV: 0,
+        PARALELA: 0,
+        PROMEDIO: 0
+    };
     const token = $("meta[name='_csrf']").attr("content");
     const header = $("meta[name='_csrf_header']").attr("content");
 
-    // Obtener la tasa del dólar
-    function obtenerTasaDolar() {
+    // Obtener las tasas del dólar
+    function obtenerTasasDolar() {
         $.ajax({
-            url: '/api/tasa-dolar',
+            url: '/dolar/api/tasas',
             method: 'GET',
             success: function(response) {
-                tasaDolar = response.tasa;
-                fechaTasa = new Date(response.fecha);
-                actualizarCarrito(); // Actualizar los totales con la nueva tasa
-                mostrarNotificacion('Tasa del dólar actualizada', 'info');
+                console.log('Respuesta tasas:', response); // Debug
+                tasasDolar = {
+                    BCV: parseFloat(response.bcv) || 0,
+                    PARALELA: parseFloat(response.paralelo) || 0,
+                    PROMEDIO: parseFloat(response.promedio) || 0
+                };
+                console.log('Tasas procesadas:', tasasDolar); // Debug
+                actualizarCarrito(); // Actualizar los totales con las nuevas tasas
             },
             error: function(xhr) {
-                const mensaje = xhr.responseText || 'Error al obtener la tasa del dólar';
+                const mensaje = xhr.responseText || 'Error al obtener las tasas del dólar';
                 mostrarNotificacion(mensaje, 'error');
                 // Intentar nuevamente en 5 segundos
-                setTimeout(obtenerTasaDolar, 5000);
+                setTimeout(obtenerTasasDolar, 5000);
             }
         });
     }
 
-    // Obtener la tasa inicial
-    obtenerTasaDolar();
+    // Obtener las tasas iniciales
+    obtenerTasasDolar();
 
     // Configurar CSRF para todas las peticiones AJAX
     $.ajaxSetup({
@@ -53,6 +60,8 @@ $(document).ready(function() {
         const id = $(this).data('id');
         const nombre = $(this).data('nombre');
         const precio = parseFloat($(this).data('precio'));
+        const tipoTasa = $(this).data('tipo-tasa') || 'PROMEDIO'; // Valor por defecto
+        console.log('Agregando combo:', { id, nombre, precio, tipoTasa }); // Debug
 
         // Verificar si el combo ya está en el carrito
         const comboExistente = carrito.find(item => item.id === id);
@@ -63,6 +72,7 @@ $(document).ready(function() {
                 id: id,
                 nombre: nombre,
                 precio: precio,
+                tipoTasa: tipoTasa,
                 cantidad: 1
             });
         }
@@ -101,16 +111,23 @@ $(document).ready(function() {
         $cartItems.empty();
 
         let total = 0;
+        let totalBs = 0;
 
         carrito.forEach(item => {
             const subtotal = item.precio * item.cantidad;
             total += subtotal;
+            
+            // Calcular el subtotal en Bs según el tipo de tasa del combo
+            const tasa = tasasDolar[item.tipoTasa] || 0;
+            console.log('Calculando subtotal para:', item.nombre, 'Tasa:', item.tipoTasa, 'Valor:', tasa); // Debug
+            const subtotalBs = subtotal * tasa;
+            totalBs += subtotalBs;
 
             const $item = $(`
                 <div class="cart-item" data-id="${item.id}">
                     <div class="cart-item-info">
                         <div class="cart-item-title">${item.nombre}</div>
-                        <div class="cart-item-price">$${item.precio.toFixed(2)} c/u</div>
+                        <div class="cart-item-price">$${item.precio.toFixed(2)} c/u (${item.tipoTasa})</div>
                     </div>
                     <div class="cart-item-quantity">
                         <button class="quantity-btn" data-id="${item.id}" data-accion="decrementar">-</button>
@@ -119,6 +136,7 @@ $(document).ready(function() {
                     </div>
                     <div class="cart-item-subtotal">
                         $${subtotal.toFixed(2)}
+                        <div class="subtotal-bs">Bs. ${subtotalBs.toFixed(2)}</div>
                     </div>
                     <button class="remove-item" data-id="${item.id}">
                         <i class="fas fa-trash"></i>
@@ -129,12 +147,15 @@ $(document).ready(function() {
             $cartItems.append($item);
         });
 
-        // Actualizar totales en ambas monedas
-        const totalBs = total * tasaDolar;
+        // Actualizar totales
         $('.total-amount').html(`
             <div class="total-usd">$${total.toFixed(2)}</div>
             <div class="total-bs">Bs. ${totalBs.toFixed(2)}</div>
-            ${fechaTasa ? `<div class="tasa-info">Tasa: ${tasaDolar.toFixed(2)} Bs. (${fechaTasa.toLocaleDateString()})</div>` : ''}
+            <div class="tasa-info">
+                BCV: ${tasasDolar.BCV?.toFixed(2) || 'N/A'} Bs. | 
+                Paralela: ${tasasDolar.PARALELA?.toFixed(2) || 'N/A'} Bs. | 
+                Promedio: ${tasasDolar.PROMEDIO?.toFixed(2) || 'N/A'} Bs.
+            </div>
         `);
         $('#btnConfirmarVenta').prop('disabled', carrito.length === 0);
     }

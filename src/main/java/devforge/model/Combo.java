@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.ArrayList;
 
 @Entity
 @Table(name = "combos")
@@ -18,6 +19,10 @@ public class Combo {
     @Column(nullable = false)
     private BigDecimal precio;
 
+    @Column(name = "tipo_tasa", nullable = false)
+    @Enumerated(EnumType.STRING)
+    private TipoTasa tipoTasa;
+
     @ManyToOne
     @JoinColumn(name = "licoreria_id", nullable = false)
     private Licoreria licoreria;
@@ -29,7 +34,13 @@ public class Combo {
     private LocalDateTime fechaCreacion = LocalDateTime.now();
 
     @OneToMany(mappedBy = "combo", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<ComboProducto> productos;
+    private List<ComboProducto> productos = new ArrayList<>();
+
+    public enum TipoTasa {
+        BCV,
+        PARALELO,
+        PROMEDIO
+    }
 
     // Getters y Setters
     public Long getId() {
@@ -54,6 +65,14 @@ public class Combo {
 
     public void setPrecio(BigDecimal precio) {
         this.precio = precio;
+    }
+
+    public TipoTasa getTipoTasa() {
+        return tipoTasa;
+    }
+
+    public void setTipoTasa(TipoTasa tipoTasa) {
+        this.tipoTasa = tipoTasa;
     }
 
     public Licoreria getLicoreria() {
