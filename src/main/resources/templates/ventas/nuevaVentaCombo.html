@@ -9,6 +9,7 @@
     <meta th:name="_csrf_header" th:content="${_csrf.headerName}" />
     <link rel="stylesheet" th:href="@{/css/dashboard.css}">
     <link rel="stylesheet" th:href="@{/css/ventas.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
     <div class="dashboard-container">
@@ -45,9 +46,16 @@
                 </a>
             </div>
 
+            <div class="search-container">
+                <div class="search-box">
+                    <i class="fas fa-search search-icon"></i>
+                    <input type="text" id="searchInput" placeholder="Buscar combos...">
+                </div>
+            </div>
+
             <!-- Grid de Combos -->
             <div class="combos-grid">
-                <div th:each="combo : ${combos}" class="combo-card">
+                <div th:each="combo : ${combos}" class="combo-card" th:data-nombre="${combo.nombre}">
                     <div class="combo-header">
                         <h3 th:text="${combo.nombre}">Nombre del Combo</h3>
                         <span class="combo-price" th:text="'$' + ${#numbers.formatDecimal(combo.precio, 1, 2)}">$0.00</span>

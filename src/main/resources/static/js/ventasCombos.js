@@ -10,6 +10,19 @@ $(document).ready(function() {
         }
     });
 
+    // Función de búsqueda
+    $('#searchInput').on('input', function() {
+        const searchTerm = $(this).val().toLowerCase();
+        $('.combo-card').each(function() {
+            const comboNombre = $(this).data('nombre').toLowerCase();
+            if (comboNombre.includes(searchTerm)) {
+                $(this).show();
+            } else {
+                $(this).hide();
+            }
+        });
+    });
+
     // Agregar combo al carrito
     $('.agregar-combo').click(function() {
         const id = $(this).data('id');
@@ -69,14 +82,14 @@ $(document).ready(function() {
             total += subtotal;
 
             const $item = $(`
-                <div class="cart-item">
+                <div class="cart-item" data-id="${item.id}">
                     <div class="cart-item-info">
                         <div class="cart-item-title">${item.nombre}</div>
                         <div class="cart-item-price">$${item.precio.toFixed(2)} c/u</div>
                     </div>
                     <div class="cart-item-quantity">
                         <button class="quantity-btn" data-id="${item.id}" data-accion="decrementar">-</button>
-                        <span>${item.cantidad}</span>
+                        <span class="quantity">${item.cantidad}</span>
                         <button class="quantity-btn" data-id="${item.id}" data-accion="incrementar">+</button>
                     </div>
                     <div class="cart-item-subtotal">
@@ -95,59 +108,48 @@ $(document).ready(function() {
         $('#btnConfirmarVenta').prop('disabled', carrito.length === 0);
     }
 
-    // Confirmar venta
-    $('#btnConfirmarVenta').click(function() {
+    // Función para mostrar notificaciones
+    function mostrarNotificacion(mensaje, tipo = 'success') {
+        const notificacion = document.createElement('div');
+        notificacion.className = `notificacion ${tipo}`;
+        notificacion.textContent = mensaje;
+        document.body.appendChild(notificacion);
+
+        setTimeout(() => {
+            notificacion.remove();
+        }, 3000);
+    }
+
+    // Función para confirmar la venta
+    function confirmarVenta() {
         if (carrito.length === 0) {
-            mostrarNotificacion('El carrito está vacío', 'error');
+            mostrarNotificacion('El carrito está vacío', 'warning');
             return;
         }
 
-        const ventaData = {
-            items: carrito.map(item => ({
-                id: item.id,
-                cantidad: item.cantidad
-            }))
-        };
+        const combosVendidos = carrito.map(item => ({
+            id: item.id,
+            cantidad: item.cantidad
+        }));
 
         $.ajax({
-            url: '/ventas/combos/confirmar',
+            url: '/combos/api/combos/venta',
             method: 'POST',
             contentType: 'application/json',
-            data: JSON.stringify(ventaData),
+            data: JSON.stringify({ combos: combosVendidos }),
             success: function(response) {
-                if (response.success) {
-                    mostrarNotificacion('Venta realizada con éxito', 'success');
-                    carrito = [];
-                    actualizarCarrito();
-                    
-                    // Redirigir al ticket si existe
-                    if (response.ticketUrl) {
-                        window.location.href = response.ticketUrl;
-                    }
-                } else {
-                    mostrarNotificacion(response.message, 'error');
-                }
+                mostrarNotificacion('Venta realizada exitosamente');
+                // Limpiar el carrito
+                carrito = [];
+                actualizarCarrito();
             },
             error: function(xhr) {
-                mostrarNotificacion('Error al procesar la venta: ' + xhr.responseText, 'error');
+                const mensaje = xhr.responseText || 'Error al procesar la venta';
+                mostrarNotificacion(mensaje, 'error');
             }
         });
-    });
-
-    // Función para mostrar notificaciones
-    function mostrarNotificacion(mensaje, tipo = 'info') {
-        const $notificacion = $(`
-            <div class="notificacion ${tipo}">
-                ${mensaje}
-            </div>
-        `);
-
-        $('body').append($notificacion);
-
-        setTimeout(() => {
-            $notificacion.fadeOut(() => {
-                $notificacion.remove();
-            });
-        }, 3000);
     }
+
+    // Agregar el evento al botón de confirmar venta
+    $('#btnConfirmarVenta').click(confirmarVenta);
 }); 

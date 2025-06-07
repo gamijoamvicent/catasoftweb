@@ -149,4 +149,51 @@ public class ComboController {
         dto.setProductos(items);
         return ResponseEntity.ok(dto);
     }
+
+    @PostMapping("/api/combos/venta")
+    @ResponseBody
+    public ResponseEntity<?> procesarVentaCombo(@RequestBody Map<String, Object> payload) {
+        try {
+            if (licoreriaContext.getLicoreriaActual() == null) {
+                return ResponseEntity.badRequest().body("Debe seleccionar una licorería primero");
+            }
+
+            @SuppressWarnings("unchecked")
+            List<Map<String, Object>> combosVendidos = (List<Map<String, Object>>) payload.get("combos");
+            
+            for (Map<String, Object> comboVenta : combosVendidos) {
+                Long comboId = ((Number) comboVenta.get("id")).longValue();
+                int cantidad = ((Number) comboVenta.get("cantidad")).intValue();
+                
+                Combo combo = comboRepository.findById(comboId)
+                    .orElseThrow(() -> new RuntimeException("Combo no encontrado"));
+                
+                List<ComboProducto> productosCombo = comboProductoRepository.findByComboId(comboId);
+                
+                for (ComboProducto cp : productosCombo) {
+                    Producto producto = cp.getProducto();
+                    int cantidadADescontar = cp.getCantidad() * cantidad;
+                    
+                    if (producto.getCantidad() < cantidadADescontar) {
+                        return ResponseEntity.badRequest()
+                            .body("No hay suficiente stock de " + producto.getNombre() + 
+                                  ". Stock actual: " + producto.getCantidad() + 
+                                  ", Se requieren: " + cantidadADescontar);
+                    }
+                    
+                    producto.setCantidad(producto.getCantidad() - cantidadADescontar);
+                    productoRepository.save(producto);
+                }
+            }
+            
+            return ResponseEntity.ok(Map.of(
+                "mensaje", "Venta procesada exitosamente",
+                "fecha", new java.util.Date()
+            ));
+            
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.badRequest().body("Error al procesar la venta: " + e.getMessage());
+        }
+    }
 }
