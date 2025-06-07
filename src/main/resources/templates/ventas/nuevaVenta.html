@@ -9,6 +9,8 @@
     <meta th:name="_csrf_header" th:content="${_csrf.headerName}" />
     <link rel="stylesheet" th:href="@{/css/dashboard.css}">
     <link rel="stylesheet" th:href="@{/css/ventas.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
             --background-dark: #181A1B;
@@ -276,6 +278,9 @@
                     <p th:text="${licoreriaActual.nombre}"></p>
                     <p><strong>Ubicación:</strong> <span th:text="${licoreriaActual.direccion}"></span></p>
                     <p><strong>Teléfono:</strong> <span th:text="${licoreriaActual.telefono}"></span></p>
+                    <a th:href="@{/licorerias/seleccionar}" class="btn btn-primary">
+                        <span class="icon">🔄</span> Cambiar Licorería
+                    </a>
                 </div>
             </div>
 
@@ -314,7 +319,12 @@
         <!-- Contenido Principal -->
         <main class="main-content">
             <div class="venta-container">
-                <h1>Nueva Venta</h1>
+                <div class="page-header">
+                    <h1>Nueva Venta</h1>
+                    <a th:href="@{/ventas/combos/nueva}" class="btn btn-primary">
+                        <span class="icon">🎁</span> Vender Combos
+                    </a>
+                </div>
 
                 <!-- Búsqueda de productos -->
                 <div class="search-container">
