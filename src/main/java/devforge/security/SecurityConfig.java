@@ -57,7 +57,7 @@ public class SecurityConfig {
                 .permitAll()
             )
             .csrf(csrf -> csrf
-                .ignoringRequestMatchers("/api/**", "/ventas/confirmar")
+                .ignoringRequestMatchers("/api/**", "/ventas/confirmar", "/combos/api/**") // Ignora CSRF para combos/api
                 .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse()))
             .httpBasic(basic -> {})
             .sessionManagement(session -> session

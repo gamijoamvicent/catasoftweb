@@ -1,92 +1,125 @@
 package devforge.web;
 
+import devforge.config.LicoreriaContext;
 import devforge.model.Combo;
 import devforge.model.ComboProducto;
 import devforge.model.Producto;
-import devforge.model.dto.ComboDTO;
-import devforge.repository.ComboRepository;
 import devforge.repository.ComboProductoRepository;
+import devforge.repository.ComboRepository;
 import devforge.repository.ProductoRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Map;
 
-@RestController
-@RequestMapping("/api/combos")
-@CrossOrigin(origins = "*")
+@Controller
+@RequestMapping("/combos")
 public class ComboController {
 
-    @Autowired
-    private ComboRepository comboRepository;
+    private final ComboRepository comboRepository;
+    private final ProductoRepository productoRepository;
+    private final ComboProductoRepository comboProductoRepository;
+    private final LicoreriaContext licoreriaContext;
 
-    @Autowired
-    private ComboProductoRepository comboProductoRepository;
+    public ComboController(ComboRepository comboRepository, 
+                          ProductoRepository productoRepository,
+                          ComboProductoRepository comboProductoRepository,
+                          LicoreriaContext licoreriaContext) {
+        this.comboRepository = comboRepository;
+        this.productoRepository = productoRepository;
+        this.comboProductoRepository = comboProductoRepository;
+        this.licoreriaContext = licoreriaContext;
+    }
 
-    @Autowired
-    private ProductoRepository productoRepository;
+    @GetMapping("/agregar")
+    public String mostrarFormularioAgregar(Model model) {
+        if (licoreriaContext.getLicoreriaActual() == null) {
+            return "redirect:/licorerias/seleccionar";
+        }
+        model.addAttribute("licoreriaActual", licoreriaContext.getLicoreriaActual());
+        return "combos/agregar";
+    }
 
-    @PostMapping
-    public ResponseEntity<Combo> crearCombo(@RequestBody ComboDTO comboDTO) {
+    @PostMapping("/api/combos")
+    @ResponseBody
+    public ResponseEntity<?> crearCombo(@RequestBody Map<String, Object> payload) {
         try {
-            // Crear el combo
-            Combo combo = new Combo();
-            combo.setNombre(comboDTO.getNombre());
-            combo.setPrecio(comboDTO.getPrecio());
-            Combo comboGuardado = comboRepository.save(combo);
-
-            // Guardar los productos del combo
-            if (comboDTO.getProductoIds() != null) {
-                for (Long productoId : comboDTO.getProductoIds()) {
-                    Producto producto = productoRepository.findById(productoId)
-                            .orElseThrow(() -> new RuntimeException("Producto no encontrado: " + productoId));
-                    
-                    ComboProducto comboProducto = new ComboProducto();
-                    comboProducto.setCombo(comboGuardado);
-                    comboProducto.setProducto(producto);
-                    comboProductoRepository.save(comboProducto);
-                }
+            if (licoreriaContext.getLicoreriaActual() == null) {
+                return ResponseEntity.badRequest().body("Debe seleccionar una licorería primero");
             }
 
-            return ResponseEntity.ok(comboGuardado);
+            String nombre = (String) payload.get("nombre");
+            Double precio = ((Number) payload.get("precio")).doubleValue();
+            @SuppressWarnings("unchecked")
+            List<Map<String, Object>> productos = (List<Map<String, Object>>) payload.get("productos");
+
+            Combo combo = new Combo();
+            combo.setNombre(nombre);
+            combo.setPrecio(BigDecimal.valueOf(precio));
+            combo.setLicoreria(licoreriaContext.getLicoreriaActual());
+            combo = comboRepository.save(combo);
+
+            for (Map<String, Object> productoData : productos) {
+                Long productoId = ((Number) productoData.get("id")).longValue();
+                int cantidad = ((Number) productoData.get("cantidad")).intValue();
+                
+                Producto producto = productoRepository.findById(productoId)
+                    .orElseThrow(() -> new RuntimeException("Producto no encontrado"));
+
+                ComboProducto comboProducto = new ComboProducto();
+                comboProducto.setCombo(combo);
+                comboProducto.setProducto(producto);
+                comboProducto.setCantidad(cantidad);
+                comboProductoRepository.save(comboProducto);
+            }
+
+            return ResponseEntity.ok(combo);
         } catch (Exception e) {
-            return ResponseEntity.badRequest().build();
+            e.printStackTrace(); // Imprime el stacktrace en la consola
+            return ResponseEntity.badRequest().body("Error al crear el combo: " + e.getMessage());
         }
     }
 
-    @GetMapping
-    public ResponseEntity<List<Combo>> listarCombos() {
-        try {
-            List<Combo> combos = comboRepository.findAll();
-            return ResponseEntity.ok(combos);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().build();
+    @GetMapping("/api/combos")
+    @ResponseBody
+    public List<Map<String, Object>> listarCombos() {
+        if (licoreriaContext.getLicoreriaActual() == null) {
+            return new ArrayList<>();
         }
+
+        return comboRepository.findAll()
+            .stream()
+            .filter(combo -> combo.getLicoreria().getId().equals(licoreriaContext.getLicoreriaId()))
+            .map(combo -> {
+                Map<String, Object> comboData = new HashMap<>();
+                comboData.put("id", combo.getId());
+                comboData.put("nombre", combo.getNombre());
+                comboData.put("precio", combo.getPrecio());
+                comboData.put("fechaCreacion", combo.getFechaCreacion());
+                return comboData;
+            })
+            .toList();
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<Combo> obtenerCombo(@PathVariable Long id) {
-        try {
-            return comboRepository.findById(id)
-                    .map(ResponseEntity::ok)
-                    .orElse(ResponseEntity.notFound().build());
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().build();
-        }
+    @GetMapping("/api/combos/{id}/productos")
+    @ResponseBody
+    public List<Map<String, Object>> obtenerProductosCombo(@PathVariable Long id) {
+        return comboProductoRepository.findByComboId(id)
+            .stream()
+            .map(cp -> {
+                Map<String, Object> productoData = new HashMap<>();
+                productoData.put("id", cp.getProducto().getId());
+                productoData.put("nombre", cp.getProducto().getNombre());
+                productoData.put("precioVenta", cp.getProducto().getPrecioVenta());
+                productoData.put("cantidad", cp.getCantidad());
+                return productoData;
+            })
+            .toList();
     }
-
-    @GetMapping("/{id}/productos")
-    public ResponseEntity<List<Producto>> obtenerProductosDelCombo(@PathVariable Long id) {
-        try {
-            List<ComboProducto> comboProductos = comboProductoRepository.findByComboId(id);
-            List<Producto> productos = comboProductos.stream()
-                    .map(ComboProducto::getProducto)
-                    .collect(Collectors.toList());
-            return ResponseEntity.ok(productos);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().build();
-        }
-    }
-} 
+}

@@ -4,10 +4,84 @@
     <meta charset="UTF-8">
     <title>Agregar Combo</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css">
     <style>
-        .select2-container {
-            width: 100% !important;
+        .producto-item {
+            padding: 10px;
+            border: 1px solid #ddd;
+            margin-bottom: 5px;
+            border-radius: 4px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: white;
+            transition: background-color 0.2s;
+        }
+        .producto-item:hover {
+            background-color: #f8f9fa;
+            cursor: pointer;
+        }
+        .carrito-item {
+            padding: 10px;
+            border: 1px solid #ddd;
+            margin-bottom: 5px;
+            border-radius: 4px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: white;
+        }
+        .cantidad-control {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .cantidad-control input {
+            width: 60px;
+            text-align: center;
+        }
+        #resultadosBusqueda {
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-top: 5px;
+            background-color: white;
+            position: absolute;
+            width: 100%;
+            z-index: 1000;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        #carrito {
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 10px;
+            margin-top: 20px;
+            background-color: white;
+        }
+        .search-container {
+            position: relative;
+        }
+        .producto-info {
+            flex-grow: 1;
+            margin-right: 10px;
+        }
+        .producto-precio {
+            color: #28a745;
+            font-weight: bold;
+        }
+        .producto-stock {
+            color: #6c757d;
+            font-size: 0.9em;
+        }
+        .btn-cantidad {
+            width: 30px;
+            height: 30px;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
     </style>
 </head>
@@ -25,14 +99,15 @@
                 <input type="number" class="form-control" id="precio" name="precio" step="0.01" required>
             </div>
             
+            <div class="form-group search-container">
+                <label for="buscarProducto">Buscar Productos</label>
+                <input type="text" class="form-control" id="buscarProducto" placeholder="Escribe para buscar productos...">
+                <div id="resultadosBusqueda"></div>
+            </div>
+
             <div class="form-group">
-                <label for="productos">Productos</label>
-                <select class="form-control" id="productos" name="productoIds" multiple="multiple" required>
-                    <option value="1">Ron</option>
-                    <option value="2">Agua</option>
-                    <option value="3">Bebida</option>
-                    <option value="4">Gabrielin</option>
-                </select>
+                <label>Productos en el Combo</label>
+                <div id="carrito"></div>
             </div>
             
             <button type="submit" class="btn btn-primary">Guardar Combo</button>
@@ -40,45 +115,186 @@
         </form>
     </div>
 
-    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script>
-        $(document).ready(function() {
-            // Inicializar Select2
-            $('#productos').select2({
-                placeholder: 'Seleccione los productos',
-                allowClear: true
+        document.addEventListener('DOMContentLoaded', function() {
+            const buscarInput = document.getElementById('buscarProducto');
+            const resultadosDiv = document.getElementById('resultadosBusqueda');
+            const carritoDiv = document.getElementById('carrito');
+            const comboForm = document.getElementById('comboForm');
+            let carrito = [];
+            let timeoutId;
+
+            // Función para buscar productos
+            async function buscarProductos(termino) {
+                try {
+                    const response = await fetch(`/producto/buscar?termino=${encodeURIComponent(termino)}`, {
+                        headers: {
+                            'Authorization': 'Basic ' + btoa('admin:123')
+                        }
+                    });
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    const productos = await response.json();
+                    mostrarResultados(productos);
+                } catch (error) {
+                    console.error('Error al buscar productos:', error);
+                    resultadosDiv.innerHTML = '<div class="p-2 text-danger">Error al buscar productos</div>';
+                }
+            }
+
+            // Función para mostrar resultados
+            function mostrarResultados(productos) {
+                resultadosDiv.innerHTML = '';
+                if (productos.length === 0) {
+                    resultadosDiv.innerHTML = '<div class="p-2">No se encontraron productos</div>';
+                    return;
+                }
+
+                productos.forEach(producto => {
+                    const item = document.createElement('div');
+                    item.className = 'producto-item';
+                    item.innerHTML = `
+                        <div class="producto-info">
+                            <div>${producto.nombre}</div>
+                            <div class="producto-precio">$${producto.precioVenta}</div>
+                            <div class="producto-stock">Stock: ${producto.cantidad}</div>
+                        </div>
+                    `;
+                    item.addEventListener('click', () => agregarAlCarrito(producto));
+                    resultadosDiv.appendChild(item);
+                });
+            }
+
+            // Función para agregar al carrito
+            function agregarAlCarrito(producto) {
+                const existente = carrito.findIndex(p => p.id === producto.id);
+                if (existente === -1) {
+                    carrito.push({
+                        id: producto.id,
+                        nombre: producto.nombre,
+                        precio: producto.precioVenta,
+                        cantidad: 1
+                    });
+                } else {
+                    carrito[existente].cantidad++;
+                }
+                actualizarCarrito();
+                buscarInput.value = '';
+                resultadosDiv.innerHTML = '';
+            }
+
+            // Función para actualizar el carrito
+            function actualizarCarrito() {
+                carritoDiv.innerHTML = '';
+                carrito.forEach((item, index) => {
+                    const carritoItem = document.createElement('div');
+                    carritoItem.className = 'carrito-item';
+                    carritoItem.innerHTML = `
+                        <div class="producto-info">
+                            <div>${item.nombre}</div>
+                            <div class="producto-precio">$${item.precio}</div>
+                        </div>
+                        <div class="cantidad-control">
+                            <button class="btn btn-sm btn-secondary btn-cantidad" onclick="decrementarCantidad(${index})">-</button>
+                            <input type="number" class="form-control form-control-sm" value="${item.cantidad}" 
+                                   onchange="actualizarCantidad(${index}, this.value)">
+                            <button class="btn btn-sm btn-secondary btn-cantidad" onclick="incrementarCantidad(${index})">+</button>
+                            <button class="btn btn-sm btn-danger ml-2" onclick="eliminarProducto(${index})">Eliminar</button>
+                        </div>
+                    `;
+                    carritoDiv.appendChild(carritoItem);
+                });
+            }
+
+            // Funciones para manejar el carrito
+            window.decrementarCantidad = function(index) {
+                if (carrito[index].cantidad > 1) {
+                    carrito[index].cantidad--;
+                    actualizarCarrito();
+                }
+            };
+
+            window.incrementarCantidad = function(index) {
+                carrito[index].cantidad++;
+                actualizarCarrito();
+            };
+
+            window.actualizarCantidad = function(index, valor) {
+                const nuevaCantidad = parseInt(valor);
+                if (nuevaCantidad > 0) {
+                    carrito[index].cantidad = nuevaCantidad;
+                    actualizarCarrito();
+                }
+            };
+
+            window.eliminarProducto = function(index) {
+                carrito.splice(index, 1);
+                actualizarCarrito();
+            };
+
+            // Event listeners
+            buscarInput.addEventListener('input', function() {
+                clearTimeout(timeoutId);
+                const termino = this.value.trim();
+                
+                if (termino.length < 1) {
+                    resultadosDiv.innerHTML = '';
+                    return;
+                }
+
+                timeoutId = setTimeout(() => buscarProductos(termino), 300);
+            });
+
+            // Cerrar resultados al hacer clic fuera
+            document.addEventListener('click', function(e) {
+                if (!e.target.closest('.search-container')) {
+                    resultadosDiv.innerHTML = '';
+                }
             });
 
             // Manejar el envío del formulario
-            $('#comboForm').on('submit', function(e) {
+            comboForm.addEventListener('submit', async function(e) {
                 e.preventDefault();
                 
-                const combo = {
-                    nombre: $('#nombre').val(),
-                    precio: parseFloat($('#precio').val()),
-                    productoIds: $('#productos').val()
-                };
+                if (carrito.length === 0) {
+                    alert('Debe agregar al menos un producto al combo');
+                    return;
+                }
 
-                $.ajax({
-                    url: '/api/combos',
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': 'Basic ' + btoa('admin:123')
-                    },
-                    data: JSON.stringify(combo),
-                    success: function(response) {
+                const combo = {
+                    nombre: document.getElementById('nombre').value,
+                    precio: parseFloat(document.getElementById('precio').value),
+                    productos: carrito.map(item => ({
+                        id: item.id,
+                        cantidad: item.cantidad
+                    }))
+                };
+                console.log('Combo a enviar:', combo);
+
+                try {
+                    const response = await fetch('/combos/api/combos', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': 'Basic ' + btoa('admin:123')
+                        },
+                        body: JSON.stringify(combo)
+                    });
+
+                    if (response.ok) {
                         alert('Combo creado exitosamente');
                         window.location.href = '/';
-                    },
-                    error: function(error) {
-                        console.error('Error al crear combo:', error);
-                        alert('Error al crear el combo');
+                    } else {
+                        const error = await response.text();
+                        throw new Error(error);
                     }
-                });
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert('Error al crear el combo: ' + error.message);
+                }
             });
         });
     </script>
 </body>
-</html> 
+</html>

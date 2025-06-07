@@ -19,16 +19,24 @@ public class Combo {
     @Column(nullable = false)
     private BigDecimal precio;
 
+    @ManyToOne
+    @JoinColumn(name = "licoreria_id")
+    private Licoreria licoreria;
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    @Column(name = "fecha_creacion")
+    private LocalDateTime fechaCreacion;
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
         updatedAt = LocalDateTime.now();
+        fechaCreacion = LocalDateTime.now();
     }
 
     @PreUpdate

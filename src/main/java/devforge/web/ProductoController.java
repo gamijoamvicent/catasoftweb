@@ -193,27 +193,21 @@ public class ProductoController {
 
     @GetMapping("/buscar")
     @ResponseBody
-    public List<Map<String, Object>> buscarProductos(@RequestParam String q) {
+    public List<Map<String, Object>> buscarProductos(@RequestParam String termino) {
         if (licoreriaContext.getLicoreriaActual() == null) {
             return new ArrayList<>();
         }
 
-        String busqueda = q.toLowerCase();
         return productoRepositorio.findByLicoreriaId(licoreriaContext.getLicoreriaId())
             .stream()
-            .filter(p -> p.isActivo()) // Solo productos activos
-            .filter(p -> 
-                p.getNombre().toLowerCase().contains(busqueda) ||
-                (p.getMarca() != null && p.getMarca().toLowerCase().contains(busqueda))
-            )
+            .filter(p -> p.isActivo())
+            .filter(p -> p.getNombre().toLowerCase().contains(termino.toLowerCase()))
             .map(p -> {
                 Map<String, Object> productoData = new HashMap<>();
                 productoData.put("id", p.getId());
                 productoData.put("nombre", p.getNombre());
                 productoData.put("precioVenta", p.getPrecioVenta());
                 productoData.put("cantidad", p.getCantidad());
-                productoData.put("marca", p.getMarca());
-                productoData.put("tipoTasa", p.getTipoTasa());
                 return productoData;
             })
             .toList();
