@@ -99,6 +99,7 @@ public class ComboController {
         return comboRepository.findAll()
             .stream()
             .filter(combo -> combo.getLicoreria().getId().equals(licoreriaContext.getLicoreriaId()))
+            .filter(Combo::getActivo)
             .map(combo -> {
                 Map<String, Object> comboData = new HashMap<>();
                 comboData.put("id", combo.getId());
