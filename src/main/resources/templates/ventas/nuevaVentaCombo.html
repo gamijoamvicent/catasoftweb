@@ -8,8 +8,9 @@
     <meta th:name="_csrf" th:content="${_csrf.token}" />
     <meta th:name="_csrf_header" th:content="${_csrf.headerName}" />
     <link rel="stylesheet" th:href="@{/css/dashboard.css}">
-    <link rel="stylesheet" th:href="@{/css/ventasCombos.css}">
+    <link rel="stylesheet" th:href="@{/css/ventasCombos1.css}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
     <div class="dashboard-container">
@@ -70,12 +71,13 @@
                                 </li>
                             </ul>
                         </div>
-                        <button class="btn btn-primary agregar-combo" 
+                        <button class="agregar-combo" 
                                 th:data-id="${combo.id}"
                                 th:data-nombre="${combo.nombre}"
                                 th:data-precio="${combo.precio}"
                                 th:data-tipo-tasa="${combo.tipoTasa}">
-                            <span class="icon">🛒</span> Agregar al Carrito
+                            <i class="fas fa-cart-plus"></i>
+                            Agregar al carrito
                         </button>
                     </div>
                 </div>
