@@ -1,3 +1,28 @@
+// Importar módulos (si usas ES6 modules, descomenta y usa import)
+// import './carrito.js';
+// import './busquedaProductos.js';
+// import './clientes.js';
+// import './ventasForm.js';
+// import './reportes.js';
+// import './utilidades.js';
+// import './estilos.js';
+
+// Si no usas módulos, asegúrate de incluir los archivos en el HTML en este orden:
+// utilidades.js, estilos.js, carrito.js, busquedaProductos.js, clientes.js, ventasForm.js, reportes.js
+
+// Inicialización principal
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Inicializar módulos principales
+    cargarTasas();
+    cargarProductos();
+    setupFormValidation();
+    setupPaymentCalculations();
+    setupCharts();
+    initializeReportes();
+    // ...agrega aquí cualquier inicialización global necesaria...
+});
+
 // Variables globales
 let productosDisponibles = []; // Array para almacenar todos los productos
 let productosSeleccionados = []; // Array para el carrito
@@ -12,20 +37,6 @@ let isNavigatingTable = false;
 // Inicialización de tokens CSRF
 let csrfToken = document.querySelector('meta[name="_csrf"]')?.content;
 let csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.content;
-
-document.addEventListener('DOMContentLoaded', function() {
-    // Inicializar tokens CSRF
-    csrfToken = document.querySelector('meta[name="_csrf"]')?.content;
-    csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.content;
-    
-    if (!csrfToken || !csrfHeader) {
-        console.error('No se encontraron los tokens CSRF');
-    }
-    
-    cargarTasas(); // Cargar tasas primero
-    initializeVentasModule();
-    cargarProductos();
-});
 
 function initializeVentasModule() {
     // Configurar búsqueda
@@ -138,44 +149,35 @@ function buscarProducto() {
 function mostrarSugerencias(productos) {
     const lista = document.getElementById('sugerenciasList');
     lista.innerHTML = '';
-    
     if (!productos || productos.length === 0) {
         lista.innerHTML = '<li class="no-results">No se encontraron productos</li>';
         return;
     }
-
     productos.forEach((prod, index) => {
         const li = document.createElement('li');
         li.setAttribute('data-id', prod.id);
         li.setAttribute('data-index', index);
-        
-        // Colores de stock más serios
-        let stockClass = '';
-        if (prod.cantidad === 0) {
-            stockClass = 'stock-gray'; // gris para agotado
-        } else if (prod.cantidad <= 10) {
-            stockClass = 'stock-amber'; // ámbar para bajo stock
+        li.setAttribute('data-tipo', prod.tipo || 'producto');
+        let label = '';
+        if (prod.tipo === 'combo') {
+            li.className = 'producto-item stock-blue';
+            label = `<strong>Combo: ${prod.nombre}</strong><br><small>Precio: $${prod.precioVenta}</small>`;
         } else {
-            stockClass = 'stock-blue'; // azul para suficiente stock
+            // Producto normal
+            let stockClass = '';
+            if (prod.cantidad === 0) {
+                stockClass = 'stock-gray';
+            } else if (prod.cantidad <= 10) {
+                stockClass = 'stock-amber';
+            } else {
+                stockClass = 'stock-blue';
+            }
+            li.className = `producto-item ${stockClass}`;
+            label = `<strong>${prod.nombre}</strong><br><small>Precio: $${prod.precioVenta.toFixed(2)} | Stock: ${prod.cantidad}</small>`;
         }
-        
-        li.className = `producto-item ${stockClass}`;
-        li.innerHTML = `
-            <strong>${prod.nombre}</strong><br>
-            <small>Precio: $${prod.precioVenta.toFixed(2)} | Stock: ${prod.cantidad}</small>
-        `;
-        
-        if (prod.cantidad === 0) {
-            li.style.cursor = 'not-allowed';
-            li.style.opacity = '0.7';
-        } else {
-            li.style.cursor = 'pointer';
-            // Remover el evento onclick anterior si existe
-            li.removeEventListener('click', handleProductClick);
-            // Agregar el nuevo evento click
-            li.addEventListener('click', handleProductClick);
-        }
-        
+        li.innerHTML = label;
+        li.style.cursor = 'pointer';
+        li.addEventListener('click', handleProductClick);
         lista.appendChild(li);
     });
 
@@ -229,15 +231,36 @@ function mostrarSugerencias(productos) {
 function handleProductClick(event) {
     event.preventDefault();
     event.stopPropagation();
-    
     const li = event.currentTarget;
     const productoId = li.getAttribute('data-id');
-    const producto = productosDisponibles.find(p => p.id === parseInt(productoId));
-    
-    if (producto && producto.cantidad > 0) {
-        agregarAlCarrito(producto);
-        document.getElementById('buscarField').value = '';
-        document.getElementById('buscarField').focus();
+    const tipo = li.getAttribute('data-tipo');
+    if (tipo === 'combo') {
+        // Buscar detalle del combo por API y agregarlo al carrito como un solo item
+        fetch(`/combos/api/combos/${productoId}/detalle`)
+            .then(res => res.json())
+            .then(combo => {
+                if (!combo || !combo.id) return;
+                agregarAlCarrito({
+                    id: combo.id,
+                    nombre: `Combo: ${combo.nombre}`,
+                    precioVenta: parseFloat(combo.precio),
+                    cantidad: 1,
+                    tipo: 'combo',
+                    productos: combo.productos
+                });
+                document.getElementById('buscarField').value = '';
+                document.getElementById('buscarField').focus();
+            })
+            .catch(err => {
+                showNotification('Error al agregar combo: ' + err.message, 'error');
+            });
+    } else {
+        const producto = productosDisponibles.find(p => p.id === parseInt(productoId));
+        if (producto && producto.cantidad > 0) {
+            agregarAlCarrito(producto);
+            document.getElementById('buscarField').value = '';
+            document.getElementById('buscarField').focus();
+        }
     }
 }
 
@@ -951,6 +974,10 @@ function showNotification(message, type = 'info') {
 
 // Funcionalidades para reportes
 function initializeReportes() {
+    const fechaInput = document.getElementById('fechaReporte');
+    if (fechaInput) {
+        fechaInput.valueAsDate = new Date();
+    }
     setupDateRangePicker();
     setupCharts();
     setupExport();
@@ -1287,7 +1314,7 @@ function updateGraficos(data) {
     }
 }
 
-function updateMetodosPagoChart(data) {
+/*function updateMetodosPagoChart(data) {
     const ctx = document.getElementById('metodosPagoChart');
     if (!ctx) {
         console.error('No se encontró el elemento canvas para el gráfico de métodos de pago');
@@ -1324,7 +1351,7 @@ function updateMetodosPagoChart(data) {
     ];
 
     window.metodosPagoChart = new Chart(ctx, {
-        type: 'doughnut', // Cambiado de 'pie' a 'doughnut' para un aspecto más moderno
+        type: 'doughnut',
         data: {
             labels: labels,
             datasets: [{
@@ -1339,7 +1366,7 @@ function updateMetodosPagoChart(data) {
         },
         options: {
             responsive: true,
-            cutout: '60%', // Tamaño del agujero en el centro
+            cutout: '60%',
             plugins: {
                 legend: {
                     position: 'right',
@@ -1382,11 +1409,10 @@ function updateMetodosPagoChart(data) {
                 animateRotate: true,
                 animateScale: true
             }
-        }
-    });
-}
+        });
+}*/
 
-function updateCreditosChart(data) {
+/*function updateCreditosChart(data) {
     const ctx = document.getElementById('creditosChart');
     if (!ctx) {
         console.error('No se encontró el elemento canvas para el gráfico de créditos');
@@ -1462,10 +1488,10 @@ function updateCreditosChart(data) {
                     }
                 }
             }
-        }
-    });
-}
+        });
+}*/
 
+// Función para actualizar la tabla de ventas en el reporte
 function updateTablaVentas(ventas) {
     const tbody = document.getElementById('ventas-list');
     if (!tbody) return;
@@ -1846,107 +1872,41 @@ function buscarProductos(query) {
 }
 
 function mostrarResultadosBusqueda(resultados) {
-    const sugerenciasList = document.getElementById('sugerenciasList');
-    sugerenciasList.innerHTML = '';
+    const sugerencias = document.getElementById('sugerencias');
+    if (!sugerencias) return;
     
-    resultados.forEach((producto, index) => {
-        const li = document.createElement('li');
-        li.textContent = `${producto.nombre} - $${producto.precioVenta}`;
-        li.dataset.index = index;
-        li.onclick = () => seleccionarProducto(producto);
-        sugerenciasList.appendChild(li);
+    sugerencias.innerHTML = '';
+    
+    // Verificar que resultados sea un array
+    if (!Array.isArray(resultados)) {
+        console.error('Resultados no es un array:', resultados);
+        return;
+    }
+    
+    resultados.forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'sugerencia-item';
+        
+        // Diferencia visual entre productos y combos
+        const tipo = item.tipo === 'combo' ? '🎁 Combo: ' : '📦 ';
+        const precio = typeof item.precioVenta === 'number' ? 
+            item.precioVenta.toFixed(2) : 
+            parseFloat(item.precioVenta).toFixed(2);
+        
+        // Mostrar stock solo para productos
+        const stock = item.tipo === 'producto' ? ` (Stock: ${item.cantidad})` : '';
+        
+        div.innerHTML = `${tipo}${item.nombre} - $${precio}${stock}`;
+        div.onclick = () => seleccionarProducto(item);
+        div.dataset.tipo = item.tipo;
+        div.dataset.id = item.id;
+        
+        sugerencias.appendChild(div);
     });
+    
+    // Mostrar u ocultar el contenedor de sugerencias
+    sugerencias.style.display = resultados.length > 0 ? 'block' : 'none';
+    
+    // Reset del índice de selección
+    selectedProductIndex = -1;
 }
-
-function seleccionarProducto(producto) {
-    console.log('Seleccionando producto:', producto);
-    
-    // Verificar si el producto ya está en el carrito
-    const index = productosSeleccionados.findIndex(p => p.id === producto.id);
-    
-    if (index >= 0) {
-        // Si ya existe, incrementar la cantidad solo si hay stock disponible
-        const productoActual = productosDisponibles.find(p => p.id === producto.id);
-        if (productoActual && productosSeleccionados[index].cantidad < productoActual.cantidad) {
-            productosSeleccionados[index].cantidad++;
-        } else {
-            showNotification('No hay más unidades disponibles', 'warning');
-            return;
-        }
-    } else {
-        // Si no existe, agregarlo con cantidad 1
-        productosSeleccionados.push({
-            ...producto,
-            cantidad: 1
-        });
-    }
-    
-    actualizarTablaVentas();
-    ocultarSugerencias();
-    document.getElementById('buscarField').value = '';
-    showNotification('Producto agregado al carrito', 'success');
-}
-
-// Actualizar el indicador de navegación
-document.addEventListener('DOMContentLoaded', function() {
-    const buscarField = document.getElementById('buscarField');
-    if (buscarField) {
-        buscarField.addEventListener('input', debounce((e) => buscarProductos(e.target.value), 300));
-        buscarField.addEventListener('keydown', manejarNavegacionTeclado);
-    }
-    
-    // Agregar el indicador de navegación (invisible)
-    const indicator = document.createElement('div');
-    indicator.className = 'navigation-indicator';
-    indicator.style.display = 'none'; // Hacer invisible
-    indicator.style.pointerEvents = 'none'; // Deshabilitar interacción
-    indicator.innerHTML = `
-        <div class="shortcut"><kbd>F1</kbd> Facturar</div>
-        <div class="shortcut"><kbd>F2</kbd> Buscar</div>
-        <div class="shortcut"><kbd>F3</kbd> Tabla</div>
-        <div class="shortcut"><kbd>↑</kbd><kbd>↓</kbd> Navegar</div>
-        <div class="shortcut"><kbd>Enter</kbd> Seleccionar</div>
-        <div class="shortcut"><kbd>Esc</kbd> Salir</div>
-    `;
-    document.body.appendChild(indicator);
-});
-
-// Agregar estilos para el indicador de navegación
-const navigationStyles = document.createElement('style');
-navigationStyles.textContent = `
-    .navigation-indicator {
-        position: fixed;
-        bottom: 20px;
-        left: 20px;
-        background: rgba(0, 0, 0, 0.8);
-        color: white;
-        padding: 10px 15px;
-        border-radius: 8px;
-        font-size: 14px;
-        display: flex;
-        gap: 15px;
-        z-index: 1000;
-        opacity: 0.9;
-        transition: opacity 0.3s;
-    }
-
-    .navigation-indicator:hover {
-        opacity: 1;
-    }
-
-    .shortcut {
-        display: flex;
-        align-items: center;
-        gap: 5px;
-    }
-
-    .shortcut kbd {
-        background: #444;
-        padding: 2px 6px;
-        border-radius: 4px;
-        font-family: monospace;
-        font-size: 12px;
-        border: 1px solid #666;
-    }
-`;
-document.head.appendChild(navigationStyles);
