@@ -1,7 +1,32 @@
 $(document).ready(function() {
     let carrito = [];
+    let tasaDolar = 0;
+    let fechaTasa = null;
     const token = $("meta[name='_csrf']").attr("content");
     const header = $("meta[name='_csrf_header']").attr("content");
+
+    // Obtener la tasa del dólar
+    function obtenerTasaDolar() {
+        $.ajax({
+            url: '/api/tasa-dolar',
+            method: 'GET',
+            success: function(response) {
+                tasaDolar = response.tasa;
+                fechaTasa = new Date(response.fecha);
+                actualizarCarrito(); // Actualizar los totales con la nueva tasa
+                mostrarNotificacion('Tasa del dólar actualizada', 'info');
+            },
+            error: function(xhr) {
+                const mensaje = xhr.responseText || 'Error al obtener la tasa del dólar';
+                mostrarNotificacion(mensaje, 'error');
+                // Intentar nuevamente en 5 segundos
+                setTimeout(obtenerTasaDolar, 5000);
+            }
+        });
+    }
+
+    // Obtener la tasa inicial
+    obtenerTasaDolar();
 
     // Configurar CSRF para todas las peticiones AJAX
     $.ajaxSetup({
@@ -104,7 +129,13 @@ $(document).ready(function() {
             $cartItems.append($item);
         });
 
-        $('.total-amount').text(`$${total.toFixed(2)}`);
+        // Actualizar totales en ambas monedas
+        const totalBs = total * tasaDolar;
+        $('.total-amount').html(`
+            <div class="total-usd">$${total.toFixed(2)}</div>
+            <div class="total-bs">Bs. ${totalBs.toFixed(2)}</div>
+            ${fechaTasa ? `<div class="tasa-info">Tasa: ${tasaDolar.toFixed(2)} Bs. (${fechaTasa.toLocaleDateString()})</div>` : ''}
+        `);
         $('#btnConfirmarVenta').prop('disabled', carrito.length === 0);
     }
 
