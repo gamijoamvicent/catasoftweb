@@ -110,7 +110,9 @@ public class ComboController {
     @GetMapping("/api/combos/{id}/productos")
     @ResponseBody
     public List<Map<String, Object>> obtenerProductosCombo(@PathVariable Long id) {
-        return comboProductoRepository.findByComboId(id)
+        List<ComboProducto> productosCombo = comboProductoRepository.findByComboId(id);
+        System.out.println("[DEBUG] Productos encontrados para combo " + id + ": " + productosCombo.size());
+        return productosCombo
             .stream()
             .map(cp -> {
                 Map<String, Object> productoData = new HashMap<>();
@@ -121,5 +123,30 @@ public class ComboController {
                 return productoData;
             })
             .toList();
+    }
+
+    @GetMapping("/api/combos/{id}/detalle")
+    @ResponseBody
+    public ResponseEntity<?> obtenerDetalleCombo(@PathVariable Long id) {
+        Combo combo = comboRepository.findById(id).orElse(null);
+        if (combo == null) {
+            return ResponseEntity.notFound().build();
+        }
+        List<ComboProducto> productosCombo = comboProductoRepository.findByComboId(id);
+        devforge.model.dto.ComboDetalleDTO dto = new devforge.model.dto.ComboDetalleDTO();
+        dto.setId(combo.getId());
+        dto.setNombre(combo.getNombre());
+        dto.setPrecio(combo.getPrecio());
+        List<devforge.model.dto.ComboDetalleDTO.ItemDTO> items = new java.util.ArrayList<>();
+        for (ComboProducto cp : productosCombo) {
+            devforge.model.dto.ComboDetalleDTO.ItemDTO item = new devforge.model.dto.ComboDetalleDTO.ItemDTO();
+            item.setId(cp.getProducto().getId());
+            item.setNombre(cp.getProducto().getNombre());
+            item.setPrecio(java.math.BigDecimal.valueOf(cp.getProducto().getPrecioVenta()));
+            item.setCantidad(cp.getCantidad());
+            items.add(item);
+        }
+        dto.setProductos(items);
+        return ResponseEntity.ok(dto);
     }
 }
