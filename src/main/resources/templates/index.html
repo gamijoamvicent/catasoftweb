@@ -76,6 +76,33 @@
                     </div>
                 </div>
 
+                <!-- Sección de Ventas de Combos -->
+                <div class="section-title">
+                    <h2>Ventas de Combos</h2>
+                </div>
+
+                <div class="card combos" sec:authorize="hasAnyRole('CAJERO', 'ADMIN_LOCAL', 'SUPER_ADMIN')">
+                    <div class="card-header">
+                        <img src="/icons/combo.png" alt="Venta Combos" class="card-icon">
+                        <h3 class="card-title">Venta de Combos</h3>
+                    </div>
+                    <div class="card-content">
+                        <p>Registrar venta de combos predefinidos</p>
+                        <a th:href="@{/ventas/combos/nueva}" class="btn btn-primary">Vender Combo</a>
+                    </div>
+                </div>
+
+                <div class="card combos" sec:authorize="hasAnyRole('ADMIN_LOCAL', 'SUPER_ADMIN')">
+                    <div class="card-header">
+                        <img src="/icons/chart.png" alt="Reportes Combos" class="card-icon">
+                        <h3 class="card-title">Reportes de Combos</h3>
+                    </div>
+                    <div class="card-content">
+                        <p>Ver reportes y estadísticas de ventas de combos</p>
+                        <a th:href="@{/reportes/combos}" class="btn btn-primary">Ver Reportes</a>
+                    </div>
+                </div>
+
                 <!-- Sección de Inventario -->
                 <div class="section-title">
                     <h2>Inventario</h2>

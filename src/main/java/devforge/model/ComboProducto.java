@@ -1,9 +1,7 @@
 package devforge.model;
 
 import jakarta.persistence.*;
-import lombok.Data;
 
-@Data
 @Entity
 @Table(name = "combo_productos")
 public class ComboProducto {
@@ -19,5 +17,39 @@ public class ComboProducto {
     @JoinColumn(name = "producto_id", nullable = false)
     private Producto producto;
 
-    private int cantidad; // Cantidad de este producto en el combo
+    @Column(nullable = false)
+    private Integer cantidad;
+
+    // Getters y Setters
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public Combo getCombo() {
+        return combo;
+    }
+
+    public void setCombo(Combo combo) {
+        this.combo = combo;
+    }
+
+    public Producto getProducto() {
+        return producto;
+    }
+
+    public void setProducto(Producto producto) {
+        this.producto = producto;
+    }
+
+    public Integer getCantidad() {
+        return cantidad;
+    }
+
+    public void setCantidad(Integer cantidad) {
+        this.cantidad = cantidad;
+    }
 } 

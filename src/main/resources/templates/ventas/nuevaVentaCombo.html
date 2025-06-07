@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Venta de Combos - InventSoft</title>
+    <!-- Meta tags para protección CSRF -->
+    <meta th:name="_csrf" th:content="${_csrf.token}" />
+    <meta th:name="_csrf_header" th:content="${_csrf.headerName}" />
+    <link rel="stylesheet" th:href="@{/css/dashboard.css}">
+    <link rel="stylesheet" th:href="@{/css/ventas.css}">
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="user-info" th:if="${licoreriaActual != null}">
+                <div class="licoreria-info">
+                    <h3>🏢 Licorería Actual</h3>
+                    <p th:text="${licoreriaActual.nombre}"></p>
+                    <p><strong>Ubicación:</strong> <span th:text="${licoreriaActual.direccion}"></span></p>
+                    <p><strong>Teléfono:</strong> <span th:text="${licoreriaActual.telefono}"></span></p>
+                    <a th:href="@{/licorerias/seleccionar}" class="btn btn-primary">
+                        <span class="icon">🔄</span> Cambiar Licorería
+                    </a>
+                </div>
+            </div>
+
+            <!-- Botón de cerrar sesión -->
+            <div class="logout-container">
+                <form th:action="@{/logout}" method="post">
+                    <button type="submit" class="btn btn-danger">
+                        <span class="icon">🚪</span> Cerrar Sesión
+                    </button>
+                </form>
+            </div>
+        </aside>
+
+        <!-- Contenido Principal -->
+        <main class="main-content">
+            <div class="content-header">
+                <h1>Venta de Combos</h1>
+                <a th:href="@{/}" class="btn btn-secondary">
+                    <span class="icon">🏠</span> Volver al Inicio
+                </a>
+            </div>
+
+            <!-- Grid de Combos -->
+            <div class="combos-grid">
+                <div th:each="combo : ${combos}" class="combo-card">
+                    <div class="combo-header">
+                        <h3 th:text="${combo.nombre}">Nombre del Combo</h3>
+                        <span class="combo-price" th:text="'$' + ${#numbers.formatDecimal(combo.precio, 1, 2)}">$0.00</span>
+                    </div>
+                    <div class="combo-content">
+                        <div class="combo-products">
+                            <h4>Productos Incluidos:</h4>
+                            <ul>
+                                <li th:each="comboProducto : ${combo.productos}">
+                                    <span th:text="${comboProducto.producto.nombre}">Producto</span>
+                                    <span th:text="'x' + ${comboProducto.cantidad}">x1</span>
+                                </li>
+                            </ul>
+                        </div>
+                        <button class="btn btn-primary agregar-combo" 
+                                th:data-id="${combo.id}"
+                                th:data-nombre="${combo.nombre}"
+                                th:data-precio="${combo.precio}">
+                            <span class="icon">🛒</span> Agregar al Carrito
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Carrito de Compras -->
+            <div class="cart-container">
+                <h2>Carrito de Compras</h2>
+                <div class="cart-items">
+                    <!-- Los items se agregarán dinámicamente -->
+                </div>
+                <div class="cart-summary">
+                    <div class="total">
+                        <span>Total:</span>
+                        <span class="total-amount">$0.00</span>
+                    </div>
+                    <button class="btn btn-success" id="btnConfirmarVenta">
+                        <span class="icon">✅</span> Confirmar Venta
+                    </button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script th:src="@{/js/ventasCombos.js}"></script>
+</body>
+</html> 

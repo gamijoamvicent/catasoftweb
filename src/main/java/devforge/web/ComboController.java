@@ -55,13 +55,13 @@ public class ComboController {
             }
 
             String nombre = (String) payload.get("nombre");
-            Double precio = ((Number) payload.get("precio")).doubleValue();
+            BigDecimal precio = new BigDecimal(payload.get("precio").toString());
             @SuppressWarnings("unchecked")
             List<Map<String, Object>> productos = (List<Map<String, Object>>) payload.get("productos");
 
             Combo combo = new Combo();
             combo.setNombre(nombre);
-            combo.setPrecio(BigDecimal.valueOf(precio));
+            combo.setPrecio(precio);
             combo.setLicoreria(licoreriaContext.getLicoreriaActual());
             combo = comboRepository.save(combo);
 
@@ -81,7 +81,7 @@ public class ComboController {
 
             return ResponseEntity.ok(combo);
         } catch (Exception e) {
-            e.printStackTrace(); // Imprime el stacktrace en la consola
+            e.printStackTrace();
             return ResponseEntity.badRequest().body("Error al crear el combo: " + e.getMessage());
         }
     }
@@ -137,12 +137,12 @@ public class ComboController {
         dto.setId(combo.getId());
         dto.setNombre(combo.getNombre());
         dto.setPrecio(combo.getPrecio());
-        List<devforge.model.dto.ComboDetalleDTO.ItemDTO> items = new java.util.ArrayList<>();
+        List<devforge.model.dto.ComboDetalleDTO.ItemDTO> items = new ArrayList<>();
         for (ComboProducto cp : productosCombo) {
             devforge.model.dto.ComboDetalleDTO.ItemDTO item = new devforge.model.dto.ComboDetalleDTO.ItemDTO();
             item.setId(cp.getProducto().getId());
             item.setNombre(cp.getProducto().getNombre());
-            item.setPrecio(java.math.BigDecimal.valueOf(cp.getProducto().getPrecioVenta()));
+            item.setPrecio(BigDecimal.valueOf(cp.getProducto().getPrecioVenta()));
             item.setCantidad(cp.getCantidad());
             items.add(item);
         }
