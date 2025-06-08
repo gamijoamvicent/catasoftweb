@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/layout}">
+<head>
+    <title>Venta por Cajas</title>
+    <style>
+        .card {
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .card-header {
+            background-color: #f8f9fa;
+            border-bottom: 1px solid #e3e6f0;
+            padding: 1rem 1.5rem;
+            border-radius: 10px 10px 0 0;
+        }
+
+        .card-body {
+            padding: 1.5rem;
+        }
+
+        .btn-action {
+            border-radius: 5px;
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            transition: all 0.3s;
+        }
+
+        .btn-action:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+        }
+
+        .form-control {
+            border-radius: 5px;
+            padding: 0.6rem 0.75rem;
+            border: 1px solid #d1d3e2;
+        }
+
+        .table th {
+            background-color: #f8f9fa;
+            border-color: #e3e6f0;
+        }
+
+        .caja-item {
+            border: 1px solid #e3e6f0;
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 15px;
+            transition: all 0.3s;
+        }
+
+        .caja-item:hover {
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+        }
+
+        .summary-section {
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div layout:fragment="content">
+        <div class="container-fluid">
+            <h1 class="h3 mb-4 text-gray-800">Venta por Cajas</h1>
+
+            <div class="row">
+                <!-- Formulario de Venta -->
+                <div class="col-lg-8">
+                    <div class="card shadow mb-4">
+                        <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                            <h6 class="m-0 font-weight-bold text-primary">Detalles de la Venta</h6>
+                            <button class="btn btn-primary btn-sm" id="btnAgregarCaja">
+                                <i class="fas fa-plus"></i> Agregar Caja
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <div class="row mb-4">
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="tipoVenta">Tipo de Venta</label>
+                                        <select class="form-control" id="tipoVenta">
+                                            <option value="CONTADO">Contado</option>
+                                            <option value="CREDITO">Crédito</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group" id="clienteContainer" style="display: none;">
+                                        <label for="cliente">Cliente</label>
+                                        <select class="form-control" id="cliente">
+                                            <option value="">Seleccione un cliente</option>
+                                            <!-- Aquí se cargarán los clientes dinámicamente -->
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="metodoPago">Método de Pago</label>
+                                        <select class="form-control" id="metodoPago">
+                                            <option value="EFECTIVO_DOLAR">Efectivo (Dólares)</option>
+                                            <option value="EFECTIVO_BS">Efectivo (Bolívares)</option>
+                                            <option value="TRANSFERENCIA">Transferencia</option>
+                                            <option value="PUNTO">Punto de Venta</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Lista de Cajas Agregadas -->
+                            <div id="listaCajas" class="mb-4">
+                                <h6 class="font-weight-bold mb-3">Cajas Agregadas</h6>
+                                <div class="alert alert-info" id="noCajas">
+                                    No se han agregado cajas a la venta.
+                                </div>
+                                <!-- Las cajas se agregarán dinámicamente aquí -->
+                            </div>
+
+                            <!-- Resumen de la Venta -->
+                            <div class="summary-section">
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <h6 class="font-weight-bold">Totales</h6>
+                                        <div class="d-flex justify-content-between mb-2">
+                                            <span>Subtotal:</span>
+                                            <span id="subtotal">$0.00</span>
+                                        </div>
+                                        <div class="d-flex justify-content-between font-weight-bold">
+                                            <span>Total:</span>
+                                            <span id="total">$0.00</span>
+                                        </div>
+                                        <div class="d-flex justify-content-between font-weight-bold mt-2">
+                                            <span>Total en Bs:</span>
+                                            <span id="totalBs">Bs. 0,00</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Panel de Pago y Acciones -->
+                <div class="col-lg-4">
+                    <div class="card shadow mb-4">
+                        <div class="card-header py-3">
+                            <h6 class="m-0 font-weight-bold text-primary">Acciones</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="mt-4">
+                                <button id="btnProcesarVenta" class="btn btn-success btn-block mb-3">
+                                    <i class="fas fa-check-circle"></i> Procesar Venta
+                                </button>
+                                <button id="btnCancelarVenta" class="btn btn-secondary btn-block">
+                                    <i class="fas fa-times-circle"></i> Cancelar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal para Agregar Caja -->
+        <div class="modal fade" id="modalAgregarCaja" tabindex="-1" role="dialog" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Agregar Caja</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label for="buscarCaja">Buscar Caja</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="buscarCaja" placeholder="Escriba para buscar cajas...">
+                                <div class="input-group-append">
+                                    <button class="btn btn-primary" type="button" id="btnBuscarCaja">
+                                        <i class="fas fa-search"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="resultadosBusquedaCajas" class="mb-3" style="max-height: 200px; overflow-y: auto; display: none;">
+                            <!-- Aquí se mostrarán los resultados de la búsqueda -->
+                        </div>
+                        <div class="form-group">
+                            <label for="cajaSeleccionada">Caja Seleccionada</label>
+                            <input type="text" class="form-control" id="cajaSeleccionada" readonly>
+                            <input type="hidden" id="cajaId">
+                            <input type="hidden" id="cajaTasaCambio">
+                        </div>
+                        <div class="form-group">
+                            <label for="cantidadCajas">Cantidad</label>
+                            <input type="number" class="form-control" id="cantidadCajas" min="1" value="1">
+                        </div>
+                        <div class="form-group">
+                            <label for="precioCaja">Precio por Caja ($)</label>
+                            <input type="number" class="form-control" id="precioCaja" step="0.01" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label for="subtotalCaja">Subtotal ($)</label>
+                            <input type="text" class="form-control" id="subtotalCaja" readonly>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                        <button type="button" class="btn btn-primary" id="btnConfirmarCaja">Agregar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts específicos para esta página -->
+    <th:block layout:fragment="scripts">
+        <script>
+            $(document).ready(function() {
+                // Variables globales
+                let tasaCambioActual = 0;
+
+                // Cargar tasa de cambio al iniciar
+                cargarTasaCambio();
+
+                // Función para cargar la tasa de cambio actual
+                function cargarTasaCambio() {
+                    $.ajax({
+                        url: '/ventas/cajas/obtener-tasa',
+                        method: 'GET',
+                        success: function(tasa) {
+                            tasaCambioActual = tasa;
+                            console.log('Tasa de cambio cargada:', tasaCambioActual);
+                        },
+                        error: function() {
+                            console.error('Error al cargar la tasa de cambio');
+                            // Usar valor por defecto si falla
+                            tasaCambioActual = 35.5;
+                        }
+                    });
+                }
+
+                // Mostrar/ocultar selector de cliente según tipo de venta
+                $('#tipoVenta').change(function() {
+                    if ($(this).val() === 'CREDITO') {
+                        $('#clienteContainer').show();
+                        $('#metodoPago').val('CREDITO').prop('disabled', true);
+                    } else {
+                        $('#clienteContainer').hide();
+                        $('#metodoPago').prop('disabled', false);
+                    }
+                });
+
+                // Manejador para abrir el modal de agregar caja
+                $('#btnAgregarCaja').click(function() {
+                    limpiarModalCaja();
+                    $('#modalAgregarCaja').modal('show');
+                });
+
+                // Función para limpiar el modal de caja
+                function limpiarModalCaja() {
+                    $('#buscarCaja').val('');
+                    $('#resultadosBusquedaCajas').empty().hide();
+                    $('#cajaSeleccionada').val('');
+                    $('#cajaId').val('');
+                    $('#cajaTasaCambio').val('');
+                    $('#cantidadCajas').val('1');
+                    $('#precioCaja').val('');
+                    $('#subtotalCaja').val('');
+                }
+
+                // Búsqueda de cajas
+                $('#buscarCaja').on('input', function() {
+                    const termino = $(this).val().trim();
+                    if (termino.length < 2) {
+                        $('#resultadosBusquedaCajas').empty().hide();
+                        return;
+                    }
+
+                    buscarCajas(termino);
+                });
+
+                // Botón de búsqueda
+                $('#btnBuscarCaja').click(function() {
+                    const termino = $('#buscarCaja').val().trim();
+                    if (termino.length >= 2) {
+                        buscarCajas(termino);
+                    }
+                });
+
+                // Función para buscar cajas
+                function buscarCajas(termino) {
+                    $.ajax({
+                        url: '/ventas/cajas/buscar',
+                        method: 'GET',
+                        data: { termino: termino },
+                        success: function(cajas) {
+                            mostrarResultadosBusqueda(cajas);
+                        },
+                        error: function() {
+                            $('#resultadosBusquedaCajas').html(
+                                '<div class="alert alert-danger">Error al buscar cajas</div>'
+                            ).show();
+                        }
+                    });
+                }
+
+                // Mostrar resultados de búsqueda
+                function mostrarResultadosBusqueda(cajas) {
+                    const $resultados = $('#resultadosBusquedaCajas');
+                    $resultados.empty();
+
+                    if (cajas.length === 0) {
+                        $resultados.html(
+                            '<div class="alert alert-info">No se encontraron cajas con ese nombre</div>'
+                        ).show();
+                        return;
+                    }
+
+                    const $lista = $('<div class="list-group"></div>');
+                    cajas.forEach(function(caja) {
+                        const $item = $(`
+                            <a href="#" class="list-group-item list-group-item-action resultado-caja"
+                               data-id="${caja.id}"
+                               data-nombre="${caja.nombre}"
+                               data-precio="${caja.precio}"
+                               data-tasa="${caja.tasaCambio}">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h6 class="mb-1">${caja.nombre}</h6>
+                                    <span class="text-primary">$${caja.precio.toFixed(2)}</span>
+                                </div>
+                                <p class="mb-1">Contenido: ${caja.descripcion || 'Sin descripción'}</p>
+                                <small>Stock: ${caja.stock} unidades</small>
+                            </a>
+                        `);
+                        $lista.append($item);
+                    });
+
+                    $resultados.append($lista).show();
+                }
+
+                // Seleccionar una caja de los resultados
+                $(document).on('click', '.resultado-caja', function(e) {
+                    e.preventDefault();
+
+                    const id = $(this).data('id');
+                    const nombre = $(this).data('nombre');
+                    const precio = $(this).data('precio');
+                    const tasa = $(this).data('tasa');
+
+                    // Establecer los valores en el formulario
+                    $('#cajaSeleccionada').val(nombre);
+                    $('#cajaId').val(id);
+                    $('#precioCaja').val(precio);
+                    $('#cajaTasaCambio').val(tasa);
+
+                    // Calcular el subtotal
+                    calcularSubtotalCaja();
+
+                    // Ocultar resultados
+                    $('#resultadosBusquedaCajas').hide();
+                });
+
+                // Cálculo del subtotal al cambiar la cantidad
+                $('#cantidadCajas').on('change keyup', function() {
+                    calcularSubtotalCaja();
+                });
+
+                // Función para calcular el subtotal de la caja
+                function calcularSubtotalCaja() {
+                    const cantidad = parseInt($('#cantidadCajas').val()) || 0;
+                    const precio = parseFloat($('#precioCaja').val()) || 0;
+                    const subtotal = cantidad * precio;
+                    $('#subtotalCaja').val('$' + subtotal.toFixed(2));
+                }
+
+                // Actualizar totales cuando se agregan cajas
+                function actualizarTotales() {
+                    let subtotal = 0;
+                    $('.caja-item').each(function() {
+                        subtotal += parseFloat($(this).data('subtotal')) || 0;
+                    });
+
+                    $('#subtotal').text('$' + subtotal.toFixed(2));
+                    $('#total').text('$' + subtotal.toFixed(2));
+
+                    // Usar la tasa de cambio obtenida del servidor
+                    $('#totalBs').text('Bs. ' + (subtotal * tasaCambioActual).toFixed(2));
+                }
+
+                // Manejador para agregar caja
+                $('#btnConfirmarCaja').click(function() {
+                    const cajaNombre = $('#cajaSeleccionada').val();
+                    const cajaId = $('#cajaId').val();
+                    const cantidad = $('#cantidadCajas').val();
+                    const precio = $('#precioCaja').val();
+                    const cajaTasa = $('#cajaTasaCambio').val() || tasaCambioActual;
+                    const subtotal = parseFloat(precio) * parseInt(cantidad);
+
+                    if (!cajaId || !cantidad || !precio) {
+                        alert('Por favor seleccione una caja y especifique la cantidad');
+                        return;
+                    }
+
+                    // Agregar caja a la lista
+                    $('#noCajas').hide();
+                    const cajaItem = `
+                        <div class="caja-item" data-id="${cajaId}" data-subtotal="${subtotal}" data-tasa="${cajaTasa}">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="m-0">${cajaNombre}</h6>
+                                    <small>Cantidad: ${cantidad} × $${precio} = $${subtotal.toFixed(2)}</small>
+                                    <div><small class="text-muted">Bs. ${(subtotal * cajaTasa).toFixed(2)}</small></div>
+                                </div>
+                                <button class="btn btn-sm btn-danger btn-eliminar-caja">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                    $('#listaCajas').append(cajaItem);
+
+                    // Actualizar totales
+                    actualizarTotales();
+
+                    // Cerrar modal
+                    $('#modalAgregarCaja').modal('hide');
+                    limpiarModalCaja();
+                });
+
+                // Eliminar caja de la lista (delegación de eventos)
+                $(document).on('click', '.btn-eliminar-caja', function() {
+                    $(this).closest('.caja-item').remove();
+                    if ($('.caja-item').length === 0) {
+                        $('#noCajas').show();
+                    }
+                    actualizarTotales();
+                });
+
+                // Cerrar resultados de búsqueda al hacer clic fuera
+                $(document).on('click', function(e) {
+                    if (!$(e.target).closest('#buscarCaja, #resultadosBusquedaCajas, #btnBuscarCaja').length) {
+                        $('#resultadosBusquedaCajas').hide();
+                    }
+                });
+
+                // Manejador para procesar venta
+                $('#btnProcesarVenta').click(function() {
+                    if ($('.caja-item').length === 0) {
+                        alert('Debe agregar al menos una caja a la venta');
+                        return;
+                    }
+
+                    if ($('#tipoVenta').val() === 'CREDITO' && !$('#cliente').val()) {
+                        alert('Debe seleccionar un cliente para ventas a crédito');
+                        return;
+                    }
+
+                    // Recopilar datos de la venta
+                    const venta = {
+                        tipoVenta: $('#tipoVenta').val(),
+                        clienteId: $('#cliente').val() || null,
+                        metodoPago: $('#metodoPago').val(),
+                        cajas: [],
+                        total: parseFloat($('#total').text().replace('$', '')),
+                        totalBs: parseFloat($('#totalBs').text().replace('Bs. ', ''))
+                    };
+
+                    // Recopilar cajas
+                    $('.caja-item').each(function() {
+                        venta.cajas.push({
+                            cajaId: $(this).data('id'),
+                            cantidad: parseInt($(this).find('small').text().split('×')[0].trim().replace('Cantidad: ', '')),
+                            precio: parseFloat($(this).find('small').text().split('×')[1].split('=')[0].trim().replace('$', '')),
+                            subtotal: $(this).data('subtotal'),
+                            tasaCambio: $(this).data('tasa')
+                        });
+                    });
+
+                    console.log('Datos de la venta a procesar:', venta);
+                    // Aquí se implementará la lógica para enviar los datos al servidor
+                    alert('Procesando venta... Esta funcionalidad se implementará en el backend');
+                });
+
+                // Manejador para cancelar la venta
+                $('#btnCancelarVenta').click(function() {
+                    if (confirm('¿Está seguro que desea cancelar la venta?')) {
+                        window.location.href = '/';
+                    }
+                });
+            });
+        </script>
+    </th:block>
+</body>
+</html>

@@ -15,6 +15,8 @@ import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.JoinColumn;
+
+import java.time.LocalDateTime;
 import java.util.Date;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -38,7 +40,7 @@ public class PrecioDolar {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_precio_dolar")
-    private Long idPrecioDolar;
+    private Long id;
 
     @Column(name = "precio_dolar", nullable = false)
     private double precioDolar;
@@ -57,4 +59,8 @@ public class PrecioDolar {
 
     @Column(name = "licoreria_id", insertable = false, updatable = false)
     private Long licoreriaId;
+
+    @Column(name = "fecha_creacion")
+    private LocalDateTime fechaCreacion;
+
 }

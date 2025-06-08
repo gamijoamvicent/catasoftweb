@@ -1,14 +1,18 @@
 package devforge.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import jakarta.persistence.*;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
+import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 @Entity
 @Table(name = "cajas")
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class Caja {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -21,13 +25,16 @@ public class Caja {
     private String descripcion;
 
     @Column(name = "precio", nullable = false)
-    private double precio;
+    private Double precio;
 
-    @Column(name = "cantidad_unidades", nullable = false)
-    private int cantidadUnidades;
+    @Column(name = "stock")
+    private Integer stock;
+
+    @Column(name = "cantidad_unidades")
+    private Integer cantidadUnidades;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "producto_id", nullable = false)
+    @JoinColumn(name = "producto_id")
     private Producto producto;
 
     @Column(name = "producto_id", insertable = false, updatable = false)
@@ -40,14 +47,22 @@ public class Caja {
     @Column(name = "licoreria_id", insertable = false, updatable = false)
     private Long licoreriaId;
 
-    @Column(name = "tipo_tasa", nullable = false)
+    @ManyToOne
+    @JoinColumn(name = "precio_dolar_id")
+    private PrecioDolar precioDolar;
+
+    @Column(name = "tipo_tasa")
     private String tipoTasa; // BCV, PROMEDIO, PARALELA
 
-    @Column(name = "fecha_creacion", nullable = false)
+    @Column(name = "fecha_creacion")
     private LocalDateTime fechaCreacion;
 
-    @Column(name = "estado", nullable = false)
+    @Column(name = "estado")
     private Boolean estado = true;
+
+    // Campo calculado, no se almacena en la base de datos
+    @Transient
+    private Double tasaCambio;
 
     @PrePersist
     protected void onCreate() {
@@ -55,10 +70,15 @@ public class Caja {
     }
 
     public TipoTasa getTipoTasaEnum() {
-        return TipoTasa.valueOf(tipoTasa);
+        return tipoTasa != null ? TipoTasa.valueOf(tipoTasa) : null;
     }
 
     public void setTipoTasaEnum(TipoTasa tipoTasa) {
-        this.tipoTasa = tipoTasa.name();
+        this.tipoTasa = tipoTasa != null ? tipoTasa.name() : null;
+    }
+
+    // Método para obtener la tasa de cambio actual
+    public Double getTasaCambio() {
+        return precioDolar != null ? precioDolar.getPrecioDolar() : null;
     }
 }

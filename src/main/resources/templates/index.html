@@ -65,6 +65,17 @@
                     </div>
                 </div>
 
+                <div class="card ventas" sec:authorize="hasAnyRole('CAJERO', 'ADMIN_LOCAL', 'SUPER_ADMIN')">
+                    <div class="card-header">
+                        <img src="/icons/box.png" alt="Venta por Cajas" class="card-icon">
+                        <h3 class="card-title">Venta por Cajas</h3>
+                    </div>
+                    <div class="card-content">
+                        <p>Registrar ventas de productos por cajas</p>
+                        <a th:href="@{/ventas/cajas/nueva}" class="btn btn-primary">Vender por Cajas</a>
+                    </div>
+                </div>
+
                 <div class="card ventas" sec:authorize="hasAnyRole('ADMIN_LOCAL', 'SUPER_ADMIN')">
                     <div class="card-header">
                         <img src="/icons/chart.png" alt="Reportes" class="card-icon">
