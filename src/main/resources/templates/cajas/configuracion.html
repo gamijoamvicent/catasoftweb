@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="_csrf" th:content="${_csrf?.token}">
+    <meta name="_csrf_header" th:content="${_csrf?.headerName}">
+    <title>Configuración de Cajas - InventSoft</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #4361ee;
+            --secondary-color: #3f37c9;
+            --success-color: #4cc9f0;
+            --danger-color: #f72585;
+            --warning-color: #f8961e;
+            --info-color: #4895ef;
+            --light-color: #f8f9fa;
+            --dark-color: #212529;
+        }
+
+        body {
+            background-color: #f0f2f5;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        }
+
+        .container {
+            max-width: 1400px;
+            padding: 2rem;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding: 1rem;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .page-title {
+            font-size: 1.8rem;
+            font-weight: 600;
+            color: var(--dark-color);
+            margin: 0;
+        }
+
+        .btn-back {
+            background-color: var(--light-color);
+            color: var(--dark-color);
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-back:hover {
+            background-color: #e9ecef;
+            transform: translateX(-2px);
+            color: var(--dark-color);
+        }
+
+        .form-section {
+            background: white;
+            border-radius: 15px;
+            padding: 2rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            height: 100%;
+        }
+
+        .section-title {
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: var(--dark-color);
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid var(--light-color);
+        }
+
+        .form-control {
+            border-radius: 10px;
+            border: 1px solid #e0e0e0;
+            padding: 0.75rem 1rem;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus {
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.15);
+            border-color: var(--primary-color);
+        }
+
+        .form-label {
+            font-weight: 500;
+            color: var(--dark-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 10px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--secondary-color);
+            transform: translateY(-2px);
+        }
+
+        .btn-danger {
+            background-color: var(--danger-color);
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .btn-danger:hover {
+            background-color: #d90429;
+            transform: translateY(-2px);
+        }
+
+        .btn-success {
+            background-color: var(--success-color);
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .btn-success:hover {
+            background-color: #38b2ac;
+            transform: translateY(-2px);
+        }
+
+        .card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            transition: all 0.3s ease;
+            background: white;
+            height: 100%;
+        }
+
+        .card:hover {
+            box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+            transform: translateY(-3px);
+        }
+
+        .card-body {
+            padding: 1.5rem;
+        }
+
+        .card-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--dark-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .precio-caja {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: var(--success-color);
+            margin-bottom: 1rem;
+        }
+
+        .table {
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .table thead th {
+            background-color: var(--light-color);
+            color: var(--dark-color);
+            font-weight: 600;
+            border-bottom: 2px solid #dee2e6;
+        }
+
+        .search-results {
+            position: absolute;
+            width: 100%;
+            max-height: 300px;
+            overflow-y: auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            z-index: 1000;
+            margin-top: 0.5rem;
+        }
+
+        .search-item {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid #e0e0e0;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .search-item:hover {
+            background-color: var(--light-color);
+        }
+
+        .search-item:last-child {
+            border-bottom: none;
+        }
+
+        .search-item-title {
+            font-weight: 500;
+            color: var(--dark-color);
+        }
+
+        .search-item-price {
+            color: var(--success-color);
+            font-weight: 500;
+        }
+
+        .search-item-stock {
+            color: var(--warning-color);
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="page-header">
+            <h1 class="page-title">Configuración de Cajas</h1>
+            <a href="/" class="btn-back">
+                <i class="fas fa-arrow-left"></i>
+                Volver al Dashboard
+            </a>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-md-5">
+                <div class="form-section">
+                    <h2 class="section-title">Crear Nueva Caja</h2>
+                    <form id="cajaForm">
+                        <div class="mb-3">
+                            <label for="nombre" class="form-label">Nombre de la Caja</label>
+                            <input type="text" class="form-control" id="nombre" name="nombre" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="descripcion" class="form-label">Descripción</label>
+                            <textarea class="form-control" id="descripcion" name="descripcion" rows="2"></textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="precio" class="form-label">Precio de la Caja ($)</label>
+                            <input type="number" class="form-control" id="precio" name="precio" step="0.01" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="cantidadUnidades" class="form-label">Cantidad de Unidades por Caja</label>
+                            <input type="number" class="form-control" id="cantidadUnidades" name="cantidadUnidades" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="tipoTasa" class="form-label">Tipo de Tasa</label>
+                            <select class="form-control" id="tipoTasa" name="tipoTasa" required>
+                                <option value="BCV">BCV</option>
+                                <option value="PARALELA">Paralela</option>
+                                <option value="PROMEDIO">Promedio</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="buscarProducto" class="form-label">Buscar Producto</label>
+                            <input type="text" class="form-control" id="buscarProducto" placeholder="Escribe para buscar productos...">
+                            <div id="resultadosBusqueda" class="search-results" style="display: none;"></div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Producto Seleccionado</label>
+                            <div id="productoSeleccionado" class="alert alert-info">No hay producto seleccionado</div>
+                            <input type="hidden" id="productoId" name="productoId">
+                            <button type="button" class="btn btn-sm btn-outline-danger mt-2" id="limpiarProducto">
+                                <i class="fas fa-times me-1"></i>Limpiar selección
+                            </button>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fas fa-save me-2"></i>
+                            Guardar Caja
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="col-md-7">
+                <div class="form-section">
+                    <h2 class="section-title">Cajas Existentes</h2>
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Nombre</th>
+                                    <th>Producto</th>
+                                    <th>Unidades</th>
+                                    <th>Precio</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tablaCajas">
+                                <!-- Los datos se cargarán dinámicamente -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Edición -->
+    <div class="modal fade" id="editarCajaModal" tabindex="-1" aria-labelledby="editarCajaModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editarCajaModalLabel">Editar Caja</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editarCajaForm">
+                        <input type="hidden" id="editId">
+                        <div class="mb-3">
+                            <label for="editNombre" class="form-label">Nombre de la Caja</label>
+                            <input type="text" class="form-control" id="editNombre" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="editDescripcion" class="form-label">Descripción</label>
+                            <textarea class="form-control" id="editDescripcion" rows="2"></textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="editPrecio" class="form-label">Precio de la Caja ($)</label>
+                            <input type="number" class="form-control" id="editPrecio" step="0.01" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="editCantidadUnidades" class="form-label">Cantidad de Unidades por Caja</label>
+                            <input type="number" class="form-control" id="editCantidadUnidades" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="editTipoTasa" class="form-label">Tipo de Tasa</label>
+                            <select class="form-control" id="editTipoTasa" required>
+                                <option value="BCV">BCV</option>
+                                <option value="PARALELA">Paralela</option>
+                                <option value="PROMEDIO">Promedio</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="editBuscarProducto" class="form-label">Buscar Producto</label>
+                            <input type="text" class="form-control" id="editBuscarProducto" placeholder="Escribe para buscar productos...">
+                            <div id="editResultadosBusqueda" class="search-results" style="display: none;"></div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Producto Seleccionado</label>
+                            <div id="editProductoSeleccionado" class="alert alert-info">No hay producto seleccionado</div>
+                            <input type="hidden" id="editProductoId">
+                            <button type="button" class="btn btn-sm btn-outline-danger mt-2" id="limpiarEditProducto">
+                                <i class="fas fa-times me-1"></i>Limpiar selección
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" id="guardarCambiosBtn">Guardar Cambios</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            // Variables globales
+            let productoSeleccionado = null;
+            let editProductoSeleccionado = null;
+            const editarCajaModal = new bootstrap.Modal(document.getElementById('editarCajaModal'));
+
+            // Función para cargar las cajas existentes
+            function cargarCajas() {
+                $.get('/cajas/api/cajas', function(cajas) {
+                    const $tablaCajas = $('#tablaCajas');
+                    $tablaCajas.empty();
+
+                    if (cajas.length === 0) {
+                        $tablaCajas.append('<tr><td colspan="5" class="text-center">No hay cajas configuradas</td></tr>');
+                        return;
+                    }
+
+                    cajas.forEach(caja => {
+                        $tablaCajas.append(`
+                            <tr>
+                                <td>${caja.nombre}</td>
+                                <td>${caja.productoNombre}</td>
+                                <td>${caja.cantidadUnidades}</td>
+                                <td>$${caja.precio.toFixed(2)}</td>
+                                <td>
+                                    <button class="btn btn-sm btn-primary me-1 btn-editar" data-id="${caja.id}">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-danger btn-eliminar" data-id="${caja.id}">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        `);
+                    });
+                });
+            }
+
+            // Búsqueda de productos
+            $('#buscarProducto').on('input', function() {
+                const termino = $(this).val().trim();
+                const $resultados = $('#resultadosBusqueda');
+
+                if (termino.length < 2) {
+                    $resultados.hide();
+                    return;
+                }
+
+                $.get('/producto/buscar', { termino: termino }, function(productos) {
+                    $resultados.empty();
+
+                    if (productos.length === 0) {
+                        $resultados.append('<div class="search-item">No se encontraron productos</div>');
+                    } else {
+                        productos.forEach(producto => {
+                            const $item = $(`
+                                <div class="search-item" data-id="${producto.id}" data-nombre="${producto.nombre}">
+                                    <div class="search-item-title">${producto.nombre}</div>
+                                    <div class="d-flex justify-content-between">
+                                        <span class="search-item-price">$${producto.precioVenta}</span>
+                                        <span class="search-item-stock">Stock: ${producto.cantidad}</span>
+                                    </div>
+                                </div>
+                            `);
+
+                            $resultados.append($item);
+                        });
+                    }
+
+                    $resultados.show();
+                });
+            });
+
+            // Seleccionar un producto de los resultados
+            $(document).on('click', '#resultadosBusqueda .search-item', function() {
+                const id = $(this).data('id');
+                const nombre = $(this).data('nombre');
+
+                productoSeleccionado = { id, nombre };
+                $('#productoId').val(id);
+                $('#productoSeleccionado').html(`
+                    <div class="fw-medium">${nombre}</div>
+                    <div class="text-success">Producto seleccionado</div>
+                `);
+
+                $('#resultadosBusqueda').hide();
+                $('#buscarProducto').val('');
+            });
+
+            // Búsqueda en el modal de edición
+            $('#editBuscarProducto').on('input', function() {
+                const termino = $(this).val().trim();
+                const $resultados = $('#editResultadosBusqueda');
+
+                if (termino.length < 2) {
+                    $resultados.hide();
+                    return;
+                }
+
+                $.get('/producto/buscar', { termino: termino }, function(productos) {
+                    $resultados.empty();
+
+                    if (productos.length === 0) {
+                        $resultados.append('<div class="search-item">No se encontraron productos</div>');
+                    } else {
+                        productos.forEach(producto => {
+                            const $item = $(`
+                                <div class="search-item" data-id="${producto.id}" data-nombre="${producto.nombre}">
+                                    <div class="search-item-title">${producto.nombre}</div>
+                                    <div class="d-flex justify-content-between">
+                                        <span class="search-item-price">$${producto.precioVenta}</span>
+                                        <span class="search-item-stock">Stock: ${producto.cantidad}</span>
+                                    </div>
+                                </div>
+                            `);
+
+                            $resultados.append($item);
+                        });
+                    }
+
+                    $resultados.show();
+                });
+            });
+
+            // Seleccionar un producto en el modal de edición
+            $(document).on('click', '#editResultadosBusqueda .search-item', function() {
+                const id = $(this).data('id');
+                const nombre = $(this).data('nombre');
+
+                editProductoSeleccionado = { id, nombre };
+                $('#editProductoId').val(id);
+                $('#editProductoSeleccionado').html(`
+                    <div class="fw-medium">${nombre}</div>
+                    <div class="text-success">Producto seleccionado</div>
+                `);
+
+                $('#editResultadosBusqueda').hide();
+                $('#editBuscarProducto').val('');
+            });
+
+            // Crear nueva caja
+            $('#cajaForm').on('submit', function(e) {
+                e.preventDefault();
+
+                if (!productoSeleccionado) {
+                    alert('Debe seleccionar un producto');
+                    return;
+                }
+
+                const datos = {
+                    nombre: $('#nombre').val(),
+                    descripcion: $('#descripcion').val(),
+                    precio: $('#precio').val(),
+                    cantidadUnidades: $('#cantidadUnidades').val(),
+                    productoId: $('#productoId').val(),
+                    tipoTasa: $('#tipoTasa').val()
+                };
+
+                $.ajax({
+                    url: '/cajas/api/cajas',
+                    method: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(datos),
+                    success: function(response) {
+                        alert('Caja creada exitosamente');
+                        $('#cajaForm')[0].reset();
+                        productoSeleccionado = null;
+                        $('#productoSeleccionado').html('No hay producto seleccionado');
+                        cargarCajas();
+                    },
+                    error: function(xhr) {
+                        alert('Error al crear la caja: ' + xhr.responseText);
+                    }
+                });
+            });
+
+            // Abrir modal de edición
+            $(document).on('click', '.btn-editar', function() {
+                const id = $(this).data('id');
+
+                // Obtener los datos de la caja
+                $.get('/cajas/api/cajas', function(cajas) {
+                    const caja = cajas.find(c => c.id === id);
+                    if (caja) {
+                        $('#editId').val(caja.id);
+                        $('#editNombre').val(caja.nombre);
+                        $('#editDescripcion').val(caja.descripcion);
+                        $('#editPrecio').val(caja.precio);
+                        $('#editCantidadUnidades').val(caja.cantidadUnidades);
+                        $('#editTipoTasa').val(caja.tipoTasa);
+
+                        editProductoSeleccionado = { id: caja.productoId, nombre: caja.productoNombre };
+                        $('#editProductoId').val(caja.productoId);
+                        $('#editProductoSeleccionado').html(`
+                            <div class="fw-medium">${caja.productoNombre}</div>
+                            <div class="text-success">Producto seleccionado</div>
+                        `);
+
+                        editarCajaModal.show();
+                    }
+                });
+            });
+
+            // Guardar cambios
+            $('#guardarCambiosBtn').on('click', function() {
+                const id = $('#editId').val();
+
+                if (!$('#editProductoId').val()) {
+                    alert('Debe seleccionar un producto');
+                    return;
+                }
+
+                const datos = {
+                    nombre: $('#editNombre').val(),
+                    descripcion: $('#editDescripcion').val(),
+                    precio: $('#editPrecio').val(),
+                    cantidadUnidades: $('#editCantidadUnidades').val(),
+                    productoId: $('#editProductoId').val(),
+                    tipoTasa: $('#editTipoTasa').val()
+                };
+
+                $.ajax({
+                    url: `/cajas/api/cajas/${id}`,
+                    method: 'PUT',
+                    contentType: 'application/json',
+                    data: JSON.stringify(datos),
+                    success: function(response) {
+                        alert('Caja actualizada exitosamente');
+                        editarCajaModal.hide();
+                        cargarCajas();
+                    },
+                    error: function(xhr) {
+                        alert('Error al actualizar la caja: ' + xhr.responseText);
+                    }
+                });
+            });
+
+            // Eliminar caja
+            $(document).on('click', '.btn-eliminar', function() {
+                const id = $(this).data('id');
+
+                if (confirm('¿Está seguro de que desea eliminar esta caja?')) {
+                    $.ajax({
+                        url: `/cajas/api/cajas/${id}`,
+                        method: 'DELETE',
+                        success: function() {
+                            alert('Caja eliminada exitosamente');
+                            cargarCajas();
+                        },
+                        error: function(xhr) {
+                            alert('Error al eliminar la caja: ' + xhr.responseText);
+                        }
+                    });
+                }
+            });
+
+            // Cerrar menús de búsqueda al hacer clic fuera
+            $(document).on('click', function(e) {
+                if (!$(e.target).closest('#buscarProducto, #resultadosBusqueda').length) {
+                    $('#resultadosBusqueda').hide();
+                }
+
+                if (!$(e.target).closest('#editBuscarProducto, #editResultadosBusqueda').length) {
+                    $('#editResultadosBusqueda').hide();
+                }
+            });
+
+            // Botón para limpiar la selección de producto
+            $('#limpiarProducto').on('click', function() {
+                productoSeleccionado = null;
+                $('#productoId').val('');
+                $('#productoSeleccionado').html('No hay producto seleccionado');
+            });
+
+            // Botón para limpiar la selección de producto en el modal de edición
+            $('#limpiarEditProducto').on('click', function() {
+                editProductoSeleccionado = null;
+                $('#editProductoId').val('');
+                $('#editProductoSeleccionado').html('No hay producto seleccionado');
+            });
+
+            // Agregar token CSRF para solicitudes AJAX si existe
+            const csrfToken = document.querySelector('meta[name="_csrf"]')?.getAttribute('content');
+            const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.getAttribute('content');
+
+            if (csrfToken && csrfHeader) {
+                $.ajaxSetup({
+                    beforeSend: function(xhr) {
+                        xhr.setRequestHeader(csrfHeader, csrfToken);
+                    }
+                });
+            }
+
+            // Cargar cajas al iniciar
+            cargarCajas();
+        });
+    </script>
+</body>
+</html>
