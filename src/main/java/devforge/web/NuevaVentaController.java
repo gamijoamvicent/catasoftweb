@@ -325,7 +325,7 @@ public class NuevaVentaController {
                 .replace("{fecha}", venta.getFechaVenta().toString())
                 .replace("{detalle_productos}", detalle.toString().trim())
                 .replace("{subtotal}", "$" + subtotal.setScale(2, RoundingMode.HALF_UP))
-                .replace("{total}", "$" + BigDecimal.valueOf(venta.getTotalVenta()).setScale(2, RoundingMode.HALF_UP));
+                .replace("{total}", "$" + venta.getTotalVenta().setScale(2, RoundingMode.HALF_UP));
             return ResponseEntity.ok(Map.of(
                 "ticket", ticket,
                 "impresora", impresora

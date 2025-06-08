@@ -8,7 +8,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.time.LocalDateTime;
 import java.util.stream.Collectors;
 
 @Service
@@ -35,13 +37,19 @@ public class PrecioDolarServicioImpl implements PrecioDolarServicio {
 
     @Override
     public void guardar(PrecioDolar precioDolar) {
+        if (precioDolar.getFechaDolar() == null) {
+            precioDolar.setFechaDolar(new Date());
+        }
+        if (precioDolar.getFechaCreacion() == null) {
+            precioDolar.setFechaCreacion(LocalDateTime.now());
+        }
         precioDolarRepositorio.save(precioDolar);
     }
 
     @Override
     public PrecioDolar obtenerUltimoPrecioPorTipo(Long licoreriaId, TipoTasa tipoTasa) {
         List<PrecioDolar> precios = precioDolarRepositorio.findByLicoreriaIdAndTipoTasaOrderByFechaCreacionDesc(
-                licoreriaId, tipoTasa.name());
+                licoreriaId, tipoTasa);
         return !precios.isEmpty() ? precios.get(0) : null;
     }
 
@@ -80,7 +88,8 @@ public class PrecioDolarServicioImpl implements PrecioDolarServicio {
     @Override
     public Double obtenerTasaCambioActual(Long licoreriaId) {
         // Obtener la tasa más reciente (BCV por defecto)
-        List<PrecioDolar> tasas = precioDolarRepositorio.findByLicoreriaIdAndTipoTasaOrderByFechaCreacionDesc(licoreriaId, "BCV");
+        List<PrecioDolar> tasas = precioDolarRepositorio.findByLicoreriaIdAndTipoTasaOrderByFechaCreacionDesc(
+            licoreriaId, TipoTasa.BCV);
         if (!tasas.isEmpty()) {
             return tasas.get(0).getPrecioDolar();
         }

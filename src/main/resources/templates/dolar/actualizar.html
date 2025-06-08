@@ -320,10 +320,11 @@
             </div>
 
             <!-- Formulario para actualizar tasas -->
-            <form th:action="@{/dolar/actualizar}" method="post">
+            <form th:action="@{/dolar/actualizar}" method="post" class="update-form">
                 <div class="form-group">
                     <label for="tipoTasa">Seleccionar Tipo de Tasa</label>
-                    <select id="tipoTasa" name="tipoTasa" required>
+                    <select id="tipoTasa" name="tipoTasa" class="form-control" required>
+                        <option value="">Seleccione un tipo de tasa</option>
                         <option value="BCV">Tasa BCV</option>
                         <option value="PROMEDIO">Tasa Promedio</option>
                         <option value="PARALELA">Tasa Paralela</option>
@@ -333,6 +334,7 @@
                     <input type="number"
                            id="precioDolar"
                            name="precioDolar"
+                           class="form-control"
                            step="0.01"
                            min="0.01"
                            required

@@ -10,7 +10,5 @@ import java.util.List;
 @Repository
 public interface PrecioDolarRepositorio extends JpaRepository<PrecioDolar, Long> {
     List<PrecioDolar> findByLicoreriaIdOrderByFechaCreacionDesc(Long licoreriaId);
-    List<PrecioDolar> findByLicoreriaIdAndTipoTasaOrderByFechaCreacionDesc(Long licoreriaId, String tipoTasa);
     List<PrecioDolar> findByLicoreriaIdAndTipoTasaOrderByFechaCreacionDesc(Long licoreriaId, TipoTasa tipoTasa);
-        
 }

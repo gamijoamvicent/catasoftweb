@@ -99,7 +99,7 @@ public class VentaServicioImpl implements VentaServicio {
             .filter(v -> !v.isAnulada())
             .collect(Collectors.groupingBy(
                 venta -> venta.getMetodoPago().toString(),
-                Collectors.summingDouble(Venta::getTotalVenta)
+                Collectors.summingDouble(v -> v.getTotalVenta().doubleValue())
             ));
     }
 
@@ -252,7 +252,7 @@ public class VentaServicioImpl implements VentaServicio {
                     venta.getCliente().getNombre() : "Venta al contado");
                 row.createCell(3).setCellValue(venta.getTipoVenta().toString());
                 row.createCell(4).setCellValue(venta.getMetodoPago().toString());
-                row.createCell(5).setCellValue(venta.getTotalVenta());
+                row.createCell(5).setCellValue(venta.getTotalVenta().doubleValue());
                 row.createCell(6).setCellValue(
                     venta.getTotalVentaBs() != null ? venta.getTotalVentaBs().doubleValue() : 0.0);
             }
@@ -338,7 +338,7 @@ public class VentaServicioImpl implements VentaServicio {
                         creditoDisponible = 0.0;
                     }
                     clienteServicio.actualizarCreditoDisponible(cliente.getId(), 
-                        creditoDisponible + venta.getTotalVenta());
+                        creditoDisponible + venta.getTotalVenta().doubleValue());
                 }
             }
 
@@ -398,7 +398,7 @@ public class VentaServicioImpl implements VentaServicio {
                         creditoDisponible = 0.0;
                     }
                     clienteServicio.actualizarCreditoDisponible(cliente.getId(), 
-                        creditoDisponible + venta.getTotalVenta());
+                        creditoDisponible + venta.getTotalVenta().doubleValue());
                     logger.debug("Crédito actualizado para cliente ID: {}", cliente.getId());
                 }
                 

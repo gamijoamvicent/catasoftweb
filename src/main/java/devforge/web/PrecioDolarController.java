@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import java.util.Date;
 import java.util.List;
+import java.time.LocalDateTime;
 
 @Controller
 @RequestMapping("/dolar")
@@ -49,11 +50,18 @@ public class PrecioDolarController {
                 return "redirect:/dolar/actualizar";
             }
 
+            if (tipoTasa == null) {
+                redirectAttrs.addFlashAttribute("mensajeError", "❌ El tipo de tasa es inválido");
+                return "redirect:/dolar/actualizar";
+            }
+
             PrecioDolar nuevoPrecio = new PrecioDolar();
             nuevoPrecio.setPrecioDolar(precioDolar);
             nuevoPrecio.setTipoTasa(tipoTasa);
             nuevoPrecio.setLicoreria(licoreriaContext.getLicoreriaActual());
             nuevoPrecio.setFechaDolar(new Date());
+            nuevoPrecio.setFechaCreacion(LocalDateTime.now());
+            
             servicio.guardar(nuevoPrecio);
             
             redirectAttrs.addFlashAttribute("mensajeExito", 

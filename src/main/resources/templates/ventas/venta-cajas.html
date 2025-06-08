@@ -195,7 +195,7 @@
                             <label for="cajaSeleccionada">Caja Seleccionada</label>
                             <input type="text" class="form-control" id="cajaSeleccionada" readonly>
                             <input type="hidden" id="cajaId">
-                            <input type="hidden" id="cajaTasaCambio">
+                            <input type="hidden" id="cajaTipoTasa">
                         </div>
                         <div class="form-group">
                             <label for="cantidadCajas">Cantidad</label>
@@ -221,27 +221,41 @@
 
     <!-- Scripts específicos para esta página -->
     <th:block layout:fragment="scripts">
+        <!-- SweetAlert2 -->
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.32/dist/sweetalert2.all.min.js"></script>
         <script>
             $(document).ready(function() {
                 // Variables globales
-                let tasaCambioActual = 0;
+                let tasasDolar = {
+                    BCV: 0,
+                    PROMEDIO: 0,
+                    PARALELA: 0
+                };
 
-                // Cargar tasa de cambio al iniciar
-                cargarTasaCambio();
+                // Cargar tasas de cambio al iniciar
+                cargarTasasDolar();
 
-                // Función para cargar la tasa de cambio actual
-                function cargarTasaCambio() {
+                // Función para cargar las tasas de cambio
+                function cargarTasasDolar() {
                     $.ajax({
-                        url: '/ventas/cajas/obtener-tasa',
+                        url: '/dolar/api/tasas',
                         method: 'GET',
-                        success: function(tasa) {
-                            tasaCambioActual = tasa;
-                            console.log('Tasa de cambio cargada:', tasaCambioActual);
+                        success: function(response) {
+                            tasasDolar = {
+                                BCV: parseFloat(response.bcv) || 0,
+                                PROMEDIO: parseFloat(response.promedio) || 0,
+                                PARALELA: parseFloat(response.paralelo) || 0
+                            };
+                            console.log('Tasas cargadas:', tasasDolar);
                         },
                         error: function() {
-                            console.error('Error al cargar la tasa de cambio');
-                            // Usar valor por defecto si falla
-                            tasaCambioActual = 35.5;
+                            console.error('Error al cargar las tasas de cambio');
+                            // Usar valores por defecto si falla
+                            tasasDolar = {
+                                BCV: 35.5,
+                                PROMEDIO: 35.5,
+                                PARALELA: 35.5
+                            };
                         }
                     });
                 }
@@ -269,7 +283,7 @@
                     $('#resultadosBusquedaCajas').empty().hide();
                     $('#cajaSeleccionada').val('');
                     $('#cajaId').val('');
-                    $('#cajaTasaCambio').val('');
+                    $('#cajaTipoTasa').val('');
                     $('#cantidadCajas').val('1');
                     $('#precioCaja').val('');
                     $('#subtotalCaja').val('');
@@ -330,7 +344,7 @@
                                data-id="${caja.id}"
                                data-nombre="${caja.nombre}"
                                data-precio="${caja.precio}"
-                               data-tasa="${caja.tasaCambio}">
+                               data-tipo-tasa="${caja.tipoTasa}">
                                 <div class="d-flex w-100 justify-content-between">
                                     <h6 class="mb-1">${caja.nombre}</h6>
                                     <span class="text-primary">$${caja.precio.toFixed(2)}</span>
@@ -352,13 +366,13 @@
                     const id = $(this).data('id');
                     const nombre = $(this).data('nombre');
                     const precio = $(this).data('precio');
-                    const tasa = $(this).data('tasa');
+                    const tipoTasa = $(this).data('tipo-tasa');
 
                     // Establecer los valores en el formulario
                     $('#cajaSeleccionada').val(nombre);
                     $('#cajaId').val(id);
                     $('#precioCaja').val(precio);
-                    $('#cajaTasaCambio').val(tasa);
+                    $('#cajaTipoTasa').val(tipoTasa);
 
                     // Calcular el subtotal
                     calcularSubtotalCaja();
@@ -382,16 +396,21 @@
 
                 // Actualizar totales cuando se agregan cajas
                 function actualizarTotales() {
-                    let subtotal = 0;
+                    let subtotalUSD = 0;
+                    let subtotalBs = 0;
+
                     $('.caja-item').each(function() {
-                        subtotal += parseFloat($(this).data('subtotal')) || 0;
+                        const subtotal = parseFloat($(this).data('subtotal')) || 0;
+                        const tipoTasa = $(this).data('tipo-tasa') || 'BCV';
+                        const tasa = tasasDolar[tipoTasa] || tasasDolar.BCV;
+                        
+                        subtotalUSD += subtotal;
+                        subtotalBs += subtotal * tasa;
                     });
 
-                    $('#subtotal').text('$' + subtotal.toFixed(2));
-                    $('#total').text('$' + subtotal.toFixed(2));
-
-                    // Usar la tasa de cambio obtenida del servidor
-                    $('#totalBs').text('Bs. ' + (subtotal * tasaCambioActual).toFixed(2));
+                    $('#subtotal').text('$' + subtotalUSD.toFixed(2));
+                    $('#total').text('$' + subtotalUSD.toFixed(2));
+                    $('#totalBs').text('Bs. ' + subtotalBs.toFixed(2));
                 }
 
                 // Manejador para agregar caja
@@ -400,7 +419,7 @@
                     const cajaId = $('#cajaId').val();
                     const cantidad = $('#cantidadCajas').val();
                     const precio = $('#precioCaja').val();
-                    const cajaTasa = $('#cajaTasaCambio').val() || tasaCambioActual;
+                    const tipoTasa = $('#cajaTipoTasa').val() || 'BCV';
                     const subtotal = parseFloat(precio) * parseInt(cantidad);
 
                     if (!cajaId || !cantidad || !precio) {
@@ -411,12 +430,15 @@
                     // Agregar caja a la lista
                     $('#noCajas').hide();
                     const cajaItem = `
-                        <div class="caja-item" data-id="${cajaId}" data-subtotal="${subtotal}" data-tasa="${cajaTasa}">
+                        <div class="caja-item" 
+                             data-id="${cajaId}" 
+                             data-subtotal="${subtotal}" 
+                             data-tipo-tasa="${tipoTasa}">
                             <div class="d-flex justify-content-between align-items-center">
                                 <div>
                                     <h6 class="m-0">${cajaNombre}</h6>
                                     <small>Cantidad: ${cantidad} × $${precio} = $${subtotal.toFixed(2)}</small>
-                                    <div><small class="text-muted">Bs. ${(subtotal * cajaTasa).toFixed(2)}</small></div>
+                                    <div><small class="text-muted">Bs. ${(subtotal * tasasDolar[tipoTasa]).toFixed(2)} (${tipoTasa})</small></div>
                                 </div>
                                 <button class="btn btn-sm btn-danger btn-eliminar-caja">
                                     <i class="fas fa-trash"></i>
@@ -450,43 +472,89 @@
                     }
                 });
 
-                // Manejador para procesar venta
-                $('#btnProcesarVenta').click(function() {
+                // Función para procesar la venta
+                function procesarVenta() {
                     if ($('.caja-item').length === 0) {
-                        alert('Debe agregar al menos una caja a la venta');
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Atención',
+                            text: 'Debe agregar al menos una caja a la venta'
+                        });
                         return;
                     }
 
-                    if ($('#tipoVenta').val() === 'CREDITO' && !$('#cliente').val()) {
-                        alert('Debe seleccionar un cliente para ventas a crédito');
-                        return;
-                    }
+                    // Mostrar indicador de carga
+                    Swal.fire({
+                        title: 'Procesando venta...',
+                        text: 'Por favor espere',
+                        allowOutsideClick: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
 
-                    // Recopilar datos de la venta
-                    const venta = {
-                        tipoVenta: $('#tipoVenta').val(),
-                        clienteId: $('#cliente').val() || null,
-                        metodoPago: $('#metodoPago').val(),
-                        cajas: [],
-                        total: parseFloat($('#total').text().replace('$', '')),
-                        totalBs: parseFloat($('#totalBs').text().replace('Bs. ', ''))
+                    // Preparar datos de la venta
+                    const ventaData = {
+                        items: []
                     };
-
-                    // Recopilar cajas
+                    
                     $('.caja-item').each(function() {
-                        venta.cajas.push({
-                            cajaId: $(this).data('id'),
-                            cantidad: parseInt($(this).find('small').text().split('×')[0].trim().replace('Cantidad: ', '')),
-                            precio: parseFloat($(this).find('small').text().split('×')[1].split('=')[0].trim().replace('$', '')),
-                            subtotal: $(this).data('subtotal'),
-                            tasaCambio: $(this).data('tasa')
+                        const item = $(this);
+                        ventaData.items.push({
+                            cajaId: item.data('id'),
+                            cantidad: parseInt(item.find('.cantidad-input').val()),
+                            precio: parseFloat(item.find('.precio-input').val()),
+                            tipoTasa: item.data('tipo-tasa')
                         });
                     });
 
-                    console.log('Datos de la venta a procesar:', venta);
-                    // Aquí se implementará la lógica para enviar los datos al servidor
-                    alert('Procesando venta... Esta funcionalidad se implementará en el backend');
-                });
+                    // Enviar solicitud al servidor
+                    $.ajax({
+                        url: '/ventas/cajas/procesar',
+                        method: 'POST',
+                        contentType: 'application/json',
+                        data: JSON.stringify(ventaData),
+                        success: function(response) {
+                            if (response.success) {
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: '¡Éxito!',
+                                    text: response.message,
+                                    showConfirmButton: false,
+                                    timer: 1500
+                                }).then(() => {
+                                    // Limpiar el formulario y redirigir
+                                    limpiarFormulario();
+                                    window.location.href = '/ventas';
+                                });
+                            } else {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Error',
+                                    text: response.error || 'Error al procesar la venta'
+                                });
+                            }
+                        },
+                        error: function(xhr) {
+                            let errorMessage = 'Error al procesar la venta';
+                            try {
+                                const response = JSON.parse(xhr.responseText);
+                                errorMessage = response.error || errorMessage;
+                            } catch (e) {
+                                console.error('Error al parsear respuesta:', e);
+                            }
+                            
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: errorMessage
+                            });
+                        }
+                    });
+                }
+
+                // Asignar evento al botón de procesar venta
+                $('#btnProcesarVenta').click(procesarVenta);
 
                 // Manejador para cancelar la venta
                 $('#btnCancelarVenta').click(function() {

@@ -83,8 +83,8 @@ public class Venta {
         fechaVenta = LocalDateTime.now();
     }
 
-    public Double getTotalVenta() {
-        return this.totalVenta != null ? this.totalVenta.doubleValue() : 0.0;
+    public BigDecimal getTotalVenta() {
+        return this.totalVenta != null ? this.totalVenta : BigDecimal.ZERO;
     }
 
     public void setTotalVenta(BigDecimal totalVenta) {
