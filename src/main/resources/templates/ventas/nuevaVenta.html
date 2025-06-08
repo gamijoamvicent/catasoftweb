@@ -243,6 +243,37 @@
             font-weight: 600;
         }
 
+        /* Estilos para los botones de acción */
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .action-buttons .btn-primary {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .action-buttons .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+
+        .action-buttons .btn-primary .icon {
+            font-size: 1.2em;
+        }
+
         /* Ajustar el contenedor principal para dar espacio al indicador */
         .dashboard-container {
             padding-bottom: 80px;
@@ -321,9 +352,17 @@
             <div class="venta-container">
                 <div class="page-header">
                     <h1>Nueva Venta</h1>
-                    <a th:href="@{/ventas/combos/nueva}" class="btn btn-primary">
-                        <span class="icon">🎁</span> Vender Combos
-                    </a>
+                    <div style="display: flex; gap: 10px; margin-top: 20px;">
+                       <!----- <button style="display: flex; align-items: center; gap: 8px; padding: 10px 20px; background: var(--primary); color: white; border: none; border-radius: 8px; cursor: pointer; transition: all 0.3s ease; text-decoration: none; font-weight: 500;" onclick="window.location.href='/ventas/nueva'">
+                            <span style="font-size: 1.2em;">🛍️</span> Nueva Venta
+                        </button> -->  
+                        <button style="display: flex; align-items: center; gap: 8px; padding: 10px 20px; background: var(--primary); color: white; border: none; border-radius: 8px; cursor: pointer; transition: all 0.3s ease; text-decoration: none; font-weight: 500;" onclick="window.location.href='/ventas/combos/nueva'">
+                            <span style="font-size: 1.2em;">🎁</span> Vender Combos
+                        </button>
+                        <button style="display: flex; align-items: center; gap: 8px; padding: 10px 20px; background: var(--primary); color: white; border: none; border-radius: 8px; cursor: pointer; transition: all 0.3s ease; text-decoration: none; font-weight: 500;" onclick="window.location.href='/ventas/cajas/nueva'">
+                            <span style="font-size: 1.2em;">📦</span> Vender por Caja
+                        </button>
+                    </div>
                 </div>
 
                 <!-- Búsqueda de productos -->
