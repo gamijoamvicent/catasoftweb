@@ -65,7 +65,7 @@
                     </div>
                 </div>
 
-                <div class="card ventas" sec:authorize="hasAnyRole('CAJERO', 'ADMIN_LOCAL', 'SUPER_ADMIN')">
+               <!-- <div class="card ventas" sec:authorize="hasAnyRole('CAJERO', 'ADMIN_LOCAL', 'SUPER_ADMIN')">
                     <div class="card-header">
                         <img src="/icons/box.png" alt="Venta por Cajas" class="card-icon">
                         <h3 class="card-title">Venta por Cajas</h3>
@@ -74,7 +74,7 @@
                         <p>Registrar ventas de productos por cajas</p>
                         <a th:href="@{/ventas/cajas/nueva}" class="btn btn-primary">Vender por Cajas</a>
                     </div>
-                </div>
+                </div> -->
 
                 <div class="card ventas" sec:authorize="hasAnyRole('ADMIN_LOCAL', 'SUPER_ADMIN')">
                     <div class="card-header">
@@ -88,7 +88,7 @@
                 </div>
 
                 <!-- Sección de Ventas de Combos -->
-                <div class="section-title">
+               <!-- <div class="section-title">
                     <h2>Ventas de Combos</h2>
                 </div>
 
@@ -101,7 +101,7 @@
                         <p>Registrar venta de combos predefinidos</p>
                         <a th:href="@{/ventas/combos/nueva}" class="btn btn-primary">Vender Combo</a>
                     </div>
-                </div>
+                </div> -->  
 
                 <!-- Sección de Inventario -->
                 <div class="section-title">
@@ -126,7 +126,7 @@
                     </div>
                     <div class="card-content">
                         <p>Crear un nuevo combo de productos</p>
-                        <a th:href="@{/combos/agregar}" class="btn btn-primary">Agregar Combo</a>
+                        <a th:href="@{/combos/agregar}" class="btn btn-primary">Agregar Combo de productos</a>
                     </div>
                 </div>
 
@@ -138,6 +138,17 @@
                     <div class="card-content">
                         <p>Consultar el inventario actual</p>
                         <a th:href="@{/inventario}" class="btn btn-primary">Ver</a>
+                    </div>
+                </div>
+
+                <div class="card inventario" sec:authorize="hasAnyRole('ADMIN_LOCAL', 'SUPER_ADMIN')">
+                    <div class="card-header">
+                        <img src="/icons/box.png" alt="Cajas" class="card-icon">
+                        <h3 class="card-title">Gestión de Cajas</h3>
+                    </div>
+                    <div class="card-content">
+                        <p>Configure y gestione las cajas de productos</p>
+                        <a th:href="@{/cajas/configuracion}" class="btn btn-primary">Configurar Cajas de productos</a>
                     </div>
                 </div>
 
@@ -214,22 +225,6 @@
                     <div class="card-content">
                         <p>Administrar usuarios del sistema</p>
                         <a th:href="@{/usuarios/registrar}" class="btn btn-primary">Gestionar</a>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Tarjeta para Gestión de Cajas -->
-            <div class="col-md-4 col-lg-3">
-                <div class="card dashboard-card h-100">
-                    <div class="card-body d-flex flex-column">
-                        <div class="card-icon-container inventario">
-                            <i class="fas fa-box"></i>
-                        </div>
-                        <h5 class="card-title">Gestión de Cajas</h5>
-                        <p class="card-text">Configure y gestione las cajas de productos.</p>
-                        <div class="mt-auto">
-                            <a href="/cajas/configuracion" class="btn btn-primary w-100">Configurar Cajas</a>
-                        </div>
                     </div>
                 </div>
             </div>

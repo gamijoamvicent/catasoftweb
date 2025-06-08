@@ -69,9 +69,24 @@
 </head>
 <body>
     <div layout:fragment="content">
+        <nav style="background-color: #1565C0; padding: 15px 0; margin-bottom: 30px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+            <div class="container-fluid">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div style="display: flex; gap: 15px;">
+                        <a href="/ventas/nueva" style="color: white; text-decoration: none; display: flex; align-items: center; gap: 8px; padding: 8px 16px; border-radius: 6px; transition: all 0.3s ease; background: rgba(255,255,255,0.1);">
+                            <i class="fas fa-arrow-left"></i>
+                            Volver atrás
+                        </a>
+                        <a href="/dashboard" style="color: white; text-decoration: none; display: flex; align-items: center; gap: 8px; padding: 8px 16px; border-radius: 6px; transition: all 0.3s ease; background: rgba(255,255,255,0.1);">
+                            <i class="fas fa-home"></i>
+                            Volver al inicio
+                        </a>
+                    </div>
+                    <h1 style="color: white; margin: 0; font-size: 1.5rem; font-weight: 500;">Venta por Cajas</h1>
+                </div>
+            </div>
+        </nav>
         <div class="container-fluid">
-            <h1 class="h3 mb-4 text-gray-800">Venta por Cajas</h1>
-
             <div class="row">
                 <!-- Formulario de Venta -->
                 <div class="col-lg-8">
