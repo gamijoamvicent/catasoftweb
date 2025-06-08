@@ -680,6 +680,12 @@ function agregarAlCarrito(producto) {
 function actualizarTablaVentas() {
     const tbody = document.getElementById('ventasTableBody');
     tbody.innerHTML = '';
+
+// Alias para mantener compatibilidad con código existente
+// NOTA: Esta función se usa en múltiples vistas. Si se necesita en venta-cajas.html, asegurarse de que el script ventas.js esté importado.
+function actualizarTablaItems() {
+    actualizarTablaVentas();
+}
     
     let totalUSD = 0;
     let totalBs = 0;

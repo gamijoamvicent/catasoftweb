@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/layout}">
+<head>
+    <title>Gestión de Ventas</title>
+</head>
+<body>
+    <div layout:fragment="content">
+        <div class="container-fluid">
+            <h1 class="h3 mb-4 text-gray-800">Gestión de Ventas</h1>
+
+            <div class="row">
+                <div class="col-lg-12 mb-4">
+                    <div class="card shadow">
+                        <div class="card-header py-3">
+                            <h6 class="m-0 font-weight-bold text-primary">Tipos de Ventas</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-4 mb-4">
+                                    <div class="card bg-primary text-white shadow">
+                                        <div class="card-body">
+                                            <h5 class="card-title">Venta por Productos</h5>
+                                            <p class="card-text">Realizar venta de productos individuales.</p>
+                                            <a href="/ventas/nueva" class="btn btn-light btn-sm">Iniciar Venta</a>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 mb-4">
+                                    <div class="card bg-success text-white shadow">
+                                        <div class="card-body">
+                                            <h5 class="card-title">Venta por Cajas</h5>
+                                            <p class="card-text">Realizar venta de cajas de productos.</p>
+                                            <a href="/ventas/cajas/nueva" class="btn btn-light btn-sm">Iniciar Venta</a>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 mb-4">
+                                    <div class="card bg-info text-white shadow">
+                                        <div class="card-body">
+                                            <h5 class="card-title">Venta por Combos</h5>
+                                            <p class="card-text">Realizar venta de combos de productos.</p>
+                                            <a href="/ventas/combos/nueva" class="btn btn-light btn-sm">Iniciar Venta</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-lg-12 mb-4">
+                    <div class="card shadow">
+                        <div class="card-header py-3">
+                            <h6 class="m-0 font-weight-bold text-primary">Reportes y Gestión</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6 mb-4">
+                                    <div class="card bg-warning text-white shadow">
+                                        <div class="card-body">
+                                            <h5 class="card-title">Reportes de Ventas</h5>
+                                            <p class="card-text">Ver informes detallados de las ventas realizadas.</p>
+                                            <a href="/reportes/ventas" class="btn btn-light btn-sm">Ver Reportes</a>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 mb-4">
+                                    <div class="card bg-secondary text-white shadow">
+                                        <div class="card-body">
+                                            <h5 class="card-title">Gestión de Créditos</h5>
+                                            <p class="card-text">Administrar los créditos pendientes.</p>
+                                            <a href="/creditos" class="btn btn-light btn-sm">Gestionar Créditos</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

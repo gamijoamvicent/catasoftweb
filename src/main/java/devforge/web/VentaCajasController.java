@@ -171,7 +171,8 @@ public class VentaCajasController {
             return ResponseEntity.ok()
                 .body(Map.of(
                     "success", true,
-                    "message", "Venta procesada exitosamente"
+                    "message", "Venta procesada exitosamente",
+                    "clearCart", true
                 ));
         } catch (Exception e) {
             e.printStackTrace(); // Para logging
