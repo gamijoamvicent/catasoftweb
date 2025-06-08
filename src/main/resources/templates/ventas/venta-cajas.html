@@ -4,6 +4,9 @@
       layout:decorate="~{layout/layout}">
 <head>
     <title>Venta por Cajas</title>
+    <!-- Agregar meta tags CSRF -->
+    <meta name="_csrf" th:content="${_csrf?.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf?.headerName}"/>
     <style>
         .card {
             border-radius: 10px;
@@ -498,59 +501,110 @@
                         items: []
                     };
                     
-                    $('.caja-item').each(function() {
-                        const item = $(this);
-                        ventaData.items.push({
-                            cajaId: item.data('id'),
-                            cantidad: parseInt(item.find('.cantidad-input').val()),
-                            precio: parseFloat(item.find('.precio-input').val()),
-                            tipoTasa: item.data('tipo-tasa')
-                        });
-                    });
+                    try {
+                        $('.caja-item').each(function() {
+                            const item = $(this);
+                            const cantidadMatch = item.find('small').text().match(/Cantidad: (\d+)/);
+                            const precioMatch = item.find('small').text().match(/\$([\d.]+)/);
+                            
+                            if (!cantidadMatch || !precioMatch) {
+                                throw new Error('No se pudo extraer la cantidad o precio de la caja');
+                            }
 
-                    // Enviar solicitud al servidor
-                    $.ajax({
-                        url: '/ventas/cajas/procesar',
-                        method: 'POST',
-                        contentType: 'application/json',
-                        data: JSON.stringify(ventaData),
-                        success: function(response) {
-                            if (response.success) {
-                                Swal.fire({
-                                    icon: 'success',
-                                    title: '¡Éxito!',
-                                    text: response.message,
-                                    showConfirmButton: false,
-                                    timer: 1500
-                                }).then(() => {
-                                    // Limpiar el formulario y redirigir
-                                    limpiarFormulario();
-                                    window.location.href = '/ventas';
+                            const cantidad = parseInt(cantidadMatch[1]);
+                            const precio = parseFloat(precioMatch[1]);
+                            const tipoTasa = item.data('tipo-tasa');
+                            
+                            if (isNaN(cantidad) || isNaN(precio)) {
+                                throw new Error('Cantidad o precio inválido');
+                            }
+
+                            if (!tipoTasa) {
+                                throw new Error('Tipo de tasa no especificado');
+                            }
+                            
+                            ventaData.items.push({
+                                cajaId: item.data('id'),
+                                cantidad: cantidad,
+                                precio: precio,
+                                tipoTasa: tipoTasa
+                            });
+                        });
+
+                        console.log('Datos a enviar:', ventaData);
+
+                        // Obtener token CSRF
+                        const csrfToken = document.querySelector('meta[name="_csrf"]')?.getAttribute('content');
+                        const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.getAttribute('content');
+
+                        console.log('CSRF Token:', csrfToken);
+                        console.log('CSRF Header:', csrfHeader);
+
+                        if (!csrfToken || !csrfHeader) {
+                            throw new Error('No se encontraron los tokens CSRF');
+                        }
+
+                        // Enviar solicitud al servidor
+                        $.ajax({
+                            url: '/ventas/cajas/procesar',
+                            method: 'POST',
+                            contentType: 'application/json',
+                            headers: {
+                                [csrfHeader]: csrfToken
+                            },
+                            data: JSON.stringify(ventaData),
+                            success: function(response) {
+                                console.log('Respuesta exitosa:', response);
+                                if (response.success) {
+                                    Swal.fire({
+                                        icon: 'success',
+                                        title: '¡Éxito!',
+                                        text: response.message,
+                                        showConfirmButton: false,
+                                        timer: 1500
+                                    }).then(() => {
+                                        // Limpiar el formulario y redirigir
+                                        limpiarFormulario();
+                                        window.location.href = '/ventas';
+                                    });
+                                } else {
+                                    Swal.fire({
+                                        icon: 'error',
+                                        title: 'Error',
+                                        text: response.error || 'Error al procesar la venta'
+                                    });
+                                }
+                            },
+                            error: function(xhr, status, error) {
+                                console.error('Error en la petición:', {
+                                    status: status,
+                                    error: error,
+                                    response: xhr.responseText
                                 });
-                            } else {
+                                
+                                let errorMessage = 'Error al procesar la venta';
+                                try {
+                                    const response = JSON.parse(xhr.responseText);
+                                    errorMessage = response.error || response.message || errorMessage;
+                                } catch (e) {
+                                    console.error('Error al parsear respuesta:', e);
+                                }
+                                
                                 Swal.fire({
                                     icon: 'error',
                                     title: 'Error',
-                                    text: response.error || 'Error al procesar la venta'
+                                    text: errorMessage
                                 });
                             }
-                        },
-                        error: function(xhr) {
-                            let errorMessage = 'Error al procesar la venta';
-                            try {
-                                const response = JSON.parse(xhr.responseText);
-                                errorMessage = response.error || errorMessage;
-                            } catch (e) {
-                                console.error('Error al parsear respuesta:', e);
-                            }
-                            
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Error',
-                                text: errorMessage
-                            });
-                        }
-                    });
+                        });
+                    } catch (error) {
+                        console.error('Error al preparar los datos:', error);
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: error.message || 'Error al preparar los datos de la venta'
+                        });
+                    }
                 }
 
                 // Asignar evento al botón de procesar venta

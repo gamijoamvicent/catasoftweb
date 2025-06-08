@@ -1,19 +1,25 @@
 package devforge.web;
 
-import devforge.config.LicoreriaContext;
-import devforge.model.PrecioDolar;
 import devforge.model.Caja;
+import devforge.model.Licoreria;
+import devforge.model.PrecioDolar;
 import devforge.model.Venta;
 import devforge.model.VentaCaja;
-import devforge.servicio.PrecioDolarServicio;
 import devforge.servicio.CajaServicio;
+import devforge.servicio.PrecioDolarServicio;
 import devforge.servicio.VentaCajaServicio;
+import devforge.config.LicoreriaContext;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.security.web.csrf.CsrfToken;
+
+import jakarta.servlet.http.HttpSession;
+import jakarta.servlet.http.HttpServletRequest;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -25,29 +31,41 @@ import java.util.ArrayList;
 @RequestMapping("/ventas/cajas")
 public class VentaCajasController {
 
-    private final LicoreriaContext licoreriaContext;
-    private final PrecioDolarServicio precioDolarServicio;
-    private final CajaServicio cajaServicio;
-    private final VentaCajaServicio ventaCajaServicio;
-
     @Autowired
-    public VentaCajasController(LicoreriaContext licoreriaContext, 
-                               PrecioDolarServicio precioDolarServicio,
-                               CajaServicio cajaServicio,
-                               VentaCajaServicio ventaCajaServicio) {
-        this.licoreriaContext = licoreriaContext;
-        this.precioDolarServicio = precioDolarServicio;
-        this.cajaServicio = cajaServicio;
-        this.ventaCajaServicio = ventaCajaServicio;
-    }
+    private VentaCajaServicio ventaCajaServicio;
+    
+    @Autowired
+    private CajaServicio cajaServicio;
+    
+    @Autowired
+    private PrecioDolarServicio precioDolarServicio;
+    
+    @Autowired
+    private LicoreriaContext licoreriaContext;
 
     @GetMapping("/nueva")
-    public String mostrarVentaCajas(Model model) {
+    public String mostrarVentaCajas(Model model, HttpServletRequest request) {
+        // Verificar si hay una licorería seleccionada
         if (licoreriaContext.getLicoreriaActual() == null) {
             return "redirect:/licorerias/seleccionar";
         }
-
-        model.addAttribute("licoreriaActual", licoreriaContext.getLicoreriaActual());
+        
+        // Obtener la licorería actual
+        Licoreria licoreriaActual = licoreriaContext.getLicoreriaActual();
+        
+        // Obtener todas las cajas disponibles
+        List<Caja> cajas = cajaServicio.listarCajasPorLicoreria(licoreriaActual.getId());
+        
+        // Agregar datos al modelo
+        model.addAttribute("cajas", cajas);
+        model.addAttribute("licoreria", licoreriaActual);
+        
+        // Agregar el token CSRF al modelo
+        CsrfToken token = (CsrfToken) request.getAttribute(CsrfToken.class.getName());
+        if (token != null) {
+            model.addAttribute("_csrf", token);
+        }
+        
         return "ventas/venta-cajas";
     }
 
@@ -59,7 +77,8 @@ public class VentaCajasController {
                 return ResponseEntity.badRequest().body("Debe seleccionar una licorería primero");
             }
 
-            List<Caja> cajas = cajaServicio.buscarPorNombre(termino, licoreriaContext.getLicoreriaId());
+            Licoreria licoreriaActual = licoreriaContext.getLicoreriaActual();
+            List<Caja> cajas = cajaServicio.buscarPorNombre(termino, licoreriaActual.getId());
             return ResponseEntity.ok(cajas);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Error al buscar cajas: " + e.getMessage());
@@ -108,6 +127,28 @@ public class VentaCajasController {
                             .body(Map.of("error", "El precio debe ser mayor a 0"));
                     }
 
+                    Caja caja = cajaServicio.buscarPorId(cajaId)
+                        .orElseThrow(() -> new RuntimeException("Caja no encontrada: " + cajaId));
+
+                    // Solo validar stock si la caja tiene un producto asociado
+                    if (caja.getProducto() != null) {
+                        Integer stockProducto = caja.getProducto().getCantidad();
+                        if (stockProducto == null) {
+                            return ResponseEntity.badRequest()
+                                .body(Map.of("error", 
+                                    String.format("El producto %s no tiene stock definido",
+                                        caja.getProducto().getNombre())));
+                        }
+
+                        int unidadesNecesarias = caja.getCantidadUnidades() * cantidad;
+                        if (stockProducto < unidadesNecesarias) {
+                            return ResponseEntity.badRequest()
+                                .body(Map.of("error", 
+                                    String.format("Stock insuficiente para el producto: %s. Stock disponible: %d",
+                                        caja.getProducto().getNombre(), stockProducto)));
+                        }
+                    }
+
                     // Validar tipo de tasa
                     try {
                         PrecioDolar.TipoTasa.valueOf(tipoTasa);
@@ -115,30 +156,12 @@ public class VentaCajasController {
                         return ResponseEntity.badRequest()
                             .body(Map.of("error", "Tipo de tasa inválido: " + tipoTasa));
                     }
-
-                    Caja caja = cajaServicio.buscarPorId(cajaId)
-                        .orElseThrow(() -> new RuntimeException("Caja no encontrada: " + cajaId));
-
-                    if (caja.getStock() < cantidad) {
-                        return ResponseEntity.badRequest()
-                            .body(Map.of("error", 
-                                String.format("Stock insuficiente para la caja: %s. Stock disponible: %d",
-                                    caja.getNombre(), caja.getStock())));
-                    }
-
-                    // Si la caja tiene un producto asociado, validar su stock
-                    if (caja.getProducto() != null) {
-                        int unidadesNecesarias = caja.getCantidadUnidades() * cantidad;
-                        if (caja.getProducto().getCantidad() < unidadesNecesarias) {
-                            return ResponseEntity.badRequest()
-                                .body(Map.of("error", 
-                                    String.format("Stock insuficiente para el producto: %s. Stock disponible: %d",
-                                        caja.getProducto().getNombre(), caja.getProducto().getCantidad())));
-                        }
-                    }
                 } catch (NumberFormatException e) {
                     return ResponseEntity.badRequest()
-                        .body(Map.of("error", "Formato de número inválido en los datos"));
+                        .body(Map.of("error", "Formato de número inválido en los datos: " + e.getMessage()));
+                } catch (Exception e) {
+                    return ResponseEntity.badRequest()
+                        .body(Map.of("error", "Error al procesar el item: " + e.getMessage()));
                 }
             }
 
@@ -163,12 +186,12 @@ public class VentaCajasController {
     @GetMapping("/obtener-tasa")
     @ResponseBody
     public ResponseEntity<Double> obtenerTasaCambioActual() {
-        Long licoreriaId = licoreriaContext.getLicoreriaId();
-        if (licoreriaId == null) {
+        Licoreria licoreriaActual = licoreriaContext.getLicoreriaActual();
+        if (licoreriaActual == null) {
             return ResponseEntity.badRequest().build();
         }
 
-        Double tasaCambio = precioDolarServicio.obtenerTasaCambioActual(licoreriaId);
+        Double tasaCambio = precioDolarServicio.obtenerTasaCambioActual(licoreriaActual.getId());
         return ResponseEntity.ok(tasaCambio);
     }
 }
