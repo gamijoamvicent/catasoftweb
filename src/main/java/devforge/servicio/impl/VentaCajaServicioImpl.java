@@ -119,22 +119,72 @@ public class VentaCajaServicioImpl implements VentaCajaServicio {
     @Transactional
     public void descontarStockCaja(Long cajaId, int cantidad) {
         try {
+            System.out.println("=== Iniciando descuento de stock ===");
+            System.out.println("Caja ID: " + cajaId);
+            System.out.println("Cantidad a vender: " + cantidad);
+
             Caja caja = cajaRepository.findById(cajaId)
                 .orElseThrow(() -> new RuntimeException("Caja no encontrada: " + cajaId));
 
-            // Si la caja es de tipo tasa (BCV, PROMEDIO, PARALELA), no necesitamos descontar stock
-            if (caja.getTipoTasa() != null) {
-                return;
-            }
+            System.out.println("Datos de la caja:");
+            System.out.println("- Nombre: " + caja.getNombre());
+            System.out.println("- Tipo Tasa: " + caja.getTipoTasa());
+            System.out.println("- Producto ID: " + caja.getProductoId());
+            System.out.println("- Cantidad Unidades: " + caja.getCantidadUnidades());
 
             // Si la caja tiene un producto asociado, descontar el stock del producto
-            if (caja.getProducto() != null) {
-                Producto producto = caja.getProducto();
+            if (caja.getProductoId() != null) {
+                System.out.println("Buscando producto con ID: " + caja.getProductoId());
+                
+                // Obtener el producto directamente de la base de datos
+                Producto producto = productoRepository.findById(caja.getProductoId())
+                    .orElseThrow(() -> new RuntimeException("Producto no encontrado: " + caja.getProductoId()));
+                
+                System.out.println("Datos del producto:");
+                System.out.println("- Nombre: " + producto.getNombre());
+                System.out.println("- Stock actual: " + producto.getCantidad());
+                
+                // Obtener la cantidad actual del producto
+                Integer cantidadActual = producto.getCantidad();
+                if (cantidadActual == null) {
+                    throw new RuntimeException("El producto no tiene stock definido");
+                }
+                
+                // Calcular las unidades a descontar (cantidad de cajas * unidades por caja)
                 int unidadesADescontar = caja.getCantidadUnidades() * cantidad;
-                producto.setCantidad(producto.getCantidad() - unidadesADescontar);
-                productoRepository.save(producto);
+                System.out.println("Cálculo de unidades a descontar:");
+                System.out.println("- Unidades por caja: " + caja.getCantidadUnidades());
+                System.out.println("- Cantidad de cajas: " + cantidad);
+                System.out.println("- Total a descontar: " + unidadesADescontar);
+                
+                // Verificar si hay suficiente stock
+                if (cantidadActual < unidadesADescontar) {
+                    throw new RuntimeException(
+                        String.format("Stock insuficiente. Disponible: %d, Requerido: %d", 
+                            cantidadActual, unidadesADescontar)
+                    );
+                }
+                
+                // Descontar el stock y guardar inmediatamente
+                System.out.println("Descontando stock...");
+                System.out.println("- Stock anterior: " + cantidadActual);
+                producto.setCantidad(cantidadActual - unidadesADescontar);
+                producto = productoRepository.save(producto);
+                System.out.println("- Stock nuevo: " + producto.getCantidad());
+                
+                // Verificar que el cambio se haya guardado
+                if (producto.getCantidad() != (cantidadActual - unidadesADescontar)) {
+                    throw new RuntimeException("Error al actualizar el stock del producto");
+                }
+                
+                System.out.println("Stock actualizado correctamente");
+            } else {
+                System.out.println("La caja no tiene producto asociado");
             }
+            
+            System.out.println("=== Fin del proceso de descuento ===");
         } catch (Exception e) {
+            System.out.println("ERROR en descuento de stock: " + e.getMessage());
             throw new RuntimeException("Error al descontar stock: " + e.getMessage(), e);
         }
     }
