@@ -338,6 +338,164 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
         $(document).ready(function() {
+            // Variables para el carrito de productos
+            let productosSeleccionados = [];
+
+            // Función de búsqueda de productos
+            $('#buscarProducto').on('input', function() {
+                const termino = $(this).val().trim();
+                const $resultados = $('#resultadosBusqueda');
+
+                if (termino.length < 2) {
+                    $resultados.hide();
+                    return;
+                }
+
+                // Realizar la búsqueda mediante AJAX
+                $.get('/producto/buscar', { termino: termino }, function(productos) {
+                    $resultados.empty();
+
+                    if (productos.length === 0) {
+                        $resultados.append('<div class="search-item">No se encontraron productos</div>');
+                    } else {
+                        productos.forEach(producto => {
+                            const $item = $(`
+                                <div class="search-item" data-id="${producto.id}" data-nombre="${producto.nombre}" data-precio="${producto.precioVenta}">
+                                    <div class="search-item-title">${producto.nombre}</div>
+                                    <div class="d-flex justify-content-between">
+                                        <span class="search-item-price">$${producto.precioVenta}</span>
+                                        <span class="search-item-stock">Stock: ${producto.cantidad}</span>
+                                    </div>
+                                </div>
+                            `);
+
+                            $resultados.append($item);
+                        });
+                    }
+
+                    $resultados.show();
+                });
+            });
+
+            // Seleccionar un producto de los resultados de búsqueda
+            $(document).on('click', '.search-item', function() {
+                const id = $(this).data('id');
+                const nombre = $(this).data('nombre');
+                const precio = $(this).data('precio');
+
+                // Verificar si el producto ya está en el carrito
+                const productoExistente = productosSeleccionados.find(p => p.id === id);
+
+                if (productoExistente) {
+                    productoExistente.cantidad += 1;
+                } else {
+                    productosSeleccionados.push({
+                        id: id,
+                        nombre: nombre,
+                        precio: precio,
+                        cantidad: 1
+                    });
+                }
+
+                // Limpiar búsqueda y actualizar carrito
+                $('#buscarProducto').val('');
+                $('#resultadosBusqueda').hide();
+                actualizarCarrito();
+            });
+
+            // Actualizar la visualización del carrito
+            function actualizarCarrito() {
+                const $carrito = $('#carrito');
+                $carrito.empty();
+
+                productosSeleccionados.forEach((producto, index) => {
+                    const $item = $(`
+                        <div class="producto-item">
+                            <div class="flex-grow-1">
+                                <div class="fw-medium">${producto.nombre}</div>
+                                <div class="text-muted small">$${producto.precio}</div>
+                            </div>
+                            <div class="d-flex align-items-center">
+                                <button type="button" class="btn-cantidad me-2 decrementar" data-index="${index}">
+                                    <i class="fas fa-minus"></i>
+                                </button>
+                                <span class="fw-medium mx-2">${producto.cantidad}</span>
+                                <button type="button" class="btn-cantidad ms-2 incrementar" data-index="${index}">
+                                    <i class="fas fa-plus"></i>
+                                </button>
+                                <button type="button" class="btn-eliminar ms-3" data-index="${index}">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+                    `);
+
+                    $carrito.append($item);
+                });
+
+                if (productosSeleccionados.length === 0) {
+                    $carrito.append('<div class="alert alert-info">No hay productos seleccionados</div>');
+                }
+            }
+
+            // Incrementar cantidad de producto
+            $(document).on('click', '.incrementar', function() {
+                const index = $(this).data('index');
+                productosSeleccionados[index].cantidad += 1;
+                actualizarCarrito();
+            });
+
+            // Decrementar cantidad de producto
+            $(document).on('click', '.decrementar', function() {
+                const index = $(this).data('index');
+                if (productosSeleccionados[index].cantidad > 1) {
+                    productosSeleccionados[index].cantidad -= 1;
+                }
+                actualizarCarrito();
+            });
+
+            // Eliminar producto del carrito
+            $(document).on('click', '.btn-eliminar', function() {
+                const index = $(this).data('index');
+                productosSeleccionados.splice(index, 1);
+                actualizarCarrito();
+            });
+
+            // Enviar formulario para crear combo
+            $('#comboForm').on('submit', function(e) {
+                e.preventDefault();
+
+                if (productosSeleccionados.length === 0) {
+                    alert('Debe agregar al menos un producto al combo');
+                    return;
+                }
+
+                const datos = {
+                    nombre: $('#nombre').val(),
+                    precio: $('#precio').val(),
+                    tipoTasa: $('#tipoTasa').val(),
+                    productos: productosSeleccionados
+                };
+
+                $.ajax({
+                    url: '/combos/api/combos',
+                    method: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(datos),
+                    success: function(response) {
+                        alert('Combo creado exitosamente');
+                        $('#nombre').val('');
+                        $('#precio').val('');
+                        productosSeleccionados = [];
+                        actualizarCarrito();
+                        cargarCombos();
+                    },
+                    error: function(xhr) {
+                        alert('Error al crear el combo: ' + xhr.responseText);
+                    }
+                });
+            });
+
             // Cargar combos existentes
             function cargarCombos() {
                 $.get('/combos/api/combos', function(combos) {
@@ -387,6 +545,13 @@
             }
 
             // Función para eliminar un combo
+                            // Cerrar el menú de búsqueda al hacer clic fuera de él
+                            $(document).on('click', function(e) {
+                if (!$(e.target).closest('#buscarProducto, #resultadosBusqueda').length) {
+                    $('#resultadosBusqueda').hide();
+                }
+                            });
+
             window.eliminarCombo = function(id) {
                 if (confirm('¿Está seguro de que desea eliminar este combo?')) {
                     $.ajax({
