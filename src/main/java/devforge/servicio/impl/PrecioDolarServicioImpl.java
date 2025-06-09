@@ -87,17 +87,36 @@ public class PrecioDolarServicioImpl implements PrecioDolarServicio {
 
     @Override
     public Double obtenerTasaCambioActual(Long licoreriaId) {
-        // Obtener la tasa más reciente (BCV por defecto)
+        // Obtener la tasa más reciente (BCV por defecto) para la licorería específica
         List<PrecioDolar> tasas = precioDolarRepositorio.findByLicoreriaIdAndTipoTasaOrderByFechaCreacionDesc(
             licoreriaId, TipoTasa.BCV);
         if (!tasas.isEmpty()) {
             return tasas.get(0).getPrecioDolar();
         }
 
-        // Si no hay tasa BCV, obtener cualquier tasa
+        // Si no hay tasa BCV, obtener cualquier tasa para esta licorería
         tasas = precioDolarRepositorio.findByLicoreriaIdOrderByFechaCreacionDesc(licoreriaId);
         if (!tasas.isEmpty()) {
             return tasas.get(0).getPrecioDolar();
+        }
+
+        // Si no hay tasas para esta licorería, buscar tasas BCV en otras licorerías
+        List<PrecioDolar> todasLasTasasBCV = precioDolarRepositorio.findAll().stream()
+            .filter(p -> p.getTipoTasa() == TipoTasa.BCV)
+            .sorted((p1, p2) -> p2.getFechaCreacion().compareTo(p1.getFechaCreacion()))
+            .collect(java.util.stream.Collectors.toList());
+
+        if (!todasLasTasasBCV.isEmpty()) {
+            return todasLasTasasBCV.get(0).getPrecioDolar();
+        }
+
+        // Si no hay tasas BCV en ninguna licorería, obtener cualquier tasa
+        List<PrecioDolar> todasLasTasas = precioDolarRepositorio.findAll().stream()
+            .sorted((p1, p2) -> p2.getFechaCreacion().compareTo(p1.getFechaCreacion()))
+            .collect(java.util.stream.Collectors.toList());
+
+        if (!todasLasTasas.isEmpty()) {
+            return todasLasTasas.get(0).getPrecioDolar();
         }
 
         // Si no hay tasas, devolver un valor predeterminado

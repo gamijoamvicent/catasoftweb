@@ -22,6 +22,9 @@ public class VentaCaja {
     @Column(name = "venta_id", insertable = false, updatable = false)
     private Long ventaId;
 
+    @Column(nullable = false)
+    private boolean activo = true;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "caja_id", nullable = false)
     private Caja caja;
@@ -54,5 +57,6 @@ public class VentaCaja {
     @PrePersist
     protected void onCreate() {
         fechaCreacion = LocalDateTime.now();
+        // El campo activo ya tiene valor predeterminado true
     }
 }

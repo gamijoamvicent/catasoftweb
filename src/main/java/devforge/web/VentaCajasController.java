@@ -195,4 +195,39 @@ public class VentaCajasController {
         Double tasaCambio = precioDolarServicio.obtenerTasaCambioActual(licoreriaActual.getId());
         return ResponseEntity.ok(tasaCambio);
     }
+
+    @PostMapping("/desactivar/{id}")
+    @ResponseBody
+    @Transactional
+    public ResponseEntity<?> desactivarVentaCaja(@PathVariable("id") Long ventaCajaId) {
+        try {
+            if (licoreriaContext.getLicoreriaActual() == null) {
+                return ResponseEntity.badRequest()
+                    .body(Map.of("error", "Debe seleccionar una licorería primero"));
+            }
+
+            boolean resultado = ventaCajaServicio.desactivarVentaCaja(ventaCajaId);
+
+            if (resultado) {
+                return ResponseEntity.ok()
+                    .body(Map.of(
+                        "success", true,
+                        "message", "Venta desactivada exitosamente"
+                    ));
+            } else {
+                return ResponseEntity.status(404)
+                    .body(Map.of(
+                        "success", false,
+                        "error", "No se encontró la venta especificada"
+                    ));
+            }
+        } catch (Exception e) {
+            e.printStackTrace(); // Para logging
+            return ResponseEntity.status(500)
+                .body(Map.of(
+                    "success", false,
+                    "error", "Error al desactivar la venta: " + e.getMessage()
+                ));
+        }
+    }
 }

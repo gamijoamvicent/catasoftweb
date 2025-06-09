@@ -1542,6 +1542,51 @@ function verDetalle(ventaId) {
     window.location.href = `/ventas/detalle/${ventaId}`;
 }
 
+// Función para desactivar una venta de caja
+function desactivarVentaCaja(ventaCajaId) {
+    if (!confirm('¿Está seguro que desea eliminar esta venta? Esta acción no se puede deshacer.')) {
+        return;
+    }
+
+    // Verificar que tenemos los tokens CSRF
+    if (!csrfToken || !csrfHeader) {
+        showNotification('Error de seguridad: Tokens CSRF no encontrados', 'error');
+        return;
+    }
+
+    // Mostrar indicador de carga
+    document.body.style.cursor = 'wait';
+
+    const headers = {
+        'Content-Type': 'application/json'
+    };
+    headers[csrfHeader] = csrfToken;
+
+    fetch(`/ventas/cajas/desactivar/${ventaCajaId}`, {
+        method: 'POST',
+        headers: headers
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.error) {
+            throw new Error(data.error);
+        }
+        showNotification('Venta eliminada con éxito', 'success');
+
+        // Recargar la página para reflejar los cambios
+        setTimeout(() => {
+            location.reload();
+        }, 1000);
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Error al eliminar la venta: ' + error.message, 'error');
+    })
+    .finally(() => {
+        document.body.style.cursor = 'default';
+    });
+}
+
 function setupCharts() {
     // Asegurarse de que Chart.js esté disponible
     if (typeof Chart === 'undefined') {

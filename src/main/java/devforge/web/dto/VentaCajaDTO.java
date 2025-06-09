@@ -16,13 +16,14 @@ public class VentaCajaDTO {
     private BigDecimal subtotal;
     private String metodoPago;
     private String nombreCliente;
+    private boolean activo = true;
 
     public VentaCajaDTO() {
     }
 
     public VentaCajaDTO(Long id, LocalDateTime fechaCreacion, String tipoCaja, String cajaNombre, 
                       Integer cantidad, BigDecimal precioUnitario, BigDecimal subtotal, 
-                      String metodoPago, String nombreCliente) {
+                      String metodoPago, String nombreCliente, boolean activo) {
         this.id = id;
         this.fechaCreacion = fechaCreacion;
         this.tipoCaja = tipoCaja;
@@ -32,6 +33,7 @@ public class VentaCajaDTO {
         this.subtotal = subtotal;
         this.metodoPago = metodoPago;
         this.nombreCliente = nombreCliente;
+        this.activo = activo;
     }
 
     public Long getId() {
@@ -104,5 +106,13 @@ public class VentaCajaDTO {
 
     public void setNombreCliente(String nombreCliente) {
         this.nombreCliente = nombreCliente;
+    }
+
+    public boolean isActivo() {
+        return activo;
+    }
+
+    public void setActivo(boolean activo) {
+        this.activo = activo;
     }
 }

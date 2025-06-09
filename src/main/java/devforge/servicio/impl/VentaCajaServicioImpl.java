@@ -193,12 +193,48 @@ public class VentaCajaServicioImpl implements VentaCajaServicio {
 
     @Override
     public List<VentaCaja> listarVentasPorVenta(Long ventaId) {
-        return ventaCajaRepository.findByVentaId(ventaId);
+        return ventaCajaRepository.findByVentaIdAndActivoTrue(ventaId);
     }
 
     @Override
     public List<VentaCaja> listarVentasPorCaja(Long cajaId) {
-        return ventaCajaRepository.findByCajaId(cajaId);
+        return ventaCajaRepository.findByCajaIdAndActivoTrue(cajaId);
+    }
+
+    @Override
+    @Transactional
+    public boolean desactivarVentaCaja(Long ventaCajaId) {
+        try {
+            VentaCaja ventaCaja = ventaCajaRepository.findById(ventaCajaId)
+                .orElseThrow(() -> new RuntimeException("Venta de caja no encontrada: " + ventaCajaId));
+
+            // Desactivar la venta
+            ventaCaja.setActivo(false);
+            ventaCajaRepository.save(ventaCaja);
+            return true;
+        } catch (Exception e) {
+            throw new RuntimeException("Error al desactivar la venta: " + e.getMessage(), e);
+        }
+    }
+
+    @Override
+    public boolean inactivarVentaCaja(Long id) {
+        try {
+            // Buscar la venta de caja por su ID
+            VentaCaja ventaCaja = ventaCajaRepository.findById(id)
+                    .orElseThrow(() -> new RuntimeException("Venta de caja no encontrada con ID: " + id));
+
+            // Cambiar estado a inactivo
+            ventaCaja.setActivo(false);
+
+            // Guardar cambios
+            ventaCajaRepository.save(ventaCaja);
+
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 
     @Override
@@ -209,8 +245,8 @@ public class VentaCajaServicioImpl implements VentaCajaServicio {
         // Obtener los IDs de ventas para buscar las ventas de cajas
         List<Long> ventaIds = ventas.stream().map(Venta::getId).toList();
 
-        // Buscar todas las ventas de cajas asociadas a estas ventas
-        List<VentaCaja> ventasCajas = ventaCajaRepository.findByVentaIdIn(ventaIds);
+        // Buscar todas las ventas de cajas asociadas a estas ventas (solo activas)
+        List<VentaCaja> ventasCajas = ventaCajaRepository.findByVentaIdInAndActivoTrue(ventaIds);
 
         // Filtrar por tipo de caja si es necesario
         if (tipoCaja != null && !tipoCaja.equals("TODAS")) {
@@ -231,6 +267,7 @@ public class VentaCajaServicioImpl implements VentaCajaServicio {
                 dto.setPrecioUnitario(vc.getPrecioUnitario());
                 dto.setSubtotal(vc.getSubtotal());
                 dto.setMetodoPago(vc.getVenta().getMetodoPago().toString());
+                dto.setActivo(vc.isActivo());
                 // Asegurar que el nombre del cliente nunca sea null
                 if (vc.getVenta().getCliente() != null) {
                     String nombre = vc.getVenta().getCliente().getNombre() != null ? vc.getVenta().getCliente().getNombre() : "";

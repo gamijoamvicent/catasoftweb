@@ -118,8 +118,11 @@ function actualizarTablaVentas(ventas) {
             <td>${formatoDinero(venta.precioUnitario)}</td>
             <td>${formatoDinero(venta.total)}</td>
             <td>
-                <button class="btn btn-sm btn-info ver-detalle" data-id="${venta.id}">
+                <button class="btn btn-sm btn-info ver-detalle" data-id="${venta.id}" title="Ver detalle">
                     <i class="fas fa-eye"></i>
+                </button>
+                <button class="btn btn-sm btn-danger eliminar-venta" data-id="${venta.id}" title="Eliminar">
+                    <i class="fas fa-trash"></i>
                 </button>
             </td>
         `;
@@ -133,12 +136,62 @@ function actualizarTablaVentas(ventas) {
             verDetalleVenta(id);
         });
     });
+
+    // Agregar event listeners a los botones de eliminación
+    document.querySelectorAll('.eliminar-venta').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const id = this.getAttribute('data-id');
+            eliminarVenta(id);
+        });
+    });
 }
 
 function verDetalleVenta(id) {
     // Implementación para ver detalles de una venta específica
     alert(`Mostrando detalles de la venta ID: ${id}`);
     // Aquí podría abrirse un modal con los detalles o redirigir a una página de detalles
+}
+
+function eliminarVenta(id) {
+    if (confirm('¿Está seguro que desea eliminar esta venta de caja? Esta acción no se puede deshacer.')) {
+        // Preparar los headers
+        const headers = {
+            'Content-Type': 'application/json'
+        };
+
+        // Intentar obtener el token CSRF si existe
+        const csrfMeta = document.querySelector('meta[name="_csrf"]');
+        const csrfHeaderMeta = document.querySelector('meta[name="_csrf_header"]');
+
+        if (csrfMeta && csrfHeaderMeta) {
+            headers[csrfHeaderMeta.content] = csrfMeta.content;
+        }
+
+        // Realizar petición al servidor para inactivar la venta de caja
+        fetch(`/api/ventas-cajas/${id}/inactivar`, {
+            method: 'POST',
+            headers: headers
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Error al eliminar la venta de caja');
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                alert('Venta de caja eliminada correctamente');
+                // Recargar los datos del dashboard
+                cargarDashboard();
+            } else {
+                throw new Error(data.message || 'Error al eliminar la venta de caja');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error al eliminar la venta de caja: ' + error.message);
+        });
+    }
 }
 
 function exportarDatos() {
