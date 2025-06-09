@@ -516,6 +516,7 @@
                                             </button>
                                         </div>
                                         <p class="precio-combo">$${combo.precio}</p>
+                                        <p class="text-muted small">Licorería ID: ${combo.licoreriaId}</p>
                                         <div class="productos-list">
                                             <div id="productos-${combo.id}">
                                                 <!-- Los productos se cargarán dinámicamente -->
@@ -528,18 +529,27 @@
                         
                         $listaCombos.append($combo);
                         
-                        // Cargar productos del combo
-                        $.get(`/combos/api/combos/${combo.id}/productos`, function(productos) {
+                        // Cargar productos del combo - usando licoreria_id para filtrar correctamente
+                        $.get(`/combos/api/combos/${combo.id}/productos?licoreriaId=${combo.licoreriaId || ''}`, function(productos) {
                             const $productos = $(`#productos-${combo.id}`);
-                            productos.forEach(producto => {
-                                $productos.append(`
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <span class="fw-medium">${producto.nombre}</span>
-                                        <span class="badge bg-light text-dark">x${producto.cantidad}</span>
-                                    </div>
-                                `);
-                            });
+                            $productos.empty();
+
+                            if (productos.length === 0) {
+                                $productos.append(`<div class="text-muted">No hay productos en este combo</div>`);
+                            } else {
+                                productos.forEach(producto => {
+                                    $productos.append(`
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <span class="fw-medium">${producto.nombre}</span>
+                                            <span class="badge bg-light text-dark">x${producto.cantidad}</span>
+                                            <small class="text-muted">(ID: ${producto.id})</small>
+                                        </div>
+                                    `);
+                                });
+                            }
                         });
+                        // Mostrar un mensaje indicando la licorería del combo
+                        $('.card-title', $combo).append(` <span class="badge bg-info text-white">Licorería ${combo.licoreriaId}</span>`);
                     });
                 });
             }

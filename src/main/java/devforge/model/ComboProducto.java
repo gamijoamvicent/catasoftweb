@@ -17,6 +17,9 @@ public class ComboProducto {
     @JoinColumn(name = "producto_id", nullable = false)
     private Producto producto;
 
+    @Column(name = "licoreria_id")
+    private Long licoreriaId;
+
     @Column(nullable = false)
     private Integer cantidad;
 
@@ -43,6 +46,14 @@ public class ComboProducto {
 
     public void setProducto(Producto producto) {
         this.producto = producto;
+    }
+
+    public Long getLicoreriaId() {
+        return licoreriaId;
+    }
+
+    public void setLicoreriaId(Long licoreriaId) {
+        this.licoreriaId = licoreriaId;
     }
 
     public Integer getCantidad() {

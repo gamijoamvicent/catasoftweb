@@ -72,13 +72,21 @@ public class ComboController {
                 Long productoId = ((Number) productoData.get("id")).longValue();
                 int cantidad = ((Number) productoData.get("cantidad")).intValue();
                 
+                // Verificar que el producto pertenezca a la licorería actual
                 Producto producto = productoRepository.findById(productoId)
                     .orElseThrow(() -> new RuntimeException("Producto no encontrado"));
+
+                // Validar que el producto pertenezca a la licorería actual
+                if (!producto.getLicoreria().getId().equals(licoreriaContext.getLicoreriaId())) {
+                    return ResponseEntity.badRequest()
+                        .body("El producto '" + producto.getNombre() + "' no pertenece a la licorería actual");
+                }
 
                 ComboProducto comboProducto = new ComboProducto();
                 comboProducto.setCombo(combo);
                 comboProducto.setProducto(producto);
                 comboProducto.setCantidad(cantidad);
+                    comboProducto.setLicoreriaId(licoreriaContext.getLicoreriaId()); // Guardar la licorería actual
                 comboProductoRepository.save(comboProducto);
             }
 
@@ -96,10 +104,11 @@ public class ComboController {
             return new ArrayList<>();
         }
 
-        return comboRepository.findAll()
+        Long licoreriaId = licoreriaContext.getLicoreriaId();
+
+        // Usar el método del repositorio que filtra directamente
+        return comboRepository.findByLicoreriaIdAndActivoTrue(licoreriaId)
             .stream()
-            .filter(combo -> combo.getLicoreria().getId().equals(licoreriaContext.getLicoreriaId()))
-            .filter(Combo::getActivo)
             .map(combo -> {
                 Map<String, Object> comboData = new HashMap<>();
                 comboData.put("id", combo.getId());
@@ -108,6 +117,7 @@ public class ComboController {
                 comboData.put("tipoTasa", combo.getTipoTasa().toString());
                 comboData.put("fechaCreacion", combo.getFechaCreacion());
                 comboData.put("activo", combo.getActivo());
+                comboData.put("licoreriaId", combo.getLicoreria().getId()); // Agregar el ID de la licorería para verificación
                 return comboData;
             })
             .toList();
@@ -115,8 +125,36 @@ public class ComboController {
 
     @GetMapping("/api/combos/{id}/productos")
     @ResponseBody
-    public List<Map<String, Object>> obtenerProductosCombo(@PathVariable Long id) {
-        List<ComboProducto> productosCombo = comboProductoRepository.findByComboId(id);
+    public List<Map<String, Object>> obtenerProductosCombo(
+            @PathVariable Long id,
+            @RequestParam(required = false) Long licoreriaId) {
+
+        // Si no se proporciona licoreríaId, usar la del contexto actual
+        if (licoreriaId == null) {
+            if (licoreriaContext.getLicoreriaActual() == null) {
+                return List.of();
+            }
+            licoreriaId = licoreriaContext.getLicoreriaId();
+        }
+
+        // Primero verifica que el combo exista
+        Combo combo = comboRepository.findById(id).orElse(null);
+        if (combo == null) {
+            return List.of();
+        }
+
+        // Verificar que el combo pertenezca a la licorería solicitada
+        if (!combo.getLicoreria().getId().equals(licoreriaId)) {
+            return List.of();
+        }
+
+        // Primero intentar con el filtro por el campo licoreriaId
+        List<ComboProducto> productosCombo = comboProductoRepository.findByComboIdAndLicoreriaId(id, licoreriaId);
+
+        // Si no hay resultados, intentar con el filtro por relación de entidades
+        if (productosCombo.isEmpty()) {
+            productosCombo = comboProductoRepository.findByComboIdAndComboLicoreriaId(id, licoreriaId);
+        }
         return productosCombo
             .stream()
             .map(cp -> {
@@ -125,6 +163,7 @@ public class ComboController {
                 productoData.put("nombre", cp.getProducto().getNombre());
                 productoData.put("precioVenta", cp.getProducto().getPrecioVenta());
                 productoData.put("cantidad", cp.getCantidad());
+                productoData.put("licoreriaId", cp.getLicoreriaId()); // Incluir licoreríaId para verificación
                 return productoData;
             })
             .toList();
@@ -133,15 +172,33 @@ public class ComboController {
     @GetMapping("/api/combos/{id}/detalle")
     @ResponseBody
     public ResponseEntity<?> obtenerDetalleCombo(@PathVariable Long id) {
+        if (licoreriaContext.getLicoreriaActual() == null) {
+            return ResponseEntity.badRequest().body("Debe seleccionar una licorería primero");
+        }
+
         Combo combo = comboRepository.findById(id).orElse(null);
         if (combo == null) {
             return ResponseEntity.notFound().build();
         }
-        List<ComboProducto> productosCombo = comboProductoRepository.findByComboId(id);
+
+        // Verificar que el combo pertenezca a la licorería actual
+        if (!combo.getLicoreria().getId().equals(licoreriaContext.getLicoreriaId())) {
+            return ResponseEntity.badRequest().body("El combo solicitado no pertenece a la licorería actual");
+        }
+
+        // Usar el método que filtra por el campo licoreriaId
+        List<ComboProducto> productosCombo = comboProductoRepository.findByComboIdAndLicoreriaId(id, licoreriaContext.getLicoreriaId());
+
+        // Si no hay resultados, intentar con el filtro por relación de entidades
+        if (productosCombo.isEmpty()) {
+            productosCombo = comboProductoRepository.findByComboIdAndComboLicoreriaId(id, licoreriaContext.getLicoreriaId());
+        }
         devforge.model.dto.ComboDetalleDTO dto = new devforge.model.dto.ComboDetalleDTO();
         dto.setId(combo.getId());
         dto.setNombre(combo.getNombre());
         dto.setPrecio(combo.getPrecio());
+        // No agregamos licoreriaId porque no existe ese setter en el DTO
+
         List<devforge.model.dto.ComboDetalleDTO.ItemDTO> items = new ArrayList<>();
         for (ComboProducto cp : productosCombo) {
             devforge.model.dto.ComboDetalleDTO.ItemDTO item = new devforge.model.dto.ComboDetalleDTO.ItemDTO();
@@ -163,20 +220,36 @@ public class ComboController {
                 return ResponseEntity.badRequest().body("Debe seleccionar una licorería primero");
             }
 
+            Long licoreriaId = licoreriaContext.getLicoreriaId();
+
             @SuppressWarnings("unchecked")
             List<Map<String, Object>> combosVendidos = (List<Map<String, Object>>) payload.get("combos");
-            
+
             for (Map<String, Object> comboVenta : combosVendidos) {
                 Long comboId = ((Number) comboVenta.get("id")).longValue();
                 int cantidad = ((Number) comboVenta.get("cantidad")).intValue();
-                
+
                 Combo combo = comboRepository.findById(comboId)
                     .orElseThrow(() -> new RuntimeException("Combo no encontrado"));
-                
+
+                // Verificar que el combo pertenezca a la licorería actual
+                if (!combo.getLicoreria().getId().equals(licoreriaId)) {
+                    return ResponseEntity.badRequest()
+                        .body("El combo '" + combo.getNombre() + "' no pertenece a la licorería actual");
+                }
+
                 List<ComboProducto> productosCombo = comboProductoRepository.findByComboId(comboId);
-                
+
                 for (ComboProducto cp : productosCombo) {
                     Producto producto = cp.getProducto();
+
+                    // Verificar que el producto pertenezca a la licorería actual
+                    if (!producto.getLicoreria().getId().equals(licoreriaId)) {
+                        return ResponseEntity.badRequest()
+                            .body("El producto '" + producto.getNombre() + "' en el combo '" + 
+                                  combo.getNombre() + "' no pertenece a la licorería actual");
+                    }
+
                     int cantidadADescontar = cp.getCantidad() * cantidad;
                     
                     if (producto.getCantidad() < cantidadADescontar) {
