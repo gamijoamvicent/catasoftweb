@@ -28,4 +28,6 @@ public interface VentaRepository extends JpaRepository<Venta, Long>, JpaSpecific
         @Param("licoreriaId") Long licoreriaId,
         @Param("fechaInicio") LocalDateTime fechaInicio,
         @Param("fechaFin") LocalDateTime fechaFin);
+
+    List<Venta> findByLicoreriaIdAndFechaVentaBetweenAndAnuladaFalse(Long licoreriaId, LocalDateTime fechaInicio, LocalDateTime fechaFin);
 } 

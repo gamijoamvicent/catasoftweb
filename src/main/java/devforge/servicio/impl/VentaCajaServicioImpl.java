@@ -14,6 +14,7 @@ import devforge.repository.ProductoRepository;
 import devforge.servicio.VentaCajaServicio;
 import devforge.config.LicoreriaContext;
 import devforge.servicio.PrecioDolarServicio;
+import devforge.web.dto.VentaCajaDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,6 +23,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class VentaCajaServicioImpl implements VentaCajaServicio {
@@ -197,6 +199,49 @@ public class VentaCajaServicioImpl implements VentaCajaServicio {
     @Override
     public List<VentaCaja> listarVentasPorCaja(Long cajaId) {
         return ventaCajaRepository.findByCajaId(cajaId);
+    }
+
+    @Override
+    public List<VentaCajaDTO> buscarVentasCajasPorFechaYTipo(Long licoreriaId, LocalDateTime fechaInicio, LocalDateTime fechaFin, String tipoCaja) {
+        // Buscar ventas realizadas en el período especificado
+        List<Venta> ventas = ventaRepository.findByLicoreriaIdAndFechaVentaBetweenAndAnuladaFalse(licoreriaId, fechaInicio, fechaFin);
+
+        // Obtener los IDs de ventas para buscar las ventas de cajas
+        List<Long> ventaIds = ventas.stream().map(Venta::getId).toList();
+
+        // Buscar todas las ventas de cajas asociadas a estas ventas
+        List<VentaCaja> ventasCajas = ventaCajaRepository.findByVentaIdIn(ventaIds);
+
+        // Filtrar por tipo de caja si es necesario
+        if (tipoCaja != null && !tipoCaja.equals("TODAS")) {
+            ventasCajas = ventasCajas.stream()
+                .filter(vc -> vc.getCaja().getTipo().equals(tipoCaja))
+                .toList();
+        }
+
+        // Convertir a DTOs para transferir la información
+        return ventasCajas.stream()
+            .map(vc -> {
+                VentaCajaDTO dto = new VentaCajaDTO();
+                dto.setId(vc.getId());
+                dto.setFechaCreacion(vc.getFechaCreacion());
+                dto.setTipoCaja(vc.getCaja().getTipo());
+                dto.setCajaNombre(vc.getCaja().getNombre());
+                dto.setCantidad(vc.getCantidad());
+                dto.setPrecioUnitario(vc.getPrecioUnitario());
+                dto.setSubtotal(vc.getSubtotal());
+                dto.setMetodoPago(vc.getVenta().getMetodoPago().toString());
+                // Asegurar que el nombre del cliente nunca sea null
+                if (vc.getVenta().getCliente() != null) {
+                    String nombre = vc.getVenta().getCliente().getNombre() != null ? vc.getVenta().getCliente().getNombre() : "";
+                    String apellido = vc.getVenta().getCliente().getApellido() != null ? vc.getVenta().getCliente().getApellido() : "";
+                    dto.setNombreCliente(nombre + " " + apellido);
+                } else {
+                    dto.setNombreCliente("Venta al contado");
+                }
+                return dto;
+            })
+            .toList();
     }
 
     private double obtenerTasaCambio(String tipoTasa) {

@@ -20,6 +20,7 @@ public class Caja {
 
     @Column(name = "nombre", nullable = false)
     private String nombre;
+        private String tipo;
 
     @Column(name = "descripcion")
     private String descripcion;

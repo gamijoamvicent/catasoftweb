@@ -10,4 +10,5 @@ import java.util.List;
 public interface VentaCajaRepository extends JpaRepository<VentaCaja, Long> {
     List<VentaCaja> findByVentaId(Long ventaId);
     List<VentaCaja> findByCajaId(Long cajaId);
+    List<VentaCaja> findByVentaIdIn(List<Long> ventaIds);
 }

@@ -14,6 +14,7 @@ import devforge.servicio.VentaServicio;
 import devforge.servicio.CreditoServicio;
 import devforge.servicio.PrecioDolarServicio;
 import devforge.servicio.ProductoServicio;
+import devforge.web.dto.VentaCajaDTO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,6 +24,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -42,8 +44,11 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.HashMap;
+import java.util.TreeMap;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.Optional;
+import java.util.Comparator;
 
 import com.itextpdf.text.Document;
 import com.itextpdf.text.Element;
@@ -60,9 +65,20 @@ import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+
+import java.io.ByteArrayOutputStream;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Random;
+import devforge.servicio.VentaCajaServicio;
 
 @Controller
-@RequestMapping("/reportes/ventas")
+@RequestMapping("/reportes")
 public class ReporteVentasController {
     private static final Logger logger = LoggerFactory.getLogger(ReporteVentasController.class);
 
@@ -71,6 +87,9 @@ public class ReporteVentasController {
 
     @Autowired
     private UsuarioServicio usuarioServicio;
+
+    @Autowired
+    private VentaCajaServicio ventaCajaServicio;
 
     @Autowired
     private VentaServicio ventaServicio;
@@ -84,7 +103,7 @@ public class ReporteVentasController {
     @Autowired
     private ProductoServicio productoServicio;
 
-    @GetMapping
+    @GetMapping("/ventas")
     @PreAuthorize("hasAnyRole('ADMIN_LOCAL', 'SUPER_ADMIN')")
     public String mostrarDashboard(Model model) {
         Licoreria licoreriaActual = licoreriaContext.getLicoreriaActual();
@@ -96,7 +115,86 @@ public class ReporteVentasController {
         return "reportes/dashboard";
     }
 
-    @GetMapping("/lista")
+    @GetMapping("/ventas-cajas")
+    @PreAuthorize("hasAnyRole('ADMIN_LOCAL', 'SUPER_ADMIN')")
+    public String mostrarConfiguracionCajas(Model model) {
+        Licoreria licoreriaActual = licoreriaContext.getLicoreriaActual();
+        if (licoreriaActual == null) {
+            return "redirect:/error?mensaje=No hay licorería seleccionada";
+        }
+
+        model.addAttribute("licoreriaActual", licoreriaActual);
+        return "reportes/ventas-cajas";
+    }
+
+    @GetMapping("/ventas-cajas/data")
+    @ResponseBody
+    @PreAuthorize("hasAnyRole('ADMIN_LOCAL', 'SUPER_ADMIN')")
+    public ResponseEntity<?> obtenerDatosCajasDashboard(
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaInicio,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaFin,
+            @RequestParam(required = false, defaultValue = "TODAS") String tipoCaja) {
+
+        try {
+            if (licoreriaContext.getLicoreriaActual() == null) {
+                return ResponseEntity.badRequest().body(Map.of("error", "Debe seleccionar una licorería primero"));
+            }
+
+            Long licoreriaId = licoreriaContext.getLicoreriaActual().getId();
+
+            // Si no se proporcionan fechas, usar el último mes como predeterminado
+            if (fechaInicio == null) {
+                fechaInicio = LocalDate.now().minusMonths(1);
+            }
+            if (fechaFin == null) {
+                fechaFin = LocalDate.now();
+            }
+
+            // Convertir fechas a LocalDateTime para consultas
+            LocalDateTime fechaInicioDateTime = fechaInicio.atStartOfDay();
+            LocalDateTime fechaFinDateTime = fechaFin.atTime(23, 59, 59);
+
+            // Obtener datos del servicio
+            List<VentaCajaDTO> ventasCajas = ventaCajaServicio.buscarVentasCajasPorFechaYTipo(
+                    licoreriaId, fechaInicioDateTime, fechaFinDateTime, tipoCaja);
+
+            // Calcular estadísticas
+            Map<String, Object> estadisticas = calcularEstadisticasCajas(ventasCajas);
+
+            // Obtener ventas por tipo de caja
+            List<Map<String, Object>> ventasPorTipo = obtenerVentasPorTipoCaja(ventasCajas);
+
+            // Obtener tendencia de ventas por día
+            List<Map<String, Object>> tendencia = obtenerTendenciaVentasCajas(ventasCajas);
+
+            // Obtener top 5 cajas más vendidas
+            List<Map<String, Object>> topCajas = obtenerTopCajasMasVendidas(ventasCajas, 5);
+
+            // Obtener ingresos por día
+            List<Map<String, Object>> ingresosPorDia = obtenerIngresosPorDia(ventasCajas);
+
+            // Obtener últimas ventas para la tabla
+            List<Map<String, Object>> ultimasVentas = obtenerUltimasVentasCajas(ventasCajas, 10);
+
+            // Construir respuesta
+            Map<String, Object> respuesta = new HashMap<>();
+            respuesta.put("estadisticas", estadisticas);
+            respuesta.put("ventasPorTipo", ventasPorTipo);
+            respuesta.put("tendencia", tendencia);
+            respuesta.put("topCajas", topCajas);
+            respuesta.put("ingresosPorDia", ingresosPorDia);
+            respuesta.put("ultimasVentas", ultimasVentas);
+
+            return ResponseEntity.ok(respuesta);
+
+        } catch (Exception e) {
+            logger.error("Error al obtener datos del dashboard de cajas", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Error al cargar los datos: " + e.getMessage()));
+        }
+    }
+
+    @GetMapping("/ventas/lista")
     @PreAuthorize("hasAnyRole('ADMIN_LOCAL', 'SUPER_ADMIN')")
     public String mostrarListaVentas(Model model) {
         Licoreria licoreriaActual = licoreriaContext.getLicoreriaActual();
@@ -108,7 +206,97 @@ public class ReporteVentasController {
         return "reportes/lista";
     }
 
-    @GetMapping("/data")
+    @GetMapping("/ventas-cajas/exportar")
+    @PreAuthorize("hasAnyRole('ADMIN_LOCAL', 'SUPER_ADMIN')")
+    public ResponseEntity<?> exportarReporteCajas(
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaInicio,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaFin,
+            @RequestParam(required = false, defaultValue = "TODAS") String tipoCaja) {
+
+        try {
+            if (licoreriaContext.getLicoreriaActual() == null) {
+                return ResponseEntity.badRequest().body("Debe seleccionar una licorería primero");
+            }
+
+            Long licoreriaId = licoreriaContext.getLicoreriaActual().getId();
+
+            // Si no se proporcionan fechas, usar el último mes como predeterminado
+            if (fechaInicio == null) {
+                fechaInicio = LocalDate.now().minusMonths(1);
+            }
+            if (fechaFin == null) {
+                fechaFin = LocalDate.now();
+            }
+
+            // Convertir fechas a LocalDateTime para consultas
+            LocalDateTime fechaInicioDateTime = fechaInicio.atStartOfDay();
+            LocalDateTime fechaFinDateTime = fechaFin.atTime(23, 59, 59);
+
+            // Obtener datos del servicio
+            List<VentaCajaDTO> ventasCajas = ventaCajaServicio.buscarVentasCajasPorFechaYTipo(
+                    licoreriaId, fechaInicioDateTime, fechaFinDateTime, tipoCaja);
+
+            // Crear archivo Excel
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            Workbook workbook = new XSSFWorkbook();
+            Sheet sheet = workbook.createSheet("Ventas de Cajas");
+
+            // Crear estilos
+            CellStyle headerStyle = workbook.createCellStyle();
+            org.apache.poi.ss.usermodel.Font headerFont = workbook.createFont();
+            headerFont.setBold(true);
+            headerStyle.setFont(headerFont);
+
+            // Crear cabecera
+            String[] columns = {"Fecha", "Tipo de Caja", "Nombre de Caja", "Cantidad", "Precio Unitario", "Subtotal", "Método de Pago", "Cliente"};
+            Row headerRow = sheet.createRow(0);
+            for (int i = 0; i < columns.length; i++) {
+                Cell cell = headerRow.createCell(i);
+                cell.setCellValue(columns[i]);
+                cell.setCellStyle(headerStyle);
+            }
+
+            // Llenar datos
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+            int rowNum = 1;
+            for (VentaCajaDTO venta : ventasCajas) {
+                Row row = sheet.createRow(rowNum++);
+                row.createCell(0).setCellValue(venta.getFechaCreacion().format(formatter));
+                row.createCell(1).setCellValue(venta.getTipoCaja());
+                row.createCell(2).setCellValue(venta.getCajaNombre());
+                row.createCell(3).setCellValue(venta.getCantidad());
+                row.createCell(4).setCellValue(venta.getPrecioUnitario().doubleValue());
+                row.createCell(5).setCellValue(venta.getSubtotal().doubleValue());
+                row.createCell(6).setCellValue(venta.getMetodoPago() != null ? venta.getMetodoPago() : "");
+                row.createCell(7).setCellValue(venta.getNombreCliente() != null ? venta.getNombreCliente() : "");
+            }
+
+            // Ajustar ancho de columnas
+            for (int i = 0; i < columns.length; i++) {
+                sheet.autoSizeColumn(i);
+            }
+
+            // Escribir al output stream
+            workbook.write(out);
+            workbook.close();
+
+            // Configurar respuesta
+            ByteArrayResource resource = new ByteArrayResource(out.toByteArray());
+
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=ventas-cajas.xlsx")
+                    .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                    .contentLength(resource.contentLength())
+                    .body(resource);
+
+        } catch (Exception e) {
+            logger.error("Error al exportar reporte de ventas de cajas", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error al exportar el reporte: " + e.getMessage());
+        }
+    }
+
+    @GetMapping("/ventas/data")
     @ResponseBody
     @PreAuthorize("hasAnyRole('ADMIN_LOCAL', 'SUPER_ADMIN')")
     public ResponseEntity<?> obtenerDatosDashboard(
@@ -222,7 +410,7 @@ public class ReporteVentasController {
         }
     }
 
-    @GetMapping("/lista/data")
+    @GetMapping("/ventas/lista/data")
     @ResponseBody
     @PreAuthorize("hasAnyRole('ADMIN_LOCAL', 'SUPER_ADMIN')")
     public ResponseEntity<?> obtenerListaVentas(
@@ -318,7 +506,7 @@ public class ReporteVentasController {
         }
     }
 
-    @GetMapping("/exportar/{formato}")
+    @GetMapping("/ventas/exportar/{formato}")
     @PreAuthorize("hasAnyRole('ADMIN_LOCAL', 'SUPER_ADMIN')")
     public ResponseEntity<?> exportarReporte(
             @PathVariable String formato,
@@ -383,7 +571,7 @@ public class ReporteVentasController {
         }
     }
 
-    @GetMapping("/pdf/{ventaId}")
+    @GetMapping("/ventas/pdf/{ventaId}")
     @PreAuthorize("hasAnyRole('ADMIN_LOCAL', 'SUPER_ADMIN')")
     public ResponseEntity<?> generarPDFVenta(@PathVariable Long ventaId) {
         try {
@@ -482,7 +670,7 @@ public class ReporteVentasController {
         }
     }
 
-    @GetMapping("/ticket/{ventaId}")
+    @GetMapping("/ventas/ticket/{ventaId}")
     @PreAuthorize("hasAnyRole('ADMIN_LOCAL', 'SUPER_ADMIN')")
     public ResponseEntity<?> generarTicketVenta(@PathVariable Long ventaId) {
         try {
@@ -595,7 +783,7 @@ public class ReporteVentasController {
         }
     }
 
-    @PostMapping("/{ventaId}/anular")
+    @PostMapping("/ventas/{ventaId}/anular")
     @PreAuthorize("hasAnyRole('ADMIN_LOCAL', 'SUPER_ADMIN')")
     public ResponseEntity<?> anularVenta(
             @PathVariable Long ventaId,
@@ -689,5 +877,177 @@ public class ReporteVentasController {
 
     private String formatCurrencyBs(BigDecimal amount) {
         return String.format("%.2f Bs", amount.doubleValue());
+    }
+
+    private Map<String, Object> calcularEstadisticasCajas(List<VentaCajaDTO> ventasCajas) {
+        Map<String, Object> estadisticas = new HashMap<>();
+
+        if (ventasCajas.isEmpty()) {
+            estadisticas.put("totalCajas", 0);
+            estadisticas.put("totalIngresos", 0.0);
+            estadisticas.put("promedioVenta", 0.0);
+            estadisticas.put("cajaMasVendida", "-");
+            estadisticas.put("cajaMasVendidaCantidad", 0);
+            return estadisticas;
+        }
+
+        // Total de cajas vendidas
+        int totalCajas = ventasCajas.stream().mapToInt(VentaCajaDTO::getCantidad).sum();
+
+        // Total de ingresos
+        BigDecimal totalIngresos = ventasCajas.stream()
+                .map(VentaCajaDTO::getSubtotal)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        // Promedio por venta
+        BigDecimal promedioVenta = totalIngresos.divide(BigDecimal.valueOf(ventasCajas.size()), 2, RoundingMode.HALF_UP);
+
+        // Caja más vendida
+        Map<String, Integer> cantidadPorCaja = new HashMap<>();
+        for (VentaCajaDTO venta : ventasCajas) {
+            cantidadPorCaja.merge(venta.getCajaNombre(), venta.getCantidad(), Integer::sum);
+        }
+
+        String cajaMasVendida = "-";
+        int cantidadMasVendida = 0;
+
+        for (Map.Entry<String, Integer> entry : cantidadPorCaja.entrySet()) {
+            if (entry.getValue() > cantidadMasVendida) {
+                cajaMasVendida = entry.getKey();
+                cantidadMasVendida = entry.getValue();
+            }
+        }
+
+        estadisticas.put("totalCajas", totalCajas);
+        estadisticas.put("totalIngresos", totalIngresos);
+        estadisticas.put("promedioVenta", promedioVenta);
+        estadisticas.put("cajaMasVendida", cajaMasVendida);
+        estadisticas.put("cajaMasVendidaCantidad", cantidadMasVendida);
+
+        return estadisticas;
+    }
+
+    private List<Map<String, Object>> obtenerVentasPorTipoCaja(List<VentaCajaDTO> ventasCajas) {
+        Map<String, Integer> cantidadPorTipo = new HashMap<>();
+
+        for (VentaCajaDTO venta : ventasCajas) {
+            cantidadPorTipo.merge(venta.getTipoCaja(), venta.getCantidad(), Integer::sum);
+        }
+
+        List<Map<String, Object>> resultado = new ArrayList<>();
+        for (Map.Entry<String, Integer> entry : cantidadPorTipo.entrySet()) {
+            Map<String, Object> item = new HashMap<>();
+            item.put("tipo", entry.getKey());
+            item.put("cantidad", entry.getValue());
+            resultado.add(item);
+        }
+
+        return resultado;
+    }
+
+    private List<Map<String, Object>> obtenerTendenciaVentasCajas(List<VentaCajaDTO> ventasCajas) {
+        // Agrupar ventas por fecha (día)
+        Map<LocalDate, Integer> ventasPorDia = new TreeMap<>();
+
+        for (VentaCajaDTO venta : ventasCajas) {
+            LocalDate fecha = venta.getFechaCreacion().toLocalDate();
+            ventasPorDia.merge(fecha, venta.getCantidad(), Integer::sum);
+        }
+
+        // Convertir a formato de respuesta
+        List<Map<String, Object>> resultado = new ArrayList<>();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+
+        for (Map.Entry<LocalDate, Integer> entry : ventasPorDia.entrySet()) {
+            Map<String, Object> item = new HashMap<>();
+            item.put("fecha", entry.getKey().format(formatter));
+            item.put("cantidad", entry.getValue());
+            resultado.add(item);
+        }
+
+        return resultado;
+    }
+
+    private List<Map<String, Object>> obtenerTopCajasMasVendidas(List<VentaCajaDTO> ventasCajas, int limit) {
+        // Agrupar por nombre de caja
+        Map<String, Integer> cantidadPorCaja = new HashMap<>();
+
+        for (VentaCajaDTO venta : ventasCajas) {
+            cantidadPorCaja.merge(venta.getCajaNombre(), venta.getCantidad(), Integer::sum);
+        }
+
+        // Ordenar por cantidad y limitar al top solicitado
+        List<Map.Entry<String, Integer>> sortedEntries = cantidadPorCaja.entrySet().stream()
+                .sorted(Map.Entry.<String, Integer>comparingByValue().reversed())
+                .limit(limit)
+                .collect(Collectors.toList());
+
+        // Convertir a formato de respuesta
+        List<Map<String, Object>> resultado = new ArrayList<>();
+
+        for (Map.Entry<String, Integer> entry : sortedEntries) {
+            Map<String, Object> item = new HashMap<>();
+            item.put("nombre", entry.getKey());
+            item.put("cantidad", entry.getValue());
+            resultado.add(item);
+        }
+
+        return resultado;
+    }
+
+    private List<Map<String, Object>> obtenerIngresosPorDia(List<VentaCajaDTO> ventasCajas) {
+        // Agrupar ingresos por fecha (día)
+        Map<LocalDate, BigDecimal> ingresosPorDia = new TreeMap<>();
+
+        for (VentaCajaDTO venta : ventasCajas) {
+            LocalDate fecha = venta.getFechaCreacion().toLocalDate();
+            ingresosPorDia.merge(fecha, venta.getSubtotal(), BigDecimal::add);
+        }
+
+        // Convertir a formato de respuesta
+        List<Map<String, Object>> resultado = new ArrayList<>();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+
+        for (Map.Entry<LocalDate, BigDecimal> entry : ingresosPorDia.entrySet()) {
+            Map<String, Object> item = new HashMap<>();
+            item.put("fecha", entry.getKey().format(formatter));
+            item.put("total", entry.getValue());
+            resultado.add(item);
+        }
+
+        return resultado;
+    }
+
+    private List<Map<String, Object>> obtenerUltimasVentasCajas(List<VentaCajaDTO> ventasCajas, int limit) {
+        // Ordenar por fecha de creación (más recientes primero) y limitar
+        List<VentaCajaDTO> ultimasVentas = ventasCajas.stream()
+                .sorted(Comparator.comparing(VentaCajaDTO::getFechaCreacion).reversed())
+                .limit(limit)
+                .collect(Collectors.toList());
+
+        // Convertir a formato de respuesta
+        List<Map<String, Object>> resultado = new ArrayList<>();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+
+        for (VentaCajaDTO venta : ultimasVentas) {
+            Map<String, Object> item = new HashMap<>();
+            item.put("id", venta.getId());
+            item.put("fecha", venta.getFechaCreacion().format(formatter));
+            item.put("tipoCaja", venta.getTipoCaja());
+            item.put("cajaNombre", venta.getCajaNombre());
+            item.put("cantidad", venta.getCantidad());
+            item.put("precioUnitario", venta.getPrecioUnitario());
+            item.put("total", venta.getSubtotal());
+            resultado.add(item);
+        }
+
+        return resultado;
+    }
+
+    // Métodos de redirección para mantener compatibilidad con URLs antiguas
+    @GetMapping("/lista")
+    @PreAuthorize("hasAnyRole('ADMIN_LOCAL', 'SUPER_ADMIN')")
+    public String redirigirListaVentas() {
+        return "redirect:/reportes/ventas/lista";
     }
 }
