@@ -13,10 +13,12 @@ public class Vacio implements Serializable {
     private Long id;
     
     private int cantidad;
-    private double montoGarantia;
+    private double valorPorUnidad;
+    private int stockDisponible;
     private LocalDateTime fechaPrestamo;
     private LocalDateTime fechaDevolucion;
     private boolean devuelto;
+    private boolean esStock; // Indica si es un registro de stock o un préstamo
     
     @ManyToOne
     @JoinColumn(name = "licoreria_id")
@@ -39,12 +41,20 @@ public class Vacio implements Serializable {
         this.cantidad = cantidad;
     }
     
-    public double getMontoGarantia() {
-        return montoGarantia;
+    public double getValorPorUnidad() {
+        return valorPorUnidad;
     }
     
-    public void setMontoGarantia(double montoGarantia) {
-        this.montoGarantia = montoGarantia;
+    public void setValorPorUnidad(double valorPorUnidad) {
+        this.valorPorUnidad = valorPorUnidad;
+    }
+    
+    public int getStockDisponible() {
+        return stockDisponible;
+    }
+    
+    public void setStockDisponible(int stockDisponible) {
+        this.stockDisponible = stockDisponible;
     }
     
     public LocalDateTime getFechaPrestamo() {
@@ -69,6 +79,14 @@ public class Vacio implements Serializable {
     
     public void setDevuelto(boolean devuelto) {
         this.devuelto = devuelto;
+    }
+    
+    public boolean isEsStock() {
+        return esStock;
+    }
+    
+    public void setEsStock(boolean esStock) {
+        this.esStock = esStock;
     }
     
     public Licoreria getLicoreria() {

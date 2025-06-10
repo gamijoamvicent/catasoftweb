@@ -103,4 +103,250 @@ document.addEventListener('DOMContentLoaded', function() {
     // Inicialización
     actualizarMontosGarantia();
     actualizarInventario();
+});
+
+// Función para obtener el token CSRF
+function getCsrfToken() {
+    const token = document.querySelector('meta[name="_csrf"]')?.content;
+    const header = document.querySelector('meta[name="_csrf_header"]')?.content;
+    if (!token || !header) {
+        throw new Error('No se pudo obtener el token CSRF');
+    }
+    return { token, header };
+}
+
+// Función para agregar nuevo stock
+function agregarStock() {
+    try {
+        const cantidad = document.getElementById('nuevoStock').value;
+        
+        if (!cantidad || cantidad <= 0) {
+            alert('Por favor ingrese una cantidad válida de vacíos');
+            return;
+        }
+        
+        const data = {
+            cantidad: parseInt(cantidad),
+            stockDisponible: parseInt(cantidad),
+            valorPorUnidad: 0 // Valor inicial, se actualizará al hacer préstamos
+        };
+        
+        const { token, header } = getCsrfToken();
+        
+        fetch('/vacios/prestar', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                [header]: token
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Error en la respuesta del servidor');
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.error) {
+                alert(data.error);
+            } else {
+                location.reload();
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error al agregar stock: ' + error.message);
+        });
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Error: ' + error.message);
+    }
+}
+
+// Función para editar stock
+function editarStock(id) {
+    try {
+        const nuevaCantidad = prompt('Ingrese la nueva cantidad de vacíos en bodega:');
+        if (nuevaCantidad === null) return;
+        
+        if (!nuevaCantidad || nuevaCantidad <= 0) {
+            alert('Por favor ingrese una cantidad válida');
+            return;
+        }
+        
+        const { token, header } = getCsrfToken();
+        
+        fetch(`/vacios/stock/${id}?cantidad=${nuevaCantidad}`, {
+            method: 'POST',
+            headers: {
+                [header]: token
+            }
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Error en la respuesta del servidor');
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.error) {
+                alert(data.error);
+            } else {
+                location.reload();
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error al actualizar stock: ' + error.message);
+        });
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Error: ' + error.message);
+    }
+}
+
+// Función para eliminar stock
+function eliminarStock(id) {
+    try {
+        if (!confirm('¿Está seguro de eliminar todo el stock de vacíos?')) return;
+        
+        const { token, header } = getCsrfToken();
+        
+        fetch(`/vacios/stock/${id}?cantidad=0`, {
+            method: 'POST',
+            headers: {
+                [header]: token
+            }
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Error en la respuesta del servidor');
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.error) {
+                alert(data.error);
+            } else {
+                location.reload();
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error al eliminar stock: ' + error.message);
+        });
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Error: ' + error.message);
+    }
+}
+
+// Función para devolver un vacío
+function devolverVacio(id) {
+    if (confirm('¿Está seguro de que desea registrar la devolución de este préstamo?')) {
+        fetch(`/vacios/devolver/${id}`, {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="_csrf"]').content
+            }
+        })
+        .then(response => {
+            if (!response.ok) {
+                return response.text().then(text => {
+                    throw new Error(text || 'Error en la respuesta del servidor');
+                });
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.error) {
+                alert(data.error);
+            } else {
+                location.reload();
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error al registrar devolución: ' + error.message);
+        });
+    }
+}
+
+// Manejar el formulario de préstamo
+document.getElementById('prestamoForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    try {
+        const cantidad = document.getElementById('cantidadVacios').value;
+        const valor = document.getElementById('valorPorUnidad').value;
+        
+        if (!cantidad || cantidad <= 0) {
+            alert('Por favor ingrese una cantidad válida');
+            return;
+        }
+        
+        if (!valor || valor <= 0) {
+            alert('Por favor ingrese un valor válido');
+            return;
+        }
+        
+        const data = {
+            cantidad: parseInt(cantidad),
+            valorPorUnidad: parseFloat(valor),
+            fechaPrestamo: new Date().toISOString(),
+            devuelto: false,
+            esStock: false
+        };
+        
+        fetch('/vacios/prestar', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="_csrf"]').content
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => {
+            if (!response.ok) {
+                return response.text().then(text => {
+                    throw new Error(text || 'Error en la respuesta del servidor');
+                });
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.error) {
+                alert(data.error);
+            } else {
+                location.reload();
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error al registrar préstamo: ' + error.message);
+        });
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Error: ' + error.message);
+    }
+});
+
+// Manejar el formulario de devolución
+document.getElementById('devolucionForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    try {
+        const id = document.getElementById('idPrestamo').value;
+        
+        if (!id) {
+            alert('Por favor ingrese el ID del préstamo');
+            return;
+        }
+        
+        devolverVacio(id);
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Error: ' + error.message);
+    }
 }); 

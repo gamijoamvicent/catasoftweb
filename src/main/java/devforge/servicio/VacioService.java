@@ -8,5 +8,7 @@ public interface VacioService {
     Vacio registrarDevolucion(Long id);
     List<Vacio> obtenerVaciosPrestados();
     List<Vacio> obtenerVaciosDevueltos();
-    double obtenerMontoGarantiaActual();
+    Vacio obtenerStock();
+    Vacio actualizarStock(Long id, int nuevaCantidad);
+    Vacio actualizarValor(Long id, double nuevoValor);
 } 
