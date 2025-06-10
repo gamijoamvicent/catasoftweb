@@ -107,12 +107,68 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Función para obtener el token CSRF
 function getCsrfToken() {
-    const token = document.querySelector('meta[name="_csrf"]')?.content;
-    const header = document.querySelector('meta[name="_csrf_header"]')?.content;
-    if (!token || !header) {
-        throw new Error('No se pudo obtener el token CSRF');
-    }
+    const token = document.querySelector('meta[name="_csrf"]').content;
+    const header = document.querySelector('meta[name="_csrf_header"]').content;
     return { token, header };
+}
+
+// Función para manejar errores de la API
+function handleApiError(error) {
+    console.error('Error:', error);
+    if (error.response) {
+        return error.response.text().then(text => {
+            try {
+                const data = JSON.parse(text);
+                throw new Error(data.message || 'Error en la respuesta del servidor');
+            } catch (e) {
+                throw new Error(text || 'Error en la respuesta del servidor');
+            }
+        });
+    }
+    throw new Error(error.message || 'Error en la respuesta del servidor');
+}
+
+// Función para mostrar mensajes de error
+function showError(message) {
+    if (typeof Swal !== 'undefined') {
+        Swal.fire('Error', message, 'error');
+    } else {
+        alert('Error: ' + message);
+    }
+}
+
+// Función para mostrar mensajes de éxito
+function showSuccess(message) {
+    if (typeof Swal !== 'undefined') {
+        Swal.fire({
+            title: '¡Éxito!',
+            text: message,
+            icon: 'success',
+            showConfirmButton: false,
+            timer: 1500
+        }).then(() => {
+            window.location.reload();
+        });
+    } else {
+        alert('Éxito: ' + message);
+        window.location.reload();
+    }
+}
+
+// Función para confirmar acción
+function confirmAction(message) {
+    if (typeof Swal !== 'undefined') {
+        return Swal.fire({
+            title: '¿Está seguro?',
+            text: message,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Sí',
+            cancelButtonText: 'Cancelar'
+        });
+    } else {
+        return Promise.resolve({ isConfirmed: confirm(message) });
+    }
 }
 
 // Función para agregar nuevo stock
@@ -244,109 +300,134 @@ function eliminarStock(id) {
 
 // Función para devolver un vacío
 function devolverVacio(id) {
-    if (confirm('¿Está seguro de que desea registrar la devolución de este préstamo?')) {
-        fetch(`/vacios/devolver/${id}`, {
-            method: 'POST',
-            headers: {
-                'X-CSRF-TOKEN': document.querySelector('meta[name="_csrf"]').content
-            }
-        })
-        .then(response => {
-            if (!response.ok) {
-                return response.text().then(text => {
-                    throw new Error(text || 'Error en la respuesta del servidor');
-                });
-            }
-            return response.json();
-        })
-        .then(data => {
-            if (data.error) {
-                alert(data.error);
-            } else {
-                location.reload();
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('Error al registrar devolución: ' + error.message);
-        });
-    }
+    confirmAction('¿Desea registrar la devolución de este préstamo?').then((result) => {
+        if (result.isConfirmed) {
+            const { token, header } = getCsrfToken();
+            
+            fetch(`/vacios/devolver/${id}`, {
+                method: 'POST',
+                headers: {
+                    [header]: token
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.text().then(text => {
+                        try {
+                            const data = JSON.parse(text);
+                            throw new Error(data.message || 'Error en la respuesta del servidor');
+                        } catch (e) {
+                            throw new Error(text || 'Error en la respuesta del servidor');
+                        }
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                showSuccess('Devolución registrada correctamente');
+            })
+            .catch(error => {
+                showError(error.message);
+            });
+        }
+    });
 }
 
 // Manejar el formulario de préstamo
-document.getElementById('prestamoForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-    
-    try {
-        const cantidad = document.getElementById('cantidadVacios').value;
-        const valor = document.getElementById('valorPorUnidad').value;
+const prestamoForm = document.getElementById('prestamoForm');
+if (prestamoForm) {
+    prestamoForm.addEventListener('submit', function(e) {
+        e.preventDefault();
         
-        if (!cantidad || cantidad <= 0) {
-            alert('Por favor ingrese una cantidad válida');
-            return;
-        }
-        
-        if (!valor || valor <= 0) {
-            alert('Por favor ingrese un valor válido');
-            return;
-        }
-        
-        const data = {
-            cantidad: parseInt(cantidad),
-            valorPorUnidad: parseFloat(valor),
-            fechaPrestamo: new Date().toISOString(),
-            devuelto: false,
-            esStock: false
-        };
-        
-        fetch('/vacios/prestar', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="_csrf"]').content
-            },
-            body: JSON.stringify(data)
-        })
-        .then(response => {
-            if (!response.ok) {
-                return response.text().then(text => {
-                    throw new Error(text || 'Error en la respuesta del servidor');
-                });
+        try {
+            const cantidadInput = document.getElementById('cantidadVacios');
+            const valorInput = document.getElementById('valorPorUnidad');
+            
+            if (!cantidadInput || !valorInput) {
+                showError('No se encontraron los campos del formulario');
+                return;
             }
-            return response.json();
-        })
-        .then(data => {
-            if (data.error) {
-                alert(data.error);
-            } else {
-                location.reload();
+            
+            const cantidad = cantidadInput.value;
+            const valor = valorInput.value;
+            
+            if (!cantidad || cantidad <= 0) {
+                showError('Por favor ingrese una cantidad válida');
+                return;
             }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('Error al registrar préstamo: ' + error.message);
-        });
-    } catch (error) {
-        console.error('Error:', error);
-        alert('Error: ' + error.message);
-    }
-});
+            
+            if (!valor || valor <= 0) {
+                showError('Por favor ingrese un valor válido');
+                return;
+            }
+            
+            const data = {
+                cantidad: parseInt(cantidad),
+                valorPorUnidad: parseFloat(valor),
+                fechaPrestamo: new Date().toISOString(),
+                devuelto: false,
+                esStock: false
+            };
+            
+            const { token, header } = getCsrfToken();
+            
+            fetch('/vacios/prestar', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    [header]: token
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.text().then(text => {
+                        try {
+                            const data = JSON.parse(text);
+                            throw new Error(data.message || 'Error en la respuesta del servidor');
+                        } catch (e) {
+                            throw new Error(text || 'Error en la respuesta del servidor');
+                        }
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                showSuccess('Préstamo registrado correctamente');
+            })
+            .catch(error => {
+                showError(error.message);
+            });
+        } catch (error) {
+            showError(error.message);
+        }
+    });
+}
 
 // Manejar el formulario de devolución
-document.getElementById('devolucionForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-    
-    try {
-        const id = document.getElementById('idPrestamo').value;
+const devolucionForm = document.getElementById('devolucionForm');
+if (devolucionForm) {
+    devolucionForm.addEventListener('submit', function(e) {
+        e.preventDefault();
         
-        if (!id) {
-            alert('Por favor ingrese el ID del préstamo');
-            return;
+        try {
+            const idInput = document.getElementById('idPrestamo');
+            
+            if (!idInput) {
+                showError('No se encontró el campo de ID del préstamo');
+                return;
+            }
+            
+            const id = idInput.value;
+            
+            if (!id) {
+                showError('Por favor ingrese el ID del préstamo');
+                return;
+            }
+            
+            devolverVacio(id);
+        } catch (error) {
+            showError(error.message);
         }
-        
-        devolverVacio(id);
-    } catch (error) {
-        console.error('Error:', error);
-        alert('Error: ' + error.message);
-    }
-}); 
+    });
+} 

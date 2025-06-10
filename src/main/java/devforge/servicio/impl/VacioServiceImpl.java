@@ -1,7 +1,9 @@
 package devforge.servicio.impl;
 
 import devforge.model.Vacio;
+import devforge.model.PrestamoVacio;
 import devforge.repository.VacioRepository;
+import devforge.repository.PrestamoVacioRepository;
 import devforge.servicio.VacioService;
 import devforge.config.LicoreriaContext;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,17 +13,22 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
 public class VacioServiceImpl implements VacioService {
     
     private final VacioRepository vacioRepository;
+    private final PrestamoVacioRepository prestamoVacioRepository;
     private final LicoreriaContext licoreriaContext;
     
     @Autowired
-    public VacioServiceImpl(VacioRepository vacioRepository, LicoreriaContext licoreriaContext) {
+    public VacioServiceImpl(VacioRepository vacioRepository, 
+                          PrestamoVacioRepository prestamoVacioRepository,
+                          LicoreriaContext licoreriaContext) {
         this.vacioRepository = vacioRepository;
+        this.prestamoVacioRepository = prestamoVacioRepository;
         this.licoreriaContext = licoreriaContext;
     }
     
@@ -56,21 +63,33 @@ public class VacioServiceImpl implements VacioService {
         stock.setStockDisponible(stock.getStockDisponible() - vacio.getCantidad());
         vacioRepository.save(stock);
         
-        // Registrar préstamo
-        vacio.setFechaPrestamo(LocalDateTime.now());
-        vacio.setDevuelto(false);
-        return vacioRepository.save(vacio);
+        // Registrar préstamo en la tabla prestamos_vacios
+        PrestamoVacio prestamo = new PrestamoVacio();
+        prestamo.setCantidad(vacio.getCantidad());
+        prestamo.setValorPorUnidad(vacio.getValorPorUnidad());
+        prestamo.setFechaPrestamo(LocalDateTime.now());
+        prestamo.setDevuelto(false);
+        prestamo.setLicoreria(vacio.getLicoreria());
+        prestamoVacioRepository.save(prestamo);
+        
+        // Convertir PrestamoVacio a Vacio para mantener compatibilidad
+        Vacio vacioPrestamo = new Vacio();
+        vacioPrestamo.setId(prestamo.getId());
+        vacioPrestamo.setCantidad(prestamo.getCantidad());
+        vacioPrestamo.setValorPorUnidad(prestamo.getValorPorUnidad());
+        vacioPrestamo.setFechaPrestamo(prestamo.getFechaPrestamo());
+        vacioPrestamo.setDevuelto(prestamo.isDevuelto());
+        vacioPrestamo.setLicoreria(prestamo.getLicoreria());
+        vacioPrestamo.setEsStock(false);
+        
+        return vacioPrestamo;
     }
     
     @Override
     public Vacio registrarDevolucion(Long id) {
-        Vacio prestamo = vacioRepository.findById(id)
+        PrestamoVacio prestamo = prestamoVacioRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("Préstamo no encontrado"));
             
-        if (prestamo.isEsStock()) {
-            throw new RuntimeException("No se puede devolver un registro de stock");
-        }
-        
         if (prestamo.isDevuelto()) {
             throw new RuntimeException("Este préstamo ya fue devuelto");
         }
@@ -86,17 +105,57 @@ public class VacioServiceImpl implements VacioService {
         // Marcar préstamo como devuelto
         prestamo.setDevuelto(true);
         prestamo.setFechaDevolucion(LocalDateTime.now());
-        return vacioRepository.save(prestamo);
+        prestamoVacioRepository.save(prestamo);
+        
+        // Convertir PrestamoVacio a Vacio para mantener compatibilidad
+        Vacio vacioDevolucion = new Vacio();
+        vacioDevolucion.setId(prestamo.getId());
+        vacioDevolucion.setCantidad(prestamo.getCantidad());
+        vacioDevolucion.setValorPorUnidad(prestamo.getValorPorUnidad());
+        vacioDevolucion.setFechaPrestamo(prestamo.getFechaPrestamo());
+        vacioDevolucion.setFechaDevolucion(prestamo.getFechaDevolucion());
+        vacioDevolucion.setDevuelto(prestamo.isDevuelto());
+        vacioDevolucion.setLicoreria(prestamo.getLicoreria());
+        vacioDevolucion.setEsStock(false);
+        
+        return vacioDevolucion;
     }
     
     @Override
     public List<Vacio> obtenerVaciosPrestados() {
-        return vacioRepository.findByEsStockFalseAndDevueltoFalseAndLicoreriaId(licoreriaContext.getLicoreriaId());
+        return prestamoVacioRepository.findByDevueltoFalseAndLicoreriaId(licoreriaContext.getLicoreriaId())
+            .stream()
+            .map(prestamo -> {
+                Vacio vacio = new Vacio();
+                vacio.setId(prestamo.getId());
+                vacio.setCantidad(prestamo.getCantidad());
+                vacio.setValorPorUnidad(prestamo.getValorPorUnidad());
+                vacio.setFechaPrestamo(prestamo.getFechaPrestamo());
+                vacio.setDevuelto(prestamo.isDevuelto());
+                vacio.setLicoreria(prestamo.getLicoreria());
+                vacio.setEsStock(false);
+                return vacio;
+            })
+            .collect(Collectors.toList());
     }
     
     @Override
     public List<Vacio> obtenerVaciosDevueltos() {
-        return vacioRepository.findByEsStockFalseAndDevueltoTrueAndLicoreriaId(licoreriaContext.getLicoreriaId());
+        return prestamoVacioRepository.findByDevueltoTrueAndLicoreriaId(licoreriaContext.getLicoreriaId())
+            .stream()
+            .map(prestamo -> {
+                Vacio vacio = new Vacio();
+                vacio.setId(prestamo.getId());
+                vacio.setCantidad(prestamo.getCantidad());
+                vacio.setValorPorUnidad(prestamo.getValorPorUnidad());
+                vacio.setFechaPrestamo(prestamo.getFechaPrestamo());
+                vacio.setFechaDevolucion(prestamo.getFechaDevolucion());
+                vacio.setDevuelto(prestamo.isDevuelto());
+                vacio.setLicoreria(prestamo.getLicoreria());
+                vacio.setEsStock(false);
+                return vacio;
+            })
+            .collect(Collectors.toList());
     }
     
     @Override
