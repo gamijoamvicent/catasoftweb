@@ -86,18 +86,22 @@ public class VaciosController {
         }
     }
     
-    @PostMapping("/stock/{id}")
+    @PutMapping("/stock/{id}")
     @ResponseBody
-    @PreAuthorize("hasAnyRole('ADMIN_LOCAL', 'SUPER_ADMIN')")
-    public ResponseEntity<?> actualizarStock(@PathVariable Long id, @RequestParam int cantidad) {
+    @PreAuthorize("hasAnyRole('VENDEDOR', 'ADMIN_LOCAL', 'SUPER_ADMIN')")
+    public ResponseEntity<?> actualizarStock(@PathVariable Long id, @RequestBody Map<String, Integer> request) {
         try {
-            logger.info("Intentando actualizar stock ID: {} a cantidad: {}", id, cantidad);
-            Vacio vacio = vacioService.actualizarStock(id, cantidad);
-            if (vacio == null) {
-                return ResponseEntity.ok(Map.of("mensaje", "Stock eliminado correctamente"));
+            if (licoreriaContext.getLicoreriaActual() == null) {
+                return ResponseEntity.badRequest().body("No hay licorería seleccionada");
             }
-            logger.info("Stock actualizado exitosamente: {}", vacio);
-            return ResponseEntity.ok(vacio);
+            
+            Integer nuevaCantidad = request.get("cantidad");
+            if (nuevaCantidad == null || nuevaCantidad < 0) {
+                return ResponseEntity.badRequest().body("La cantidad debe ser mayor o igual a 0");
+            }
+            
+            Vacio resultado = vacioService.actualizarStock(id, nuevaCantidad);
+            return ResponseEntity.ok(resultado);
         } catch (Exception e) {
             logger.error("Error al actualizar stock", e);
             return ResponseEntity.badRequest().body("Error al actualizar stock: " + e.getMessage());

@@ -29,11 +29,50 @@
             </div>
             <div class="card-body">
                 <div th:if="${stock != null}">
-                    <h5>Disponibles: <span th:text="${stock.stockDisponible}" class="badge bg-success"></span></h5>
-                    <h5>Valor por Unidad: <span th:text="${'$' + #numbers.formatDecimal(stock.valorPorUnidad, 1, 2)}" class="badge bg-info"></span></h5>
+                    <div class="alert alert-info">
+                        <h5>Stock Disponible: <span th:text="${stock.stockDisponible}"></span> unidades</h5>
+                    </div>
+                    <form id="actualizarStockForm" class="mt-3">
+                        <input type="hidden" name="stockId" th:value="${stock.id}">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="nuevoStock">Modificar Stock</label>
+                                    <input type="number" class="form-control" id="nuevoStock" min="0" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>&nbsp;</label>
+                                    <button type="submit" class="btn btn-primary d-block">
+                                        <i class="fas fa-edit"></i> Modificar Stock
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
                 </div>
                 <div th:unless="${stock != null}" class="alert alert-warning">
-                    No hay stock registrado. Por favor, registre el stock inicial.
+                    <h5>No hay stock registrado</h5>
+                    <p>Por favor, registre el stock inicial de vacíos.</p>
+                    <form id="stockInicialForm" class="mt-3">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="cantidadInicial">Cantidad Inicial</label>
+                                    <input type="number" class="form-control" id="cantidadInicial" min="1" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>&nbsp;</label>
+                                    <button type="submit" class="btn btn-success d-block">
+                                        <i class="fas fa-plus"></i> Registrar Stock Inicial
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>

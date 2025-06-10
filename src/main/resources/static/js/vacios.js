@@ -430,4 +430,105 @@ if (devolucionForm) {
             showError(error.message);
         }
     });
+}
+
+// Event listener para el formulario de actualización de stock
+const actualizarStockForm = document.getElementById('actualizarStockForm');
+if (actualizarStockForm) {
+    actualizarStockForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const cantidad = document.getElementById('nuevoStock').value;
+        
+        if (!cantidad || cantidad < 0) {
+            showError('Por favor ingrese una cantidad válida');
+            return;
+        }
+
+        // Obtener el ID del stock actual del elemento oculto
+        const stockId = document.querySelector('input[name="stockId"]').value;
+
+        const { token, header } = getCsrfToken();
+
+        fetch(`/vacios/stock/${stockId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                [header]: token
+            },
+            body: JSON.stringify({ cantidad: parseInt(cantidad) })
+        })
+        .then(response => {
+            if (!response.ok) {
+                return response.text().then(text => {
+                    try {
+                        const data = JSON.parse(text);
+                        throw new Error(data.message || 'Error en la respuesta del servidor');
+                    } catch (e) {
+                        throw new Error(text || 'Error en la respuesta del servidor');
+                    }
+                });
+            }
+            return response.json();
+        })
+        .then(data => {
+            showSuccess('Stock modificado correctamente');
+            location.reload();
+        })
+        .catch(error => {
+            showError(error.message);
+        });
+    });
+}
+
+// Event listener para el formulario de stock inicial
+const stockInicialForm = document.getElementById('stockInicialForm');
+if (stockInicialForm) {
+    stockInicialForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const cantidad = document.getElementById('cantidadInicial').value;
+        
+        if (!cantidad || cantidad <= 0) {
+            showError('Por favor ingrese una cantidad válida');
+            return;
+        }
+
+        const data = {
+            cantidad: parseInt(cantidad),
+            stockDisponible: parseInt(cantidad),
+            esStock: true,
+            valorPorUnidad: 0,
+            fechaPrestamo: null
+        };
+
+        const { token, header } = getCsrfToken();
+
+        fetch('/vacios/prestar', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                [header]: token
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => {
+            if (!response.ok) {
+                return response.text().then(text => {
+                    try {
+                        const data = JSON.parse(text);
+                        throw new Error(data.message || 'Error en la respuesta del servidor');
+                    } catch (e) {
+                        throw new Error(text || 'Error en la respuesta del servidor');
+                    }
+                });
+            }
+            return response.json();
+        })
+        .then(data => {
+            showSuccess('Stock inicial registrado correctamente');
+            location.reload();
+        })
+        .catch(error => {
+            showError(error.message);
+        });
+    });
 } 
