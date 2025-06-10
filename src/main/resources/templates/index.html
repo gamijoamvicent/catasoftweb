@@ -141,6 +141,17 @@
                     </div>
                 </div>
 
+                <div class="card inventario" sec:authorize="hasAnyRole('ADMIN_LOCAL', 'SUPER_ADMIN', 'CAJERO')">
+                    <div class="card-header">
+                        <img src="/icons/box.png" alt="Vacíos" class="card-icon">
+                        <h3 class="card-title">Gestión de Vacíos</h3>
+                    </div>
+                    <div class="card-content">
+                        <p>Gestionar préstamos y devoluciones de vacíos</p>
+                        <a th:href="@{/vacios}" class="btn btn-primary">Gestionar</a>
+                    </div>
+                </div>
+
                 <div class="card inventario" sec:authorize="hasAnyRole('ADMIN_LOCAL', 'SUPER_ADMIN')">
                     <div class="card-header">
                         <img src="/icons/box.png" alt="Cajas" class="card-icon">

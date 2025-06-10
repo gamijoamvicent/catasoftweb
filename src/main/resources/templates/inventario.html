@@ -198,9 +198,22 @@
         }
 
         .btn-back:hover {
-            background: #00A896;
+            background: var(--accent);
+            transform: translateY(-2px);
             box-shadow: var(--shadow-hover);
-            transform: translateY(-1px);
+        }
+
+        .btn-vacios {
+            background: var(--secondary);
+            color: var(--text-light);
+            box-shadow: var(--shadow-light);
+            margin-left: 10px;
+        }
+
+        .btn-vacios:hover {
+            background: var(--secondary);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-hover);
         }
 
         @media (max-width: 768px) {
@@ -276,9 +289,10 @@
             <button class="btn" style="background:var(--primary);color:white;margin-right:10px" onclick="exportarInventario()">
                 <span class="icon">⬇️</span> Exportar Inventario
             </button>
-            <button class="btn btn-back" onclick="window.location.href='/'">
-                <span class="icon">⬅️</span> Volver al Menú
-            </button>
+            <a th:href="@{/vacios}" class="btn btn-vacios">
+                <i class="fas fa-box"></i>
+                Gestión de Vacíos
+            </a>
         </div>
     </div>
 </div>
