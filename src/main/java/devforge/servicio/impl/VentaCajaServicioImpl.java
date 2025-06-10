@@ -282,8 +282,18 @@ public class VentaCajaServicioImpl implements VentaCajaServicio {
     }
 
     private double obtenerTasaCambio(String tipoTasa) {
-        return precioDolarServicio.obtenerTasaCambioActual(
-            licoreriaContext.getLicoreriaActual().getId()
-        );
+        try {
+            PrecioDolar.TipoTasa tipo = PrecioDolar.TipoTasa.valueOf(tipoTasa);
+            return precioDolarServicio.obtenerPrecioActualPorTipo(
+                licoreriaContext.getLicoreriaActual().getId(),
+                tipo
+            );
+        } catch (Exception e) {
+            // Si hay algún error, usar la tasa BCV por defecto
+            return precioDolarServicio.obtenerPrecioActualPorTipo(
+                licoreriaContext.getLicoreriaActual().getId(),
+                PrecioDolar.TipoTasa.BCV
+            );
+        }
     }
 } 

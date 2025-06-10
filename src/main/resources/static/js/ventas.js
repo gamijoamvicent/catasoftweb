@@ -79,6 +79,30 @@ function cargarTasas() {
     // Verificar que al menos tengamos la tasa BCV
     if (!tasas['BCV']) {
         console.error('¡Advertencia! No se encontró la tasa BCV');
+
+        // Intentar obtener tasas del servidor si no están disponibles en el DOM
+        fetch('/api/tasas/actuales')
+            .then(response => response.json())
+            .then(data => {
+                if (data && Array.isArray(data) && data.length > 0) {
+                    data.forEach(tasa => {
+                        if (tasa.tipoTasa && tasa.valor) {
+                            tasas[tasa.tipoTasa] = tasa.valor;
+                            console.log(`Tasa cargada desde API: ${tasa.tipoTasa} = ${tasa.valor}`);
+                        }
+                    });
+                    console.log('Tasas actualizadas desde API:', tasas);
+                }
+            })
+            .catch(error => {
+                console.error('Error al cargar tasas desde API:', error);
+
+                // Establecer tasa BCV por defecto como fallback final
+                if (!tasas['BCV']) {
+                    console.warn('Estableciendo tasa BCV por defecto como fallback');
+                    tasas['BCV'] = 40.0; // Valor de fallback
+                }
+            });
     }
     
     console.log('Tasas cargadas:', tasas);
@@ -461,6 +485,66 @@ function confirmarVenta() {
         return;
     }
 
+    // Verificar que todas las tasas estén cargadas
+    let tasasFaltantes = false;
+    const tiposTasas = new Set(productosSeleccionados.map(p => p.tipoTasa || 'BCV'));
+
+    // Intentar recargar las tasas si faltan algunas
+    if (Object.keys(tasas).length === 0) {
+        console.log('No hay tasas cargadas, intentando recargar...');
+        cargarTasas();
+    }
+
+    // Verificar cada tipo de tasa necesario
+    tiposTasas.forEach(tipo => {
+        if (!tasas[tipo]) {
+            console.warn(`Falta tasa de tipo ${tipo}, se usará BCV como fallback`);
+            tasasFaltantes = true;
+        }
+    });
+
+    // Asegurar que al menos exista la tasa BCV
+    if (tasasFaltantes || !tasas['BCV']) {
+        console.warn('Estableciendo tasa BCV por defecto');
+        tasas['BCV'] = 40.0;
+    }
+
+    // Verificar que todas las tasas necesarias estén cargadas
+    const tiposTasaRequeridos = new Set(productosSeleccionados.map(p => p.tipoTasa || 'BCV'));
+    let faltanTasas = false;
+
+    tiposTasaRequeridos.forEach(tipo => {
+        if (!tasas[tipo]) {
+            console.error(`Falta la tasa de tipo: ${tipo}`);
+            faltanTasas = true;
+        }
+    });
+
+    if (faltanTasas) {
+        console.log('Intentando recargar las tasas...');
+        cargarTasas();
+
+        // Verificar nuevamente después de recargar
+        let todaviaFaltan = false;
+        tiposTasaRequeridos.forEach(tipo => {
+            if (!tasas[tipo]) {
+                todaviaFaltan = true;
+                // Asignar tasa BCV como fallback
+                console.warn(`Usando tasa BCV como fallback para ${tipo}`);
+                productosSeleccionados.forEach(p => {
+                    if (p.tipoTasa === tipo) {
+                        p.tipoTasa = 'BCV';
+                    }
+                });
+            }
+        });
+
+        if (todaviaFaltan && !tasas['BCV']) {
+            showNotification('Error: No hay tasas de cambio disponibles. No se puede procesar la venta.', 'error');
+            return;
+        }
+    }
+
     const metodoPago = document.getElementById('metodoPago').value;
     const tipoVentaSelect = document.getElementById('tipoVenta');
     const clienteId = document.getElementById('clienteId')?.value;
@@ -621,12 +705,51 @@ function prepararDatosVenta() {
     const tipoVenta = document.getElementById('tipoVenta').value;
     const clienteId = document.getElementById('clienteId').value;
 
+    // Validar que todos los productos tengan un tipo de tasa válido y asegurar que el valor existe
+    productosSeleccionados.forEach(p => {
+        // Si no tiene tipo de tasa o el tipo no existe en las tasas disponibles
+        if (!p.tipoTasa || !tasas[p.tipoTasa]) {
+            console.warn(`Producto ${p.nombre} (ID: ${p.id}) tiene tipo de tasa inválida: ${p.tipoTasa}. Cambiando a BCV.`);
+            p.tipoTasa = 'BCV';
+        }
+
+        // Verificar si la tasa seleccionada existe
+        if (!tasas[p.tipoTasa]) {
+            console.warn(`No existe valor para la tasa ${p.tipoTasa}, cambiando a BCV para el producto ${p.nombre}`);
+            p.tipoTasa = 'BCV';
+
+            // Si tampoco hay tasa BCV, crear una por defecto
+            if (!tasas['BCV']) {
+                console.warn('No existe valor para la tasa BCV, estableciendo valor por defecto');
+                tasas['BCV'] = 40.0;
+            }
+        }
+    });
+
     // Mapear los productos seleccionados al formato que espera el servidor
-    const items = productosSeleccionados.map(p => ({
-        id: p.id,
-        cantidad: p.cantidad,
-        precioUnitario: p.precioVenta
-    }));
+    const items = productosSeleccionados.map(p => {
+        // Verificar nuevamente el tipo de tasa
+        let tipoTasaFinal = p.tipoTasa || 'BCV';
+
+        // Si la tasa no está disponible, usar BCV
+        if (!tasas[tipoTasaFinal]) {
+            console.warn(`Usando tasa BCV para producto ${p.nombre} porque ${tipoTasaFinal} no está disponible`);
+            tipoTasaFinal = 'BCV';
+        }
+
+        // Si tampoco hay tasa BCV, crearla
+        if (!tasas['BCV']) {
+            console.warn('Creando tasa BCV por defecto (40.0)');
+            tasas['BCV'] = 40.0;
+        }
+
+        return {
+            id: p.id,
+            cantidad: p.cantidad,
+            precioUnitario: p.precioVenta,
+            tipoTasa: tipoTasaFinal
+        };
+    });
 
     return {
         items,
@@ -641,6 +764,12 @@ function agregarAlCarrito(producto) {
     console.log('Producto a agregar:', producto);
     console.log('Tasas disponibles:', tasas);
 
+    // Verificar si hay tasas cargadas
+    if (Object.keys(tasas).length === 0) {
+        console.warn('No hay tasas cargadas. Recargando tasas...');
+        cargarTasas();
+    }
+
     if (producto.cantidad === 0) {
         showNotification('Este producto está agotado', 'error');
         return;
@@ -648,6 +777,13 @@ function agregarAlCarrito(producto) {
 
     // Convertir el ID a número si es string
     const productoId = typeof producto.id === 'string' ? parseInt(producto.id) : producto.id;
+
+    // Verificar que el tipo de tasa del producto sea válido
+    const tipoTasa = producto.tipoTasa || 'BCV';
+    if (!tasas[tipoTasa]) {
+        console.warn(`El producto tiene un tipo de tasa no disponible: ${tipoTasa}. Usando BCV como fallback.`);
+        producto.tipoTasa = 'BCV';
+    }
 
     const index = productosSeleccionados.findIndex(p => p.id === productoId);
     if (index >= 0) {
@@ -690,12 +826,35 @@ function actualizarTablaItems() {
     let totalUSD = 0;
     let totalBs = 0;
 
+    // Verificar si las tasas se han cargado correctamente
+    if (Object.keys(tasas).length === 0) {
+        console.error('Las tasas no están disponibles. Recargando tasas...');
+        cargarTasas();
+
+        // Establecer tasa BCV por defecto como fallback inmediato
+        if (Object.keys(tasas).length === 0) {
+            console.warn('Estableciendo tasa BCV por defecto como fallback inmediato');
+            tasas['BCV'] = 40.0;
+        }
+    }
+
     console.log('Actualizando tabla con productos:', productosSeleccionados);
     console.log('Tasas disponibles:', tasas);
 
     productosSeleccionados.forEach(prod => {
+        // Asegurar que el tipo de tasa sea válido, si no, usar BCV como fallback
+        if (!prod.tipoTasa || !tasas[prod.tipoTasa]) {
+            console.warn(`Tipo de tasa inválido o no disponible para producto ${prod.nombre}: ${prod.tipoTasa}. Usando BCV como fallback.`);
+            prod.tipoTasa = 'BCV';
+        }
+
         const tasaValor = tasas[prod.tipoTasa];
         const tasaEfectiva = tasaValor || tasas['BCV'] || 0;
+
+        if (tasaEfectiva === 0) {
+            console.error('¡Error crítico! No se pudo obtener una tasa de cambio válida.');
+            showNotification('Error: No hay tasas de cambio disponibles', 'error');
+        }
         
         const precioBs = prod.precioVenta * tasaEfectiva;
         const subtotalUSD = prod.precioVenta * prod.cantidad;
@@ -1932,10 +2091,55 @@ function seleccionarProducto(producto) {
         });
     }
     
-    actualizarTablaVentas();
+    // Verificar si podemos calcular el precio en Bs con la tasa correcta
+    const tasaProducto = tasas[producto.tipoTasa || 'BCV'];
+    if (!tasaProducto) {
+        console.error(`No se pudo encontrar la tasa ${producto.tipoTasa} para el producto`);
+        // Intentar recuperar las tasas nuevamente
+        cargarTasasConReintentos(3, () => {
+            actualizarTablaVentas();
+        });
+    } else {
+        actualizarTablaVentas();
+    }
+
     ocultarSugerencias();
     document.getElementById('buscarField').value = '';
     showNotification('Producto agregado al carrito', 'success');
+}
+
+// Función para cargar tasas con reintentos
+function cargarTasasConReintentos(intentosMaximos, callback) {
+    let intentos = 0;
+
+    function intentarCargar() {
+        intentos++;
+        console.log(`Intento ${intentos} de cargar tasas...`);
+
+        // Intentar cargar las tasas
+        cargarTasas();
+
+        // Verificar si se cargaron correctamente
+        if (tasas['BCV']) {
+            console.log('Tasas cargadas correctamente');
+            if (callback) callback();
+            return;
+        }
+
+        // Si no se cargaron y aún hay intentos, reintentar
+        if (intentos < intentosMaximos) {
+            setTimeout(intentarCargar, 1000); // Esperar 1 segundo entre intentos
+        } else {
+            console.error(`Fallaron ${intentosMaximos} intentos de cargar tasas`);
+            showNotification('Error al cargar tasas de cambio. Intente recargar la página.', 'error');
+
+            // Establecer una tasa por defecto como último recurso
+            tasas['BCV'] = 40.0; // Valor de fallback
+            if (callback) callback();
+        }
+    }
+
+    intentarCargar();
 }
 
 // Actualizar el indicador de navegación
