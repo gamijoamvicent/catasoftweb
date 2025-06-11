@@ -288,26 +288,26 @@
                     <form id="comboForm">
                         <div class="mb-4">
                             <label for="nombre" class="form-label">Nombre del Combo</label>
-                            <input type="text" class="form-control" id="nombre" name="nombre" required>
+                            <input type="text" class="form-control" id="nombre" name="nombre" required autocomplete="off">
                         </div>
                         
                         <div class="mb-4">
                             <label for="precio" class="form-label">Precio ($)</label>
-                            <input type="number" class="form-control" id="precio" name="precio" step="0.01" required>
+                            <input type="number" class="form-control" id="precio" name="precio" step="0.01" required autocomplete="off">
                         </div>
                         
                         <div class="mb-4">
                             <label for="tipoTasa" class="form-label">Tipo de Tasa</label>
-                            <select class="form-control" id="tipoTasa" name="tipoTasa" required>
+                            <select class="form-control" id="tipoTasa" name="tipoTasa" required autocomplete="off">
                                 <option value="BCV">BCV</option>
-                                <option value="PARALELA">Paralela</option>
+                                <option value="PARALELO">Paralela</option>
                                 <option value="PROMEDIO">Promedio</option>
                             </select>
                         </div>
                         
                         <div class="mb-4">
                             <label for="buscarProducto" class="form-label">Buscar Productos</label>
-                            <input type="text" class="form-control" id="buscarProducto" placeholder="Escribe para buscar productos...">
+                            <input type="text" class="form-control" id="buscarProducto" placeholder="Escribe para buscar productos..." autocomplete="off">
                             <div id="resultadosBusqueda" class="search-results" style="display: none;"></div>
                         </div>
 
@@ -555,13 +555,6 @@
             }
 
             // Función para eliminar un combo
-                            // Cerrar el menú de búsqueda al hacer clic fuera de él
-                            $(document).on('click', function(e) {
-                if (!$(e.target).closest('#buscarProducto, #resultadosBusqueda').length) {
-                    $('#resultadosBusqueda').hide();
-                }
-                            });
-
             window.eliminarCombo = function(id) {
                 if (confirm('¿Está seguro de que desea eliminar este combo?')) {
                     $.ajax({
