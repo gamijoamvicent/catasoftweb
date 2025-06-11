@@ -337,6 +337,8 @@ public class VentaCajaServicioImpl implements VentaCajaServicio {
                 dto.setCantidad(vc.getCantidad());
                 dto.setPrecioUnitario(vc.getPrecioUnitario());
                 dto.setSubtotal(vc.getSubtotal());
+                dto.setSubtotalBolivares(vc.getSubtotalBolivares());
+                dto.setTasaCambioUsado(vc.getTasaCambioUsado());
 
                 // Determinar método de pago y cliente según la venta
                 if (vc.getVenta() != null) {

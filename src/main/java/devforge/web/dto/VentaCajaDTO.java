@@ -16,6 +16,8 @@ public class VentaCajaDTO {
     private Integer cantidad;
     private BigDecimal precioUnitario;
     private BigDecimal subtotal;
+    private BigDecimal subtotalBolivares;
+    private BigDecimal tasaCambioUsado;
     private String metodoPago;
     private String nombreCliente;
     private boolean activo = true;
@@ -24,7 +26,8 @@ public class VentaCajaDTO {
     }
 
     public VentaCajaDTO(Long id, LocalDateTime fechaCreacion, String tipoCaja, String cajaNombre, 
-                      Integer cantidad, BigDecimal precioUnitario, BigDecimal subtotal, 
+                      Integer cantidad, BigDecimal precioUnitario, BigDecimal subtotal,
+                      BigDecimal subtotalBolivares, BigDecimal tasaCambioUsado,
                       String metodoPago, String nombreCliente, boolean activo) {
         this.id = id;
         this.fechaCreacion = fechaCreacion;
@@ -33,6 +36,8 @@ public class VentaCajaDTO {
         this.cantidad = cantidad;
         this.precioUnitario = precioUnitario;
         this.subtotal = subtotal;
+        this.subtotalBolivares = subtotalBolivares;
+        this.tasaCambioUsado = tasaCambioUsado;
         this.metodoPago = metodoPago;
         this.nombreCliente = nombreCliente;
         this.activo = activo;
@@ -92,6 +97,22 @@ public class VentaCajaDTO {
 
     public void setSubtotal(BigDecimal subtotal) {
         this.subtotal = subtotal;
+    }
+
+    public BigDecimal getSubtotalBolivares() {
+        return subtotalBolivares;
+    }
+
+    public void setSubtotalBolivares(BigDecimal subtotalBolivares) {
+        this.subtotalBolivares = subtotalBolivares;
+    }
+
+    public BigDecimal getTasaCambioUsado() {
+        return tasaCambioUsado;
+    }
+
+    public void setTasaCambioUsado(BigDecimal tasaCambioUsado) {
+        this.tasaCambioUsado = tasaCambioUsado;
     }
 
     public String getMetodoPago() {

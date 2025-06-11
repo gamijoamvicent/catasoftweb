@@ -121,7 +121,7 @@
 
                 <div class="card inventario" sec:authorize="hasAnyRole('BODEGA', 'ADMIN_LOCAL', 'SUPER_ADMIN')">
                     <div class="card-header">
-                        <img src="/icons/stock.png" alt="IngresoStock" class="card-icon">
+                        <img src="/icons/stock1.png" alt="IngresoStock" class="card-icon">
                         <h3 class="card-title">Ingreso de Stock</h3>
                     </div>
                     <div class="card-content">
@@ -137,7 +137,7 @@
                     </div>
                     <div class="card-content">
                         <p>Crear un nuevo combo de productos</p>
-                        <a th:href="@{/combos/agregar}" class="btn btn-primary">Agregar Combo de productos</a>
+                        <a th:href="@{/combos/agregar}" class="btn btn-primary">Agregar</a>
                     </div>
                 </div>
 
@@ -170,7 +170,7 @@
                     </div>
                     <div class="card-content">
                         <p>Configure y gestione las cajas de productos</p>
-                        <a th:href="@{/cajas/configuracion}" class="btn btn-primary">Configurar Cajas de productos</a>
+                        <a th:href="@{/cajas/configuracion}" class="btn btn-primary">Gestionar</a>
                     </div>
                 </div>
 
