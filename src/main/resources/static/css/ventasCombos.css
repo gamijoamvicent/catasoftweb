@@ -295,4 +295,38 @@ body {
         border-radius: var(--border-radius-lg) var(--border-radius-lg) 0 0;
         z-index: 1000;
     }
+}
+
+/* Estilos para notificaciones */
+.notificacion {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 15px 25px;
+    border-radius: 8px;
+    color: white;
+    font-weight: 500;
+    z-index: 9999;
+    opacity: 0;
+    transform: translateX(100%);
+    transition: all 0.3s ease-out;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.notificacion.show {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+.notificacion.success {
+    background-color: #2ecc71;
+}
+
+.notificacion.error {
+    background-color: #e74c3c;
+}
+
+.notificacion.warning {
+    background-color: #f1c40f;
+    color: #2c3e50;
 } 

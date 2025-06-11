@@ -55,15 +55,49 @@ $(document).ready(function() {
         });
     });
 
+    // Función para mostrar notificaciones
+    function mostrarNotificacion(mensaje, tipo = 'success') {
+        console.log('Mostrando notificación:', mensaje, tipo);
+        
+        const Toast = Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 3000,
+            timerProgressBar: true,
+            didOpen: (toast) => {
+                toast.addEventListener('mouseenter', Swal.stopTimer)
+                toast.addEventListener('mouseleave', Swal.resumeTimer)
+            }
+        });
+
+        let icon = 'success';
+        switch(tipo) {
+            case 'error':
+                icon = 'error';
+                break;
+            case 'warning':
+                icon = 'warning';
+                break;
+            case 'info':
+                icon = 'info';
+                break;
+        }
+
+        Toast.fire({
+            icon: icon,
+            title: mensaje
+        });
+    }
+
     // Agregar combo al carrito
     $('.agregar-combo').click(function() {
         const id = $(this).data('id');
         const nombre = $(this).data('nombre');
         const precio = parseFloat($(this).data('precio'));
-        const tipoTasa = $(this).data('tipo-tasa') || 'PROMEDIO'; // Valor por defecto
-        console.log('Agregando combo:', { id, nombre, precio, tipoTasa }); // Debug
+        const tipoTasa = $(this).data('tipo-tasa') || 'PROMEDIO';
+        console.log('Agregando combo:', { id, nombre, precio, tipoTasa });
 
-        // Verificar si el combo ya está en el carrito
         const comboExistente = carrito.find(item => item.id === id);
         if (comboExistente) {
             comboExistente.cantidad++;
@@ -78,7 +112,7 @@ $(document).ready(function() {
         }
 
         actualizarCarrito();
-        mostrarNotificacion('Combo agregado al carrito');
+        mostrarNotificacion('Combo agregado al carrito', 'success');
     });
 
     // Actualizar cantidad de un combo en el carrito
@@ -102,7 +136,7 @@ $(document).ready(function() {
         const id = $(this).data('id');
         carrito = carrito.filter(item => item.id !== id);
         actualizarCarrito();
-        mostrarNotificacion('Combo eliminado del carrito');
+        mostrarNotificacion('Combo eliminado del carrito', 'warning');
     });
 
     // Actualizar la vista del carrito
@@ -113,7 +147,7 @@ $(document).ready(function() {
         let total = 0;
         let totalBs = 0;
 
-        carrito.forEach(item => {
+        carrito.forEach((item, index) => {
             const subtotal = item.precio * item.cantidad;
             total += subtotal;
             
@@ -123,28 +157,25 @@ $(document).ready(function() {
             const subtotalBs = subtotal * tasa;
             totalBs += subtotalBs;
 
-            const $item = $(`
-                <div class="cart-item" data-id="${item.id}">
-                    <div class="cart-item-info">
-                        <div class="cart-item-title">${item.nombre}</div>
-                        <div class="cart-item-price">$${item.precio.toFixed(2)} c/u (${item.tipoTasa})</div>
+            $cartItems.append(`
+                <div class="cart-item">
+                    <div class="item-info">
+                        <span class="item-name">${item.nombre}</span>
+                        <span class="item-price">$${item.precio.toFixed(2)}</span>
                     </div>
-                    <div class="cart-item-quantity">
+                    <div class="item-quantity">
                         <button class="quantity-btn" data-id="${item.id}" data-accion="decrementar">-</button>
-                        <span class="quantity">${item.cantidad}</span>
+                        <span>${item.cantidad}</span>
                         <button class="quantity-btn" data-id="${item.id}" data-accion="incrementar">+</button>
                     </div>
-                    <div class="cart-item-subtotal">
-                        $${subtotal.toFixed(2)}
-                        <div class="subtotal-bs">Bs. ${subtotalBs.toFixed(2)}</div>
+                    <div class="item-subtotal">
+                        <span>$${subtotal.toFixed(2)}</span>
+                        <button class="remove-item" data-id="${item.id}">
+                            <i class="fas fa-trash"></i>
+                        </button>
                     </div>
-                    <button class="remove-item" data-id="${item.id}">
-                        <i class="fas fa-trash"></i>
-                    </button>
                 </div>
             `);
-
-            $cartItems.append($item);
         });
 
         // Actualizar totales
@@ -160,20 +191,9 @@ $(document).ready(function() {
         $('#btnConfirmarVenta').prop('disabled', carrito.length === 0);
     }
 
-    // Función para mostrar notificaciones
-    function mostrarNotificacion(mensaje, tipo = 'success') {
-        const notificacion = document.createElement('div');
-        notificacion.className = `notificacion ${tipo}`;
-        notificacion.textContent = mensaje;
-        document.body.appendChild(notificacion);
-
-        setTimeout(() => {
-            notificacion.remove();
-        }, 3000);
-    }
-
     // Función para confirmar la venta
-    function confirmarVenta() {
+    $('#btnConfirmarVenta').on('click', function() {
+        console.log('Botón de confirmar venta clickeado');
         if (carrito.length === 0) {
             mostrarNotificacion('El carrito está vacío', 'warning');
             return;
@@ -184,24 +204,48 @@ $(document).ready(function() {
             cantidad: item.cantidad
         }));
 
+        console.log('Enviando datos de venta:', combosVendidos);
+
         $.ajax({
-            url: '/combos/api/combos/venta',
+            url: '/ventas/combos/confirmar',
             method: 'POST',
             contentType: 'application/json',
-            data: JSON.stringify({ combos: combosVendidos }),
+            data: JSON.stringify({ items: combosVendidos }),
             success: function(response) {
-                mostrarNotificacion('Venta realizada exitosamente');
-                // Limpiar el carrito
-                carrito = [];
-                actualizarCarrito();
+                console.log('Respuesta del servidor:', response);
+                if (response.success) {
+                    mostrarNotificacion('✅ Venta realizada exitosamente', 'success');
+                    carrito = [];
+                    actualizarCarrito();
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 2000);
+                } else {
+                    mostrarNotificacion('❌ ' + (response.message || 'Error al procesar la venta'), 'error');
+                }
             },
-            error: function(xhr) {
-                const mensaje = xhr.responseText || 'Error al procesar la venta';
-                mostrarNotificacion(mensaje, 'error');
+            error: function(xhr, status, error) {
+                console.error('Error en la petición:', { xhr, status, error });
+                let mensaje = 'Error al procesar la venta';
+                
+                try {
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        mensaje = xhr.responseJSON.message;
+                    } else if (xhr.responseText) {
+                        const response = JSON.parse(xhr.responseText);
+                        if (response.message) {
+                            mensaje = response.message;
+                        }
+                    }
+                } catch (e) {
+                    console.error('Error al procesar la respuesta:', e);
+                    if (xhr.responseText) {
+                        mensaje = xhr.responseText;
+                    }
+                }
+                
+                mostrarNotificacion('❌ ' + mensaje, 'error');
             }
         });
-    }
-
-    // Agregar el evento al botón de confirmar venta
-    $('#btnConfirmarVenta').click(confirmarVenta);
+    });
 }); 

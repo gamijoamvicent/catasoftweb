@@ -5,6 +5,7 @@ import devforge.model.Combo;
 import devforge.servicio.ComboServicio;
 import devforge.servicio.VentaComboServicio;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -44,23 +45,47 @@ public class VentaCombosController {
 
     @PostMapping("/confirmar")
     @ResponseBody
-    public Map<String, Object> confirmarVenta(@RequestBody Map<String, Object> ventaData) {
+    public ResponseEntity<?> confirmarVenta(@RequestBody Map<String, Object> ventaData) {
         try {
+            if (licoreriaContext.getLicoreriaId() == null) {
+                return ResponseEntity.badRequest()
+                    .body(Map.of(
+                        "success", false,
+                        "message", "Debe seleccionar una licorería primero"
+                    ));
+            }
+
             @SuppressWarnings("unchecked")
             List<Map<String, Object>> items = (List<Map<String, Object>>) ventaData.get("items");
             
+            if (items == null || items.isEmpty()) {
+                return ResponseEntity.badRequest()
+                    .body(Map.of(
+                        "success", false,
+                        "message", "No hay items para procesar"
+                    ));
+            }
+
             ventaComboServicio.registrarVenta(items);
             
-            return Map.of(
+            return ResponseEntity.ok(Map.of(
                 "success", true,
                 "message", "Venta realizada con éxito",
                 "ticketUrl", "/ventas/ticket/" + System.currentTimeMillis()
-            );
+            ));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest()
+                .body(Map.of(
+                    "success", false,
+                    "message", e.getMessage()
+                ));
         } catch (Exception e) {
-            return Map.of(
-                "success", false,
-                "message", "Error al procesar la venta: " + e.getMessage()
-            );
+            e.printStackTrace();
+            return ResponseEntity.badRequest()
+                .body(Map.of(
+                    "success", false,
+                    "message", "Error al procesar la venta: " + e.getMessage()
+                ));
         }
     }
 } 
