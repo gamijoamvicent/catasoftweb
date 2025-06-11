@@ -324,7 +324,21 @@ function devolverVacio(id) {
                 return response.json();
             })
             .then(data => {
-                showSuccess('Devolución registrada correctamente');
+                // Mostrar alerta de éxito
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        title: '¡Éxito!',
+                        text: 'Préstamo devuelto exitosamente',
+                        icon: 'success',
+                        timer: 2000,
+                        showConfirmButton: false
+                    }).then(() => {
+                        window.location.reload();
+                    });
+                } else {
+                    alert('Préstamo devuelto exitosamente');
+                    window.location.reload();
+                }
             })
             .catch(error => {
                 showError(error.message);
