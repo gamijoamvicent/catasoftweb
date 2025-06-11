@@ -87,12 +87,12 @@ public class VentaCajasController {
 
     @PostMapping("/procesar")
     @ResponseBody
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public ResponseEntity<?> procesarVenta(@RequestBody Map<String, Object> payload) {
         try {
             if (licoreriaContext.getLicoreriaActual() == null) {
                 return ResponseEntity.badRequest()
-                    .body(Map.of("error", "Debe seleccionar una licorería primero"));
+                    .body(Map.of("success", false, "message", "❌ Debe seleccionar una licorería primero"));
             }
 
             @SuppressWarnings("unchecked")
@@ -100,7 +100,7 @@ public class VentaCajasController {
 
             if (items == null || items.isEmpty()) {
                 return ResponseEntity.badRequest()
-                    .body(Map.of("error", "No hay items para procesar"));
+                    .body(Map.of("success", false, "message", "❌ No hay items para procesar"));
             }
 
             // Validar formato de datos
@@ -166,20 +166,43 @@ public class VentaCajasController {
             }
 
             // Procesar la venta
-            ventaCajaServicio.registrarVenta(items);
+            try {
+                ventaCajaServicio.registrarVenta(items);
 
-            return ResponseEntity.ok()
-                .body(Map.of(
-                    "success", true,
-                    "message", "Venta procesada exitosamente",
-                    "clearCart", true
-                ));
+                return ResponseEntity.ok()
+                    .body(Map.of(
+                        "success", true,
+                        "message", "✅ Venta procesada exitosamente",
+                        "clearCart", true
+                    ));
+            } catch (RuntimeException e) {
+                String mensaje = e.getMessage();
+                if (mensaje.contains("inactivo")) {
+                    return ResponseEntity.badRequest()
+                        .body(Map.of(
+                            "success", false,
+                            "message", "❌ " + mensaje
+                        ));
+                } else if (mensaje.contains("Stock insuficiente")) {
+                    return ResponseEntity.badRequest()
+                        .body(Map.of(
+                            "success", false,
+                            "message", "❌ " + mensaje
+                        ));
+                } else {
+                    return ResponseEntity.badRequest()
+                        .body(Map.of(
+                            "success", false,
+                            "message", "❌ Error al procesar la venta: " + mensaje
+                        ));
+                }
+            }
         } catch (Exception e) {
             e.printStackTrace(); // Para logging
             return ResponseEntity.status(500)
                 .body(Map.of(
                     "success", false,
-                    "error", "Error al procesar la venta: " + e.getMessage()
+                    "message", "❌ Error interno del servidor. Por favor, intente nuevamente."
                 ));
         }
     }

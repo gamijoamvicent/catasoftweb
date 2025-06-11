@@ -45,6 +45,22 @@ public class VentaComboServicioImpl implements VentaComboServicio {
                 throw new RuntimeException("El combo '" + combo.getNombre() + "' no pertenece a la licorería actual");
             }
 
+            // Verificar productos inactivos
+            List<ComboProducto> productosCombo = combo.getProductos();
+            StringBuilder productosInactivos = new StringBuilder();
+            
+            for (ComboProducto cp : productosCombo) {
+                if (!cp.getProducto().isActivo()) {
+                    productosInactivos.append("- ").append(cp.getProducto().getNombre()).append("\n");
+                }
+            }
+            
+            if (productosInactivos.length() > 0) {
+                throw new RuntimeException("No se puede vender el combo '" + combo.getNombre() + 
+                    "' porque contiene productos inactivos:\n" + productosInactivos.toString() + 
+                    "\nPor favor, actualice el combo antes de venderlo.");
+            }
+
             try {
                 descontarStockCombo(combo, cantidad);
             } catch (RuntimeException e) {

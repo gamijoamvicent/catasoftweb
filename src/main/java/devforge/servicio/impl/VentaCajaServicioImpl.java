@@ -52,22 +52,26 @@ public class VentaCajaServicioImpl implements VentaCajaServicio {
     }
 
     @Override
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public void registrarVenta(List<Map<String, Object>> items) {
+        if (items == null || items.isEmpty()) {
+            throw new RuntimeException("No hay items para procesar");
+        }
+
+        // Crear la venta
+        Venta venta = new Venta();
+        venta.setLicoreria(licoreriaContext.getLicoreriaActual());
+        venta.setFechaVenta(LocalDateTime.now());
+        venta.setTipoVenta(TipoVenta.CONTADO);
+        venta.setMetodoPago(MetodoPago.EFECTIVO);
+        venta.setAnulada(false);
+        venta.setTotalVenta(BigDecimal.ZERO);
+        venta.setTotalVentaBs(BigDecimal.ZERO);
+
+        // Guardar la venta primero
+        venta = ventaRepository.save(venta);
+
         try {
-            // Crear la venta
-            Venta venta = new Venta();
-            venta.setLicoreria(licoreriaContext.getLicoreriaActual());
-            venta.setFechaVenta(LocalDateTime.now());
-            venta.setTipoVenta(TipoVenta.CONTADO);
-            venta.setMetodoPago(MetodoPago.EFECTIVO);
-            venta.setAnulada(false);
-            venta.setTotalVenta(BigDecimal.ZERO);
-            venta.setTotalVentaBs(BigDecimal.ZERO);
-
-            // Guardar la venta primero
-            venta = ventaRepository.save(venta);
-
             // Procesar cada caja
             for (Map<String, Object> item : items) {
                 Long cajaId = Long.valueOf(item.get("cajaId").toString());
@@ -78,6 +82,12 @@ public class VentaCajaServicioImpl implements VentaCajaServicio {
                 // Obtener la caja
                 Caja caja = cajaRepository.findById(cajaId)
                     .orElseThrow(() -> new RuntimeException("Caja no encontrada: " + cajaId));
+
+                // Verificar que el producto asociado esté activo
+                if (caja.getProducto() != null && !caja.getProducto().isActivo()) {
+                    throw new RuntimeException("Stock insuficiente: El producto '" + caja.getProducto().getNombre() + 
+                        "' asociado a la caja '" + caja.getNombre() + "' está inactivo.");
+                }
 
                 // Crear el detalle de venta de caja
                 VentaCaja ventaCaja = new VentaCaja();
@@ -113,7 +123,8 @@ public class VentaCajaServicioImpl implements VentaCajaServicio {
             // Actualizar la venta con los totales finales
             ventaRepository.save(venta);
         } catch (Exception e) {
-            throw new RuntimeException("Error al registrar la venta: " + e.getMessage(), e);
+            // Si ocurre algún error, lanzar una excepción con el mensaje apropiado
+            throw new RuntimeException("Error al procesar la venta: " + e.getMessage());
         }
     }
 

@@ -65,6 +65,14 @@ public class Producto {
     @Column(name = "activo", nullable = false)
     private boolean activo = true;
 
+    public boolean isActivo() {
+        return activo;
+    }
+
+    public void setActivo(boolean activo) {
+        this.activo = activo;
+    }
+
     public TipoTasa getTipoTasaEnum() {
         return TipoTasa.valueOf(tipoTasa);
     }

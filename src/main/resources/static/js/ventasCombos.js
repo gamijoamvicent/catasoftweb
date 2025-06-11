@@ -248,4 +248,99 @@ $(document).ready(function() {
             }
         });
     });
+
+    // Función para cargar los combos
+    function cargarCombos() {
+        $.get('/combos/api/combos', function(combos) {
+            const $listaCombos = $('#listaCombos');
+            $listaCombos.empty();
+            
+            combos.forEach(combo => {
+                // Obtener detalles del combo
+                $.get(`/combos/api/combos/${combo.id}/detalle`, function(detalle) {
+                    const requiereActualizacion = detalle.requiereActualizacion;
+                    const $combo = $(`
+                        <div class="col-md-6 mb-4">
+                            <div class="card ${requiereActualizacion ? 'border-warning' : ''}">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <h5 class="card-title">
+                                            ${combo.nombre}
+                                            ${requiereActualizacion ? 
+                                                '<span class="badge bg-warning text-dark ms-2">Requiere actualización</span>' : 
+                                                '<span class="badge bg-success ms-2">Listo para vender</span>'}
+                                        </h5>
+                                    </div>
+                                    <p class="precio-combo">$${combo.precio}</p>
+                                    <div class="productos-list mb-3">
+                                        <div id="productos-${combo.id}">
+                                            <!-- Los productos se cargarán dinámicamente -->
+                                        </div>
+                                    </div>
+                                    ${requiereActualizacion ? 
+                                        `<div class="alert alert-warning">
+                                            <small>${detalle.mensajeActualizacion}</small>
+                                        </div>
+                                        <button class="btn btn-warning btn-sm" onclick="actualizarCombo(${combo.id})">
+                                            <i class="fas fa-sync-alt me-1"></i>
+                                            Actualizar Combo
+                                        </button>` : 
+                                        `<button class="btn btn-primary btn-sm agregar-combo" 
+                                            data-id="${combo.id}" 
+                                            data-nombre="${combo.nombre}" 
+                                            data-precio="${combo.precio}"
+                                            data-tipo-tasa="${combo.tipoTasa}">
+                                            <i class="fas fa-cart-plus me-1"></i>
+                                            Agregar al Carrito
+                                        </button>`
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    `);
+                    
+                    $listaCombos.append($combo);
+                    
+                    // Cargar productos del combo
+                    const $productos = $(`#productos-${combo.id}`);
+                    $productos.empty();
+                    
+                    if (detalle.productos.length === 0) {
+                        $productos.append(`<div class="text-muted">No hay productos en este combo</div>`);
+                    } else {
+                        detalle.productos.forEach(producto => {
+                            $productos.append(`
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <span class="fw-medium ${!producto.activo ? 'text-danger' : ''}">
+                                        ${producto.nombre}
+                                        ${!producto.activo ? 
+                                            '<i class="fas fa-exclamation-circle ms-1" title="Producto inactivo"></i>' : ''}
+                                    </span>
+                                    <span class="badge bg-light text-dark">x${producto.cantidad}</span>
+                                </div>
+                            `);
+                        });
+                    }
+                });
+            });
+        });
+    }
+
+    // Función para actualizar un combo
+    function actualizarCombo(comboId) {
+        Swal.fire({
+            title: 'Actualizar Combo',
+            text: '¿Desea actualizar este combo? Será redirigido a la página de edición.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Sí, actualizar',
+            cancelButtonText: 'Cancelar'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                window.location.href = `/combos/editar/${comboId}`;
+            }
+        });
+    }
 }); 

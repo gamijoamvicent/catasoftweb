@@ -193,22 +193,42 @@ public class ComboController {
         if (productosCombo.isEmpty()) {
             productosCombo = comboProductoRepository.findByComboIdAndComboLicoreriaId(id, licoreriaContext.getLicoreriaId());
         }
+
         devforge.model.dto.ComboDetalleDTO dto = new devforge.model.dto.ComboDetalleDTO();
         dto.setId(combo.getId());
         dto.setNombre(combo.getNombre());
         dto.setPrecio(combo.getPrecio());
-        // No agregamos licoreriaId porque no existe ese setter en el DTO
 
         List<devforge.model.dto.ComboDetalleDTO.ItemDTO> items = new ArrayList<>();
+        boolean tieneProductosInactivos = false;
+        StringBuilder mensajeActualizacion = new StringBuilder();
+
         for (ComboProducto cp : productosCombo) {
             devforge.model.dto.ComboDetalleDTO.ItemDTO item = new devforge.model.dto.ComboDetalleDTO.ItemDTO();
             item.setId(cp.getProducto().getId());
             item.setNombre(cp.getProducto().getNombre());
             item.setPrecio(BigDecimal.valueOf(cp.getProducto().getPrecioVenta()));
             item.setCantidad(cp.getCantidad());
+            
+            // Verificar si el producto está activo
+            boolean productoActivo = cp.getProducto().isActivo();
+            item.setActivo(productoActivo);
+            
+            if (!productoActivo) {
+                tieneProductosInactivos = true;
+                item.setMensajeEstado("Producto inactivo");
+                mensajeActualizacion.append("- ").append(cp.getProducto().getNombre()).append(" está inactivo\n");
+            }
+            
             items.add(item);
         }
+
         dto.setProductos(items);
+        dto.setRequiereActualizacion(tieneProductosInactivos);
+        dto.setMensajeActualizacion(tieneProductosInactivos ? 
+            "Este combo requiere actualización:\n" + mensajeActualizacion.toString() : 
+            "El combo está actualizado y listo para vender");
+
         return ResponseEntity.ok(dto);
     }
 
