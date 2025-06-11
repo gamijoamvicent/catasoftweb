@@ -166,38 +166,44 @@
         .alert {
             padding: 15px;
             border-radius: 6px;
-            margin-bottom: 20px;
-            display: none;
+            margin: 10px 0;
+            display: block;
+            text-align: center;
+            font-weight: bold;
         }
 
         .alert-success {
-            background: #e8f5e9;
-            color: #2e7d32;
-            border: 1px solid #c8e6c9;
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
         }
 
-        .alert-error {
-            background: #ffebee;
-            color: #c62828;
-            border: 1px solid #ffcdd2;
+        .alert-danger {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        #alertContainer {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            width: 80%;
+            max-width: 500px;
         }
     </style>
 </head>
 <body>
     <div class="page-container">
+        <div id="alertContainer"></div>
         <div class="header">
             <h2>Ingreso de Stock</h2>
             <p>Registra el ingreso de productos al inventario</p>
         </div>
 
         <div class="content-wrapper">
-            <div class="alert alert-success" id="successAlert">
-                ✅ Ingreso registrado exitosamente
-            </div>
-            <div class="alert alert-error" id="errorAlert">
-                ❌ Error al registrar el ingreso
-            </div>
-
             <div class="form-container">
                 <form id="ingresoForm">
                     <div class="form-group">
@@ -284,6 +290,16 @@
                 motivo: document.getElementById('motivo').value
             };
 
+            if (!formData.productoId) {
+                mostrarError('Por favor, seleccione un producto');
+                return;
+            }
+
+            if (!formData.cantidad || formData.cantidad <= 0) {
+                mostrarError('Por favor, ingrese una cantidad válida');
+                return;
+            }
+
             fetch('/inventario/api/ingreso', {
                 method: 'POST',
                 headers: {
@@ -309,8 +325,6 @@
             .then(data => {
                 if (data.success) {
                     mostrarExito(data.message);
-                    document.getElementById('ingresoForm').reset();
-                    document.getElementById('productInfo').classList.remove('active');
                 } else {
                     mostrarError(data.message);
                 }
@@ -322,19 +336,29 @@
         });
 
         function mostrarError(mensaje) {
-            const errorDiv = document.createElement('div');
-            errorDiv.className = 'alert alert-danger';
-            errorDiv.textContent = mensaje;
-            document.querySelector('.form-container').prepend(errorDiv);
-            setTimeout(() => errorDiv.remove(), 5000);
+            const alertContainer = document.getElementById('alertContainer');
+            alertContainer.innerHTML = `
+                <div class="alert alert-danger">
+                    ❌ ${mensaje}
+                </div>
+            `;
+            setTimeout(() => {
+                alertContainer.innerHTML = '';
+            }, 5000);
         }
 
         function mostrarExito(mensaje) {
-            const exitoDiv = document.createElement('div');
-            exitoDiv.className = 'alert alert-success';
-            exitoDiv.textContent = mensaje;
-            document.querySelector('.form-container').prepend(exitoDiv);
-            setTimeout(() => exitoDiv.remove(), 5000);
+            const alertContainer = document.getElementById('alertContainer');
+            alertContainer.innerHTML = `
+                <div class="alert alert-success">
+                    ✅ ${mensaje}
+                </div>
+            `;
+            setTimeout(() => {
+                alertContainer.innerHTML = '';
+                // Recargar la página después de mostrar el mensaje de éxito
+                window.location.reload();
+            }, 2000);
         }
     </script>
 </body>
