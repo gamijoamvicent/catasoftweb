@@ -22,6 +22,9 @@ public class VentaCaja {
     @Column(name = "venta_id", insertable = false, updatable = false)
     private Long ventaId;
 
+    @Column(name = "licoreria_id")
+    private Long licoreriaId;
+
     @Column(nullable = false)
     private boolean activo = true;
 

@@ -87,6 +87,9 @@ public class VentaCajaServicioImpl implements VentaCajaServicio {
         venta.setTotalVenta(BigDecimal.ZERO);
         venta.setTotalVentaBs(BigDecimal.ZERO);
 
+        // Obtener ID de licorería actual
+        Long licoreriaId = licoreriaContext.getLicoreriaActual().getId();
+
         // Si es venta a crédito, asociar cliente
         if (venta.getTipoVenta() == TipoVenta.CREDITO) {
             if (clienteId == null) {
@@ -139,6 +142,7 @@ public class VentaCajaServicioImpl implements VentaCajaServicio {
                 ventaCaja.setSubtotal(BigDecimal.valueOf(precio * cantidad));
                 ventaCaja.setTipoTasa(PrecioDolar.TipoTasa.valueOf(tipoTasa));
                 ventaCaja.setFechaCreacion(LocalDateTime.now());
+                ventaCaja.setLicoreriaId(licoreriaId);
 
                 // Calcular subtotal en bolívares
                 double tasaCambio = obtenerTasaCambio(tipoTasa);
@@ -316,8 +320,8 @@ public class VentaCajaServicioImpl implements VentaCajaServicio {
 
     @Override
     public List<VentaCajaDTO> buscarVentasCajasPorFechaYTipo(Long licoreriaId, LocalDateTime fechaInicio, LocalDateTime fechaFin, String tipoCaja) {
-        // Buscar directamente las ventas de cajas por fecha de creación
-        List<VentaCaja> ventasCajas = ventaCajaRepository.findByFechaCreacionBetweenAndActivoTrue(fechaInicio, fechaFin);
+        // Buscar directamente las ventas de cajas por fecha de creación y licorería
+        List<VentaCaja> ventasCajas = ventaCajaRepository.findByFechaCreacionBetweenAndLicoreriaIdAndActivoTrue(fechaInicio, fechaFin, licoreriaId);
 
         // Filtrar por tipo de caja si es necesario
         if (tipoCaja != null && !tipoCaja.equals("TODAS")) {

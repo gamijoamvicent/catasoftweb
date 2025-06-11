@@ -16,4 +16,5 @@ public interface VentaCajaRepository extends JpaRepository<VentaCaja, Long> {
     List<VentaCaja> findByVentaIdIn(List<Long> ventaIds);
     List<VentaCaja> findByVentaIdInAndActivoTrue(List<Long> ventaIds);
     List<VentaCaja> findByFechaCreacionBetweenAndActivoTrue(LocalDateTime fechaInicio, LocalDateTime fechaFin);
+    List<VentaCaja> findByFechaCreacionBetweenAndLicoreriaIdAndActivoTrue(LocalDateTime fechaInicio, LocalDateTime fechaFin, Long licoreriaId);
 }

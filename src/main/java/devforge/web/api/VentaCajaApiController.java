@@ -46,6 +46,14 @@ public class VentaCajaApiController {
         // Obtener ID de la licorería actual
         Long licoreriaId = licoreriaContext.getLicoreriaActual().getId();
 
+        // Verificar que existe una licorería seleccionada
+        if (licoreriaId == null) {
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("success", false);
+            errorResponse.put("message", "No hay una licorería seleccionada");
+            return ResponseEntity.badRequest().body(errorResponse);
+        }
+
         // Obtener ventas de cajas según filtros
         List<VentaCajaDTO> ventas = ventaCajaServicio.buscarVentasCajasPorFechaYTipo(
                 licoreriaId,

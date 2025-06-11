@@ -97,6 +97,9 @@ public class VentaCajasController {
                     .body(Map.of("success", false, "message", "❌ Debe seleccionar una licorería primero"));
             }
 
+            // Añadir el ID de la licorería actual al payload para que se guarde en VentaCaja
+            payload.put("licoreriaId", licoreriaContext.getLicoreriaActual().getId());
+
             @SuppressWarnings("unchecked")
             List<Map<String, Object>> items = (List<Map<String, Object>>) payload.get("items");
 
