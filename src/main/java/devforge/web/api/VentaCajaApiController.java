@@ -57,6 +57,7 @@ public class VentaCajaApiController {
         Map<String, Object> response = new HashMap<>();
         response.put("success", true);
         response.put("data", ventas);
+        response.put("verDetalle", false); // Añadir flag para ocultar el botón de detalle
         return ResponseEntity.ok(response);
     }
 

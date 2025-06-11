@@ -1,17 +1,23 @@
 // Variables para almacenar referencias a los gráficos
-document.addEventListener('DOMContentLoaded', function() {
-    // Establecer fecha actual en los campos de fecha por defecto
-    const hoy = new Date().toISOString().split('T')[0];
-    document.getElementById('fecha-inicio').value = hoy;
-    document.getElementById('fecha-fin').value = hoy;
+// Remover eventos duplicados de DOMContentLoaded
+if (window.ventasCajasInitialized !== true) {
+    document.addEventListener('DOMContentLoaded', function() {
+        // Establecer fecha actual en los campos de fecha por defecto
+        const hoy = new Date().toISOString().split('T')[0];
+        document.getElementById('fecha-inicio').value = hoy;
+        document.getElementById('fecha-fin').value = hoy;
 
-    // Cargar datos iniciales
-    cargarDatos();
+        // Cargar datos iniciales inmediatamente
+        setTimeout(cargarDatos, 100);
 
-    // Configurar eventos
-    document.getElementById('btn-filtrar').addEventListener('click', cargarDatos);
-    document.getElementById('btn-exportar').addEventListener('click', exportarDatos);
-});
+        // Configurar eventos
+        document.getElementById('btn-filtrar').addEventListener('click', cargarDatos);
+        document.getElementById('btn-exportar').addEventListener('click', exportarDatos);
+
+        // Marcar como inicializado
+        window.ventasCajasInitialized = true;
+    });
+}
 
 function cargarDatos() {
     // Obtener valores de filtros
@@ -40,7 +46,47 @@ function cargarDatos() {
                            (data.ventas && Array.isArray(data.ventas) ? data.ventas : []));
 
             console.log('Datos recibidos:', ventas);
-            actualizarEstadisticas(ventas);
+
+            // Actualizar elementos en el DOM de estadísticas
+            const totalCajas = ventas.reduce((suma, venta) => suma + (parseInt(venta.cantidad) || 0), 0);
+            document.getElementById('total-cajas').textContent = totalCajas;
+
+            const totalIngresos = ventas.reduce((suma, venta) => {
+                return suma + (parseFloat(venta.subtotal) || 0);
+            }, 0);
+            document.getElementById('total-ingresos').textContent = '$' + totalIngresos.toFixed(2);
+
+            // Encontrar la caja más vendida
+            const ventasPorCaja = {};
+            ventas.forEach(venta => {
+                const nombreCaja = venta.cajaNombre || 'Sin nombre';
+                if (!ventasPorCaja[nombreCaja]) {
+                    ventasPorCaja[nombreCaja] = 0;
+                }
+                ventasPorCaja[nombreCaja] += (parseInt(venta.cantidad) || 0);
+            });
+
+            let cajaMasVendida = '-';
+            let cantidadMasVendida = 0;
+
+            for (const [caja, cantidad] of Object.entries(ventasPorCaja)) {
+                if (cantidad > cantidadMasVendida) {
+                    cajaMasVendida = caja;
+                    cantidadMasVendida = cantidad;
+                }
+            }
+
+            document.getElementById('caja-top').textContent = cajaMasVendida;
+            document.getElementById('caja-top-cantidad').textContent = cantidadMasVendida + ' unidades';
+
+            // Calcular promedio por venta
+            let promedioVenta = 0;
+            if (ventas.length > 0) {
+                promedioVenta = totalIngresos / ventas.length;
+            }
+            document.getElementById('promedio-venta').textContent = '$' + promedioVenta.toFixed(2);
+
+            // Actualizar tabla
             actualizarTabla(ventas);
             ocultarCargando();
         })
@@ -51,54 +97,7 @@ function cargarDatos() {
         });
 }
 
-function actualizarEstadisticas(ventas) {
-    // Validar que ventas sea un array
-    if (!ventas || !Array.isArray(ventas)) {
-        console.error('Los datos recibidos no son un array:', ventas);
-        ventas = [];
-    }
-
-    // Calcular total de cajas vendidas
-    const totalCajas = ventas.reduce((suma, venta) => suma + (venta.cantidad || 0), 0);
-    document.getElementById('total-cajas').textContent = totalCajas;
-
-    // Calcular ingresos totales
-    const totalIngresos = ventas.reduce((suma, venta) => {
-        const subtotal = venta.subtotal ? parseFloat(venta.subtotal) : 0;
-        return suma + subtotal;
-    }, 0);
-    document.getElementById('total-ingresos').textContent = '$' + totalIngresos.toFixed(2);
-
-    // Encontrar la caja más vendida
-    const ventasPorCaja = {};
-    ventas.forEach(venta => {
-        const nombreCaja = venta.cajaNombre || 'Sin nombre';
-        if (!ventasPorCaja[nombreCaja]) {
-            ventasPorCaja[nombreCaja] = 0;
-        }
-        ventasPorCaja[nombreCaja] += (venta.cantidad || 0);
-    });
-
-    let cajaMasVendida = '-';
-    let cantidadMasVendida = 0;
-
-    for (const [caja, cantidad] of Object.entries(ventasPorCaja)) {
-        if (cantidad > cantidadMasVendida) {
-            cajaMasVendida = caja;
-            cantidadMasVendida = cantidad;
-        }
-    }
-
-    document.getElementById('caja-top').textContent = cajaMasVendida;
-    document.getElementById('caja-top-cantidad').textContent = cantidadMasVendida + ' unidades';
-
-    // Calcular promedio por venta
-    let promedioVenta = 0;
-    if (ventas.length > 0) {
-        promedioVenta = totalIngresos / ventas.length;
-    }
-    document.getElementById('promedio-venta').textContent = '$' + promedioVenta.toFixed(2);
-}
+// La función actualizarEstadisticas ha sido reemplazada por código directo en cargarDatos
 
 function actualizarTabla(ventas) {
     const tbody = document.getElementById('tabla-ventas-body');
@@ -123,6 +122,7 @@ function actualizarTabla(ventas) {
         const subtotal = venta.subtotal ? parseFloat(venta.subtotal).toFixed(2) : '0.00';
         const subtotalBolivares = venta.subtotalBolivares ? parseFloat(venta.subtotalBolivares).toFixed(2) : '0.00';
 
+        // Eliminar el botón de detalle y mantener solo el botón de eliminar
         tr.innerHTML = `
             <td>${fechaFormateada}</td>
             <td>${venta.cajaNombre || 'Sin nombre'}</td>
@@ -220,20 +220,21 @@ function ocultarCargando() {
 function mostrarError(mensaje) {
     alert(mensaje);
 }
-document.addEventListener('DOMContentLoaded', function() {
-    // Destruir cualquier gráfico existente de sesiones anteriores
-    destruirTodosLosGraficos();
-
-    // Inicializar fecha por defecto (último mes)
-    inicializarFechas();
-
-    // Cargar datos iniciales
-    cargarDashboard();
-
-    // Event listeners
-    document.getElementById('btn-filtrar').addEventListener('click', cargarDashboard);
-    document.getElementById('btn-exportar').addEventListener('click', exportarDatos);
-});
+// Este segundo evento DOMContentLoaded ha sido desactivado para evitar conflictos
+// document.addEventListener('DOMContentLoaded', function() {
+//     // Destruir cualquier gráfico existente de sesiones anteriores
+//     destruirTodosLosGraficos();
+// 
+//     // Inicializar fecha por defecto (último mes)
+//     inicializarFechas();
+// 
+//     // Cargar datos iniciales
+//     cargarDashboard();
+// 
+//     // Event listeners
+//     document.getElementById('btn-filtrar').addEventListener('click', cargarDashboard);
+//     document.getElementById('btn-exportar').addEventListener('click', exportarDatos);
+// });
 
 function destruirTodosLosGraficos() {
     // Ya no hay gráficos para destruir
