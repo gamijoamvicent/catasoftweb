@@ -590,6 +590,21 @@ function confirmarVenta() {
         productosSeleccionados = [];
         actualizarTablaVentas();
         
+        // Restablecer el tipo de venta a CONTADO
+        document.getElementById('tipoVenta').value = 'CONTADO';
+        
+        // Ocultar selector de cliente si está visible
+        const clienteSelector = document.getElementById('clienteSelector');
+        if (clienteSelector) {
+            clienteSelector.style.display = 'none';
+        }
+        
+        // Limpiar campo de búsqueda de cliente
+        const buscarClienteInput = document.getElementById('buscarCliente');
+        if (buscarClienteInput) {
+            buscarClienteInput.value = '';
+        }
+        
         // Imprimir ticket si está configurado
         if (data.ventaId) {
             imprimirTicket(data.ventaId);
