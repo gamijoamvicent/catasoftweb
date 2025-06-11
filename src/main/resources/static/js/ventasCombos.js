@@ -15,9 +15,15 @@ $(document).ready(function() {
             method: 'GET',
             success: function(response) {
                 console.log('Respuesta tasas:', response); // Debug
+                console.log('Tasa paralela en respuesta:', response.paralela || response.paralelo); // Debug específico para tasa paralela
+
+                // Asegurar que tenemos un valor para la tasa paralela
+                const tasaParalela = parseFloat(response.paralela) || parseFloat(response.paralelo) || 0;
+                console.log('Tasa PARALELA procesada:', tasaParalela);
+
                 tasasDolar = {
                     BCV: parseFloat(response.bcv) || 0,
-                    PARALELA: parseFloat(response.paralelo) || 0,
+                    PARALELA: tasaParalela,
                     PROMEDIO: parseFloat(response.promedio) || 0
                 };
                 console.log('Tasas procesadas:', tasasDolar); // Debug
@@ -95,7 +101,14 @@ $(document).ready(function() {
         const id = $(this).data('id');
         const nombre = $(this).data('nombre');
         const precio = parseFloat($(this).data('precio'));
-        const tipoTasa = $(this).data('tipo-tasa') || 'PROMEDIO';
+        let tipoTasa = $(this).data('tipo-tasa') || 'PROMEDIO';
+
+        // Normalizar el tipo de tasa al agregar al carrito
+        if (tipoTasa === 'PARALELO') {
+            console.log('Normalizando tipo de tasa PARALELO a PARALELA');
+            tipoTasa = 'PARALELA';
+        }
+
         console.log('Agregando combo:', { id, nombre, precio, tipoTasa });
 
         const comboExistente = carrito.find(item => item.id === id);
@@ -151,9 +164,15 @@ $(document).ready(function() {
             const subtotal = item.precio * item.cantidad;
             total += subtotal;
             
+            // Normalizar el tipo de tasa (convertir PARALELO a PARALELA si es necesario)
+            let tipoTasaNormalizado = item.tipoTasa;
+            if (tipoTasaNormalizado === 'PARALELO') {
+                tipoTasaNormalizado = 'PARALELA';
+            }
+
             // Calcular el subtotal en Bs según el tipo de tasa del combo
-            const tasa = tasasDolar[item.tipoTasa] || 0;
-            console.log('Calculando subtotal para:', item.nombre, 'Tasa:', item.tipoTasa, 'Valor:', tasa); // Debug
+            const tasa = tasasDolar[tipoTasaNormalizado] || 0;
+            console.log('Calculando subtotal para:', item.nombre, 'Tasa Original:', item.tipoTasa, 'Tasa Normalizada:', tipoTasaNormalizado, 'Valor:', tasa); // Debug
             const subtotalBs = subtotal * tasa;
             totalBs += subtotalBs;
 
