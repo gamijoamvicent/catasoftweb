@@ -5,6 +5,7 @@ import devforge.model.Licoreria;
 import devforge.model.PrecioDolar;
 import devforge.model.Venta;
 import devforge.model.VentaCaja;
+import devforge.model.enums.TipoVenta;
 import devforge.servicio.CajaServicio;
 import devforge.servicio.PrecioDolarServicio;
 import devforge.servicio.VentaCajaServicio;
@@ -23,8 +24,10 @@ import jakarta.servlet.http.HttpServletRequest;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.ArrayList;
 
 @Controller
@@ -87,7 +90,6 @@ public class VentaCajasController {
 
     @PostMapping("/procesar")
     @ResponseBody
-    @Transactional(rollbackFor = Exception.class)
     public ResponseEntity<?> procesarVenta(@RequestBody Map<String, Object> payload) {
         try {
             if (licoreriaContext.getLicoreriaActual() == null) {
@@ -97,10 +99,37 @@ public class VentaCajasController {
 
             @SuppressWarnings("unchecked")
             List<Map<String, Object>> items = (List<Map<String, Object>>) payload.get("items");
+
+            // Validar el tipo de venta
             String tipoVenta = (String) payload.get("tipoVenta");
+            if (tipoVenta == null) {
+                tipoVenta = "CONTADO"; // Valor por defecto
+            }
+
+            // Validar TipoVenta enum
+            try {
+                TipoVenta.valueOf(tipoVenta);
+            } catch (IllegalArgumentException e) {
+                return ResponseEntity.badRequest()
+                    .body(Map.of("success", false, "message", "❌ Tipo de venta inválido: " + tipoVenta));
+            }
+
+            // Procesar ID de cliente
             Long clienteId = null;
-            if (payload.containsKey("clienteId")) {
-                clienteId = Long.valueOf(payload.get("clienteId").toString());
+            if (payload.containsKey("clienteId") && payload.get("clienteId") != null 
+                && !payload.get("clienteId").toString().trim().isEmpty()) {
+                try {
+                    clienteId = Long.valueOf(payload.get("clienteId").toString());
+                } catch (NumberFormatException e) {
+                    return ResponseEntity.badRequest()
+                        .body(Map.of("success", false, "message", "❌ ID de cliente inválido"));
+                }
+            }
+
+            // Validar cliente para ventas a crédito
+            if (TipoVenta.valueOf(tipoVenta) == TipoVenta.CREDITO && clienteId == null) {
+                return ResponseEntity.badRequest()
+                    .body(Map.of("success", false, "message", "❌ Para ventas a crédito debe seleccionar un cliente"));
             }
 
             if (items == null || items.isEmpty()) {
@@ -256,6 +285,91 @@ public class VentaCajasController {
                     "success", false,
                     "error", "Error al desactivar la venta: " + e.getMessage()
                 ));
+        }
+    }
+
+    @GetMapping("/detalle-ajax/{id}")
+    @ResponseBody
+    public ResponseEntity<?> obtenerDetalleVentaCaja(@PathVariable("id") Long ventaCajaId) {
+        try {
+            if (licoreriaContext.getLicoreriaActual() == null) {
+                return ResponseEntity.badRequest()
+                    .body(Map.of("error", "Debe seleccionar una licorería primero"));
+            }
+
+            // Obtener la venta de caja
+            Optional<VentaCaja> ventaCajaOpt = ventaCajaServicio.buscarPorId(ventaCajaId);
+            if (!ventaCajaOpt.isPresent()) {
+                return ResponseEntity.status(404)
+                    .body(Map.of("error", "Venta de caja no encontrada"));
+            }
+
+            VentaCaja ventaCaja = ventaCajaOpt.get();
+
+            // Crear un mapa con la información relevante
+            Map<String, Object> detalleVenta = new HashMap<>();
+            detalleVenta.put("id", ventaCaja.getId());
+            detalleVenta.put("fechaCreacion", ventaCaja.getFechaCreacion());
+            detalleVenta.put("cajaNombre", ventaCaja.getCaja().getNombre());
+            detalleVenta.put("cantidad", ventaCaja.getCantidad());
+            detalleVenta.put("precioUnitario", ventaCaja.getPrecioUnitario());
+            detalleVenta.put("subtotal", ventaCaja.getSubtotal());
+            detalleVenta.put("tipoTasa", ventaCaja.getTipoTasa());
+            detalleVenta.put("tasaCambioUsado", ventaCaja.getTasaCambioUsado());
+            detalleVenta.put("subtotalBolivares", ventaCaja.getSubtotalBolivares());
+
+            // Agregar información de la venta si existe
+            if (ventaCaja.getVenta() != null) {
+                Map<String, Object> ventaInfo = new HashMap<>();
+                ventaInfo.put("id", ventaCaja.getVenta().getId());
+                ventaInfo.put("fechaVenta", ventaCaja.getVenta().getFechaVenta());
+                ventaInfo.put("metodoPago", ventaCaja.getVenta().getMetodoPago());
+                ventaInfo.put("tipoVenta", ventaCaja.getVenta().getTipoVenta());
+                ventaInfo.put("totalVenta", ventaCaja.getVenta().getTotalVenta());
+                ventaInfo.put("totalVentaBs", ventaCaja.getVenta().getTotalVentaBs());
+
+                // Información del cliente si existe
+                if (ventaCaja.getVenta().getCliente() != null) {
+                    Map<String, Object> clienteInfo = new HashMap<>();
+                    clienteInfo.put("id", ventaCaja.getVenta().getCliente().getId());
+                    clienteInfo.put("nombre", ventaCaja.getVenta().getCliente().getNombre());
+                    clienteInfo.put("documento", ventaCaja.getVenta().getCliente().getCedula());
+                    ventaInfo.put("cliente", clienteInfo);
+                }
+
+                detalleVenta.put("venta", ventaInfo);
+            }
+
+            // Información de la caja
+            Map<String, Object> cajaInfo = new HashMap<>();
+            if (ventaCaja.getCaja() != null) {
+                cajaInfo.put("id", ventaCaja.getCaja().getId());
+                cajaInfo.put("nombre", ventaCaja.getCaja().getNombre());
+                cajaInfo.put("tipo", ventaCaja.getCaja().getTipo());
+                cajaInfo.put("cantidadUnidades", ventaCaja.getCaja().getCantidadUnidades());
+
+                // Información del producto si existe
+                if (ventaCaja.getCaja().getProducto() != null) {
+                    Map<String, Object> productoInfo = new HashMap<>();
+                    productoInfo.put("id", ventaCaja.getCaja().getProducto().getId());
+                    productoInfo.put("nombre", ventaCaja.getCaja().getProducto().getNombre());
+                    // No hay campo de código en la clase Producto
+                    if (ventaCaja.getCaja().getProducto().getMarca() != null) {
+                        productoInfo.put("codigo", ventaCaja.getCaja().getProducto().getMarca());
+                    } else {
+                        productoInfo.put("codigo", "");
+                    }
+                    cajaInfo.put("producto", productoInfo);
+                }
+            }
+
+            detalleVenta.put("caja", cajaInfo);
+
+            return ResponseEntity.ok(detalleVenta);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500)
+                .body(Map.of("error", "Error al obtener el detalle: " + e.getMessage()));
         }
     }
 }

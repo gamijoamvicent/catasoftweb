@@ -27,6 +27,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -71,6 +72,11 @@ public class VentaCajaServicioImpl implements VentaCajaServicio {
             throw new RuntimeException("No hay items para procesar");
         }
 
+        // Validar el tipo de venta
+        if (tipoVentaStr == null) {
+            tipoVentaStr = "CONTADO";
+        }
+
         // Crear la venta
         Venta venta = new Venta();
         venta.setLicoreria(licoreriaContext.getLicoreriaActual());
@@ -82,9 +88,22 @@ public class VentaCajaServicioImpl implements VentaCajaServicio {
         venta.setTotalVentaBs(BigDecimal.ZERO);
 
         // Si es venta a crédito, asociar cliente
-        if (clienteId != null && venta.getTipoVenta() == TipoVenta.CREDITO) {
-            Cliente cliente = entityManager.getReference(Cliente.class, clienteId);
-            venta.setCliente(cliente);
+        if (venta.getTipoVenta() == TipoVenta.CREDITO) {
+            if (clienteId == null) {
+                throw new RuntimeException("Para ventas a crédito se requiere seleccionar un cliente");
+            }
+            try {
+                Cliente cliente = entityManager.find(Cliente.class, clienteId);
+                if (cliente == null) {
+                    throw new RuntimeException("El cliente seleccionado no existe");
+                }
+                if (cliente.getNombre() == null || cliente.getNombre().trim().isEmpty()) {
+                    throw new RuntimeException("El cliente seleccionado no tiene nombre definido");
+                }
+                venta.setCliente(cliente);
+            } catch (Exception e) {
+                throw new RuntimeException("Error al obtener el cliente: " + e.getMessage());
+            }
         }
 
         // Guardar la venta
@@ -145,7 +164,14 @@ public class VentaCajaServicioImpl implements VentaCajaServicio {
             ventaRepository.save(venta);
 
             // Si es venta a crédito, crear registro de crédito
-            if (venta.getTipoVenta() == TipoVenta.CREDITO && venta.getCliente() != null) {
+            if (venta.getTipoVenta() == TipoVenta.CREDITO) {
+                if (venta.getCliente() == null) {
+                    throw new RuntimeException("No se puede crear un crédito sin cliente");
+                }
+                if (venta.getCliente().getNombre() == null) {
+                    throw new RuntimeException("El cliente no tiene nombre definido");
+                }
+
                 Credito credito = new Credito();
                 credito.setVenta(venta);
                 credito.setCliente(venta.getCliente());
@@ -246,7 +272,7 @@ public class VentaCajaServicioImpl implements VentaCajaServicio {
     }
 
     @Override
-    @Transactional
+    @Transactional(noRollbackFor = {RuntimeException.class})
     public boolean desactivarVentaCaja(Long ventaCajaId) {
         try {
             VentaCaja ventaCaja = ventaCajaRepository.findById(ventaCajaId)
@@ -257,7 +283,9 @@ public class VentaCajaServicioImpl implements VentaCajaServicio {
             ventaCajaRepository.save(ventaCaja);
             return true;
         } catch (Exception e) {
-            throw new RuntimeException("Error al desactivar la venta: " + e.getMessage(), e);
+            // Loguear el error pero permitir que la transacción termine normalmente
+            e.printStackTrace();
+            return false;
         }
     }
 
@@ -279,6 +307,11 @@ public class VentaCajaServicioImpl implements VentaCajaServicio {
             e.printStackTrace();
             return false;
         }
+    }
+
+    @Override
+    public Optional<VentaCaja> buscarPorId(Long id) {
+        return ventaCajaRepository.findById(id);
     }
 
     @Override

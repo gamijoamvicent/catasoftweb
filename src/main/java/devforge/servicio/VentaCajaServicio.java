@@ -6,6 +6,7 @@ import devforge.web.dto.VentaCajaDTO;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 public interface VentaCajaServicio {
     void registrarVenta(List<Map<String, Object>> items);
@@ -33,4 +34,11 @@ public interface VentaCajaServicio {
      * @return true si se desactivó correctamente, false si no se encontró
      */
     boolean desactivarVentaCaja(Long ventaCajaId);
+
+    /**
+     * Busca una venta de caja por su ID
+     * @param id ID de la venta de caja a buscar
+     * @return Optional con la venta de caja o vacío si no existe
+     */
+    Optional<VentaCaja> buscarPorId(Long id);
 }

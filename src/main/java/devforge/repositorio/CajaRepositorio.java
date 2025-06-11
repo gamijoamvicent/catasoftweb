@@ -10,6 +10,7 @@ import java.util.List;
 public interface CajaRepositorio extends JpaRepository<Caja, Long> {
     List<Caja> findByLicoreriaId(Long licoreriaId);
     List<Caja> findByNombreContainingIgnoreCaseAndLicoreriaId(String nombre, Long licoreriaId);
+    List<Caja> findByNombreContainingIgnoreCaseAndLicoreriaIdAndEstadoTrue(String nombre, Long licoreriaId);
     List<Caja> findByLicoreriaIdAndEstadoTrue(Long licoreriaId);
     List<Caja> findByProductoId(Long productoId);
 }

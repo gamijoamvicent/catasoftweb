@@ -51,7 +51,7 @@ public class CajaServicioImpl implements CajaServicio {
 
     @Override
     public List<Caja> buscarPorNombre(String nombre, Long licoreriaId) {
-        return cajaRepositorio.findByNombreContainingIgnoreCaseAndLicoreriaId(nombre, licoreriaId);
+        return cajaRepositorio.findByNombreContainingIgnoreCaseAndLicoreriaIdAndEstadoTrue(nombre, licoreriaId);
     }
 
     @Override
