@@ -31,6 +31,10 @@ public class CreditoServicioImpl implements CreditoServicio {
     @Override
     @Transactional
     public Credito crearCredito(Venta venta) {
+        System.out.println("=== CREANDO CRÉDITO PARA VENTA ID: " + venta.getId() + " ===");
+        System.out.println("Tipo de venta: " + venta.getTipoVenta());
+        System.out.println("Cliente: " + (venta.getCliente() != null ? venta.getCliente().getNombre() : "null"));
+
         if (venta.getTipoVenta() != TipoVenta.CREDITO || venta.getCliente() == null) {
             throw new IllegalArgumentException("La venta debe ser a crédito y tener un cliente asociado");
         }
@@ -44,7 +48,14 @@ public class CreditoServicioImpl implements CreditoServicio {
         credito.setFechaLimitePago(LocalDateTime.now().plusDays(30)); // Por defecto 30 días
         credito.setEstado(Credito.EstadoCredito.PENDIENTE);
 
-        return creditoRepository.save(credito);
+        Credito creditoGuardado = creditoRepository.save(credito);
+        System.out.println("Crédito guardado con ID: " + creditoGuardado.getId());
+        System.out.println("Monto total: $" + creditoGuardado.getMontoTotal());
+        System.out.println("Saldo pendiente: $" + creditoGuardado.getSaldoPendiente());
+        System.out.println("Fecha límite: " + creditoGuardado.getFechaLimitePago());
+        System.out.println("=== FIN CREACIÓN DE CRÉDITO ===");
+
+        return creditoGuardado;
     }
 
     @Override

@@ -8,7 +8,10 @@
 <body>
     <div layout:fragment="content">
         <div class="container-fluid px-4">
-            <h1 class="mt-4">Gestión de Créditos</h1>
+            <div class="d-flex justify-content-between align-items-center">
+                <h1 class="mt-4">Gestión de Créditos</h1>
+                <a href="/" class="btn btn-outline-primary mt-4"><i class="fas fa-home"></i> Volver al Inicio</a>
+            </div>
             
             <div class="row mb-4">
                 <div class="col-12">
@@ -67,9 +70,11 @@
                                                 <span class="text-danger" th:text="${'$' + #numbers.formatDecimal(credito.saldoPendiente, 1, 2, 'POINT')}"></span>
                                             </td>
                                             <td>
-                                                <span th:text="${#temporals.format(credito.fechaLimitePago, 'dd/MM/yyyy')}"
-                                                      th:class="${credito.fechaLimitePago.isBefore(#temporals.createNow()) && credito.estado != 'PAGADO_TOTAL'} ? 'text-danger fw-bold' : ''">
+                                                <span th:if="${credito.fechaLimitePago != null}" 
+                                                      th:text="${#temporals.format(credito.fechaLimitePago, 'dd/MM/yyyy')}"
+                                                      th:class="${credito.fechaLimitePago != null && credito.fechaLimitePago.isBefore(#temporals.createNow()) && credito.estado != 'PAGADO_TOTAL'} ? 'text-danger fw-bold' : ''">
                                                 </span>
+                                                <span th:if="${credito.fechaLimitePago == null}">No definida</span>
                                             </td>
                                             <td>
                                                 <span th:class="${'badge ' + 

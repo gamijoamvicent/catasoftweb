@@ -97,6 +97,11 @@ public class VentaCajasController {
 
             @SuppressWarnings("unchecked")
             List<Map<String, Object>> items = (List<Map<String, Object>>) payload.get("items");
+            String tipoVenta = (String) payload.get("tipoVenta");
+            Long clienteId = null;
+            if (payload.containsKey("clienteId")) {
+                clienteId = Long.valueOf(payload.get("clienteId").toString());
+            }
 
             if (items == null || items.isEmpty()) {
                 return ResponseEntity.badRequest()
@@ -167,7 +172,7 @@ public class VentaCajasController {
 
             // Procesar la venta
             try {
-                ventaCajaServicio.registrarVenta(items);
+                ventaCajaServicio.registrarVenta(items, tipoVenta, clienteId);
 
                 return ResponseEntity.ok()
                     .body(Map.of(

@@ -10,6 +10,8 @@ import java.util.Map;
 public interface VentaCajaServicio {
     void registrarVenta(List<Map<String, Object>> items);
 
+    void registrarVenta(List<Map<String, Object>> items, String tipoVenta, Long clienteId);
+
     void descontarStockCaja(Long cajaId, int cantidad);
 
     List<VentaCaja> listarVentasPorVenta(Long ventaId);

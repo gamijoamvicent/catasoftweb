@@ -83,6 +83,9 @@ public class NuevaVentaController {
     @PostMapping("/confirmar")
     @ResponseBody
     public ResponseEntity<?> confirmarVenta(@RequestBody Map<String, Object> payload) {
+        // Imprimir el payload completo para depuración
+        System.out.println("=== INICIANDO PROCESAMIENTO DE VENTA ===");
+        System.out.println("Payload recibido: " + payload);
         try {
             if (licoreriaContext.getLicoreriaActual() == null) {
                 return ResponseEntity.badRequest()
@@ -215,7 +218,17 @@ public class NuevaVentaController {
 
             // Si es venta a crédito, crear el crédito
             if (tipoVenta == TipoVenta.CREDITO) {
-                creditoServicio.crearCredito(venta);
+                System.out.println("=== INICIANDO CREACIÓN DE CRÉDITO EN CONTROLLER ===");
+                System.out.println("Venta ID: " + venta.getId());
+                System.out.println("Cliente: " + (venta.getCliente() != null ? venta.getCliente().getNombre() : "null"));
+                try {
+                    Credito credito = creditoServicio.crearCredito(venta);
+                    System.out.println("Crédito creado con ID: " + credito.getId());
+                } catch (Exception e) {
+                    System.err.println("Error al crear crédito: " + e.getMessage());
+                    e.printStackTrace();
+                }
+                System.out.println("=== FIN CREACIÓN DE CRÉDITO EN CONTROLLER ===");
             }
 
             // Descontar el stock

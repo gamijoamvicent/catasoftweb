@@ -2,6 +2,8 @@ package devforge.web.dto;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import devforge.model.Venta;
+import devforge.model.enums.TipoVenta;
 
 /**
  * DTO para transferir información de ventas de cajas
@@ -106,6 +108,16 @@ public class VentaCajaDTO {
 
     public void setNombreCliente(String nombreCliente) {
         this.nombreCliente = nombreCliente;
+    }
+
+    public void actualizarNombreClienteSegunVenta(Venta venta) {
+        if (venta != null) {
+            if (venta.getTipoVenta() == TipoVenta.CREDITO && venta.getCliente() != null) {
+                this.nombreCliente = venta.getCliente().getNombre();
+            } else {
+                this.nombreCliente = "Venta al contado";
+            }
+        }
     }
 
     public boolean isActivo() {

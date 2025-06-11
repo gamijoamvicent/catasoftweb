@@ -1,12 +1,16 @@
 package devforge.servicio.impl;
 
 import devforge.model.Caja;
+import devforge.model.Cliente;
+import devforge.model.Credito;
 import devforge.model.Venta;
 import devforge.model.VentaCaja;
 import devforge.model.Producto;
 import devforge.model.enums.MetodoPago;
 import devforge.model.enums.TipoVenta;
 import devforge.model.PrecioDolar;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import devforge.repository.CajaRepository;
 import devforge.repository.VentaCajaRepository;
 import devforge.repository.VentaRepository;
@@ -35,6 +39,9 @@ public class VentaCajaServicioImpl implements VentaCajaServicio {
     private final PrecioDolarServicio precioDolarServicio;
     private final LicoreriaContext licoreriaContext;
 
+    @PersistenceContext
+    private EntityManager entityManager;
+
     @Autowired
     public VentaCajaServicioImpl(
             VentaCajaRepository ventaCajaRepository,
@@ -54,9 +61,37 @@ public class VentaCajaServicioImpl implements VentaCajaServicio {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void registrarVenta(List<Map<String, Object>> items) {
+        registrarVenta(items, "CONTADO", null);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void registrarVenta(List<Map<String, Object>> items, String tipoVentaStr, Long clienteId) {
         if (items == null || items.isEmpty()) {
             throw new RuntimeException("No hay items para procesar");
         }
+
+        // Crear la venta
+        Venta venta = new Venta();
+        venta.setLicoreria(licoreriaContext.getLicoreriaActual());
+        venta.setFechaVenta(LocalDateTime.now());
+        venta.setTipoVenta(TipoVenta.valueOf(tipoVentaStr));
+        venta.setMetodoPago(MetodoPago.EFECTIVO);
+        venta.setAnulada(false);
+        venta.setTotalVenta(BigDecimal.ZERO);
+        venta.setTotalVentaBs(BigDecimal.ZERO);
+
+        // Si es venta a crédito, asociar cliente
+        if (clienteId != null && venta.getTipoVenta() == TipoVenta.CREDITO) {
+            Cliente cliente = entityManager.getReference(Cliente.class, clienteId);
+            venta.setCliente(cliente);
+        }
+
+        // Guardar la venta
+        venta = ventaRepository.save(venta);
+
+        BigDecimal totalVenta = BigDecimal.ZERO;
+        BigDecimal totalVentaBs = BigDecimal.ZERO;
 
         try {
             // Procesar cada caja
@@ -78,6 +113,7 @@ public class VentaCajaServicioImpl implements VentaCajaServicio {
 
                 // Crear el detalle de venta de caja
                 VentaCaja ventaCaja = new VentaCaja();
+                ventaCaja.setVenta(venta);
                 ventaCaja.setCaja(caja);
                 ventaCaja.setCantidad(cantidad);
                 ventaCaja.setPrecioUnitario(BigDecimal.valueOf(precio));
@@ -95,8 +131,29 @@ public class VentaCajaServicioImpl implements VentaCajaServicio {
                 // Guardar el detalle
                 ventaCajaRepository.save(ventaCaja);
 
+                // Actualizar totales de la venta
+                totalVenta = totalVenta.add(ventaCaja.getSubtotal());
+                totalVentaBs = totalVentaBs.add(ventaCaja.getSubtotalBolivares());
+
                 // Descontar stock
                 descontarStockCaja(cajaId, cantidad);
+            }
+
+            // Actualizar venta con totales finales
+            venta.setTotalVenta(totalVenta);
+            venta.setTotalVentaBs(totalVentaBs);
+            ventaRepository.save(venta);
+
+            // Si es venta a crédito, crear registro de crédito
+            if (venta.getTipoVenta() == TipoVenta.CREDITO && venta.getCliente() != null) {
+                Credito credito = new Credito();
+                credito.setVenta(venta);
+                credito.setCliente(venta.getCliente());
+                credito.setLicoreria(venta.getLicoreria());
+                credito.setMontoTotal(venta.getTotalVenta());
+                credito.setSaldoPendiente(venta.getTotalVenta());
+                credito.setFechaLimitePago(LocalDateTime.now().plusDays(30)); // 30 días para pagar
+                entityManager.persist(credito);
             }
         } catch (Exception e) {
             // Si ocurre algún error, lanzar una excepción con el mensaje apropiado
@@ -247,9 +304,23 @@ public class VentaCajaServicioImpl implements VentaCajaServicio {
                 dto.setCantidad(vc.getCantidad());
                 dto.setPrecioUnitario(vc.getPrecioUnitario());
                 dto.setSubtotal(vc.getSubtotal());
-                dto.setMetodoPago("EFECTIVO"); // Valor por defecto
+
+                // Determinar método de pago y cliente según la venta
+                if (vc.getVenta() != null) {
+                    dto.setMetodoPago(vc.getVenta().getMetodoPago().toString());
+
+                    // Actualizar nombre del cliente según tipo de venta
+                    if (vc.getVenta().getTipoVenta() == TipoVenta.CREDITO && vc.getVenta().getCliente() != null) {
+                        dto.setNombreCliente(vc.getVenta().getCliente().getNombre());
+                    } else {
+                        dto.setNombreCliente("Venta al contado");
+                    }
+                } else {
+                    dto.setMetodoPago("EFECTIVO"); // Valor por defecto
+                    dto.setNombreCliente("Venta al contado");
+                }
+
                 dto.setActivo(vc.isActivo());
-                dto.setNombreCliente("Venta al contado");
                 return dto;
             })
             .toList();
