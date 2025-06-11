@@ -58,19 +58,6 @@ public class VentaCajaServicioImpl implements VentaCajaServicio {
             throw new RuntimeException("No hay items para procesar");
         }
 
-        // Crear la venta
-        Venta venta = new Venta();
-        venta.setLicoreria(licoreriaContext.getLicoreriaActual());
-        venta.setFechaVenta(LocalDateTime.now());
-        venta.setTipoVenta(TipoVenta.CONTADO);
-        venta.setMetodoPago(MetodoPago.EFECTIVO);
-        venta.setAnulada(false);
-        venta.setTotalVenta(BigDecimal.ZERO);
-        venta.setTotalVentaBs(BigDecimal.ZERO);
-
-        // Guardar la venta primero
-        venta = ventaRepository.save(venta);
-
         try {
             // Procesar cada caja
             for (Map<String, Object> item : items) {
@@ -91,7 +78,6 @@ public class VentaCajaServicioImpl implements VentaCajaServicio {
 
                 // Crear el detalle de venta de caja
                 VentaCaja ventaCaja = new VentaCaja();
-                ventaCaja.setVenta(venta);
                 ventaCaja.setCaja(caja);
                 ventaCaja.setCantidad(cantidad);
                 ventaCaja.setPrecioUnitario(BigDecimal.valueOf(precio));
@@ -106,22 +92,12 @@ public class VentaCajaServicioImpl implements VentaCajaServicio {
                     ventaCaja.getSubtotal().multiply(BigDecimal.valueOf(tasaCambio))
                 );
 
-                // Actualizar totales de la venta
-                BigDecimal totalVenta = venta.getTotalVenta() != null ? venta.getTotalVenta() : BigDecimal.ZERO;
-                BigDecimal totalVentaBs = venta.getTotalVentaBs() != null ? venta.getTotalVentaBs() : BigDecimal.ZERO;
-                
-                venta.setTotalVenta(totalVenta.add(ventaCaja.getSubtotal()));
-                venta.setTotalVentaBs(totalVentaBs.add(ventaCaja.getSubtotalBolivares()));
-
                 // Guardar el detalle
                 ventaCajaRepository.save(ventaCaja);
 
                 // Descontar stock
                 descontarStockCaja(cajaId, cantidad);
             }
-
-            // Actualizar la venta con los totales finales
-            ventaRepository.save(venta);
         } catch (Exception e) {
             // Si ocurre algún error, lanzar una excepción con el mensaje apropiado
             throw new RuntimeException("Error al procesar la venta: " + e.getMessage());
@@ -250,14 +226,8 @@ public class VentaCajaServicioImpl implements VentaCajaServicio {
 
     @Override
     public List<VentaCajaDTO> buscarVentasCajasPorFechaYTipo(Long licoreriaId, LocalDateTime fechaInicio, LocalDateTime fechaFin, String tipoCaja) {
-        // Buscar ventas realizadas en el período especificado
-        List<Venta> ventas = ventaRepository.findByLicoreriaIdAndFechaVentaBetweenAndAnuladaFalse(licoreriaId, fechaInicio, fechaFin);
-
-        // Obtener los IDs de ventas para buscar las ventas de cajas
-        List<Long> ventaIds = ventas.stream().map(Venta::getId).toList();
-
-        // Buscar todas las ventas de cajas asociadas a estas ventas (solo activas)
-        List<VentaCaja> ventasCajas = ventaCajaRepository.findByVentaIdInAndActivoTrue(ventaIds);
+        // Buscar directamente las ventas de cajas por fecha de creación
+        List<VentaCaja> ventasCajas = ventaCajaRepository.findByFechaCreacionBetweenAndActivoTrue(fechaInicio, fechaFin);
 
         // Filtrar por tipo de caja si es necesario
         if (tipoCaja != null && !tipoCaja.equals("TODAS")) {
@@ -277,16 +247,9 @@ public class VentaCajaServicioImpl implements VentaCajaServicio {
                 dto.setCantidad(vc.getCantidad());
                 dto.setPrecioUnitario(vc.getPrecioUnitario());
                 dto.setSubtotal(vc.getSubtotal());
-                dto.setMetodoPago(vc.getVenta().getMetodoPago().toString());
+                dto.setMetodoPago("EFECTIVO"); // Valor por defecto
                 dto.setActivo(vc.isActivo());
-                // Asegurar que el nombre del cliente nunca sea null
-                if (vc.getVenta().getCliente() != null) {
-                    String nombre = vc.getVenta().getCliente().getNombre() != null ? vc.getVenta().getCliente().getNombre() : "";
-                    String apellido = vc.getVenta().getCliente().getApellido() != null ? vc.getVenta().getCliente().getApellido() : "";
-                    dto.setNombreCliente(nombre + " " + apellido);
-                } else {
-                    dto.setNombreCliente("Venta al contado");
-                }
+                dto.setNombreCliente("Venta al contado");
                 return dto;
             })
             .toList();
