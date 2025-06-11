@@ -1,9 +1,11 @@
-package devforge.servicio;
+package devforge.servicio.impl;
 
 import devforge.config.LicoreriaContext;
 import devforge.model.ItemVentaDto;
 import devforge.model.Producto;
 import devforge.repository.ProductoRepository;
+import devforge.servicio.ProductoServicio;
+import devforge.servicio.PrecioDolarServicio;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -49,7 +51,7 @@ public class ProductoServicioImpl implements ProductoServicio {
         }
 
         producto.setCantidad(producto.getCantidad() - cantidad);
-        productoRepository.save(producto); // ✅ Guarda el cambio en la BD
+        productoRepository.save(producto);
     }
 
     @Override
@@ -100,7 +102,7 @@ public class ProductoServicioImpl implements ProductoServicio {
             }
 
             producto.setCantidad(nuevaCantidad);
-            productoRepository.save(producto); // ✅ Guarda el cambio
+            productoRepository.save(producto);
         }
     }
 
@@ -122,4 +124,33 @@ public class ProductoServicioImpl implements ProductoServicio {
             productoRepository.delete(producto);
         }
     }
-}
+
+    @Override
+    public List<Producto> obtenerTodos() {
+        if (licoreriaContext.getLicoreriaId() == null) {
+            return List.of();
+        }
+        return productoRepository.findByLicoreriaIdAndActivoTrue(licoreriaContext.getLicoreriaId());
+    }
+
+    @Override
+    @Transactional
+    public void registrarIngresoStock(Long productoId, Integer cantidad, String motivo) {
+        if (cantidad <= 0) {
+            throw new RuntimeException("La cantidad debe ser mayor a 0");
+        }
+
+        Producto producto = productoRepository.findById(productoId)
+                .orElseThrow(() -> new RuntimeException("Producto no encontrado"));
+
+        if (!producto.isActivo()) {
+            throw new RuntimeException("No se puede ingresar stock a un producto inactivo");
+        }
+
+        // Actualizar la cantidad
+        producto.setCantidad(producto.getCantidad() + cantidad);
+        productoRepository.save(producto);
+
+        // Aquí podrías agregar lógica para registrar el historial de ingresos si lo necesitas
+    }
+} 

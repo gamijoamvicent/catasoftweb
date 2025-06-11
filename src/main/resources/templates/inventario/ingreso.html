@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Ingreso de Stock - InventSoft</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+    <style>
+        :root {
+            --primary: #1565C0;
+            --accent: #00BFA5;
+            --secondary: #1976D2;
+            --background: #E3F2FD;
+            --text-dark: #1A237E;
+            --text-light: #FFFFFF;
+            --border-color: #BBDEFB;
+            --shadow-light: 0 4px 12px rgba(21, 101, 192, 0.08);
+            --shadow-hover: 0 6px 20px rgba(21, 101, 192, 0.15);
+            --input-bg: #FFFFFF;
+            --success: #00BFA5;
+            --error: #FF5252;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Roboto', 'Segoe UI', Arial, sans-serif;
+            background: var(--background);
+            color: var(--text-dark);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .page-container {
+            max-width: 1200px;
+            width: 100%;
+            box-shadow: var(--shadow-hover);
+            border-radius: 12px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            background: var(--input-bg);
+        }
+
+        .header {
+            background: var(--primary);
+            color: var(--text-light);
+            padding: 30px 35px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            text-align: left;
+        }
+
+        .header h2 {
+            margin: 0 0 8px 0;
+            font-size: 2rem;
+            font-weight: 700;
+            color: #FFFFFF;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .header p {
+            color: rgba(255, 255, 255, 0.9);
+            margin: 0;
+            font-size: 0.95rem;
+        }
+
+        .content-wrapper {
+            padding: 35px;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+
+        .form-container {
+            background: var(--input-bg);
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: var(--shadow-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--text-dark);
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(21, 101, 192, 0.1);
+        }
+
+        .product-info {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 10px;
+            display: none;
+        }
+
+        .product-info.active {
+            display: block;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: var(--text-light);
+        }
+
+        .btn-primary:hover {
+            background: var(--secondary);
+            transform: translateY(-2px);
+        }
+
+        .btn-back {
+            background: var(--accent);
+            color: var(--text-light);
+        }
+
+        .btn-back:hover {
+            background: var(--success);
+            transform: translateY(-2px);
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .alert-success {
+            background: #e8f5e9;
+            color: #2e7d32;
+            border: 1px solid #c8e6c9;
+        }
+
+        .alert-error {
+            background: #ffebee;
+            color: #c62828;
+            border: 1px solid #ffcdd2;
+        }
+    </style>
+</head>
+<body>
+    <div class="page-container">
+        <div class="header">
+            <h2>Ingreso de Stock</h2>
+            <p>Registra el ingreso de productos al inventario</p>
+        </div>
+
+        <div class="content-wrapper">
+            <div class="alert alert-success" id="successAlert">
+                ✅ Ingreso registrado exitosamente
+            </div>
+            <div class="alert alert-error" id="errorAlert">
+                ❌ Error al registrar el ingreso
+            </div>
+
+            <div class="form-container">
+                <form id="ingresoForm">
+                    <div class="form-group">
+                        <label for="producto">Seleccionar Producto:</label>
+                        <select id="producto" name="producto" required>
+                            <option value="">-- Seleccione un producto --</option>
+                        </select>
+                    </div>
+
+                    <div class="product-info" id="productInfo">
+                        <h4>Información del Producto</h4>
+                        <p><strong>Stock Actual:</strong> <span id="stockActual">0</span></p>
+                        <p><strong>Precio de Venta:</strong> $<span id="precioVenta">0.00</span></p>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="cantidad">Cantidad a Ingresar:</label>
+                        <input type="number" id="cantidad" name="cantidad" min="1" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="motivo">Motivo del Ingreso:</label>
+                        <input type="text" id="motivo" name="motivo" placeholder="Ej: Compra a proveedor, Devolución, etc.">
+                    </div>
+
+                    <div class="action-buttons">
+                        <button type="submit" class="btn btn-primary">
+                            <span class="icon">💾</span> Registrar Ingreso
+                        </button>
+                        <button type="button" class="btn btn-back" onclick="window.location.href='/'">
+                            <span class="icon">⬅️</span> Volver al Menú
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Cargar productos al iniciar
+        window.onload = function() {
+            cargarProductos();
+        };
+
+        function cargarProductos() {
+            fetch('/inventario/api/productos')
+                .then(response => response.json())
+                .then(productos => {
+                    const select = document.getElementById('producto');
+                    productos.forEach(producto => {
+                        const option = document.createElement('option');
+                        option.value = producto.id;
+                        option.textContent = `${producto.nombre} (${producto.marca})`;
+                        option.dataset.stock = producto.cantidad;
+                        option.dataset.precio = producto.precioVenta;
+                        select.appendChild(option);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error al cargar productos:', error);
+                    mostrarError('Error al cargar la lista de productos');
+                });
+        }
+
+        document.getElementById('producto').addEventListener('change', function() {
+            const selectedOption = this.options[this.selectedIndex];
+            const productInfo = document.getElementById('productInfo');
+            
+            if (this.value) {
+                document.getElementById('stockActual').textContent = selectedOption.dataset.stock;
+                document.getElementById('precioVenta').textContent = selectedOption.dataset.precio;
+                productInfo.classList.add('active');
+            } else {
+                productInfo.classList.remove('active');
+            }
+        });
+
+        document.getElementById('ingresoForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = {
+                productoId: document.getElementById('producto').value,
+                cantidad: document.getElementById('cantidad').value,
+                motivo: document.getElementById('motivo').value
+            };
+
+            fetch('/inventario/api/ingreso', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    [document.querySelector('meta[name="_csrf_header"]').getAttribute('content')]: 
+                        document.querySelector('meta[name="_csrf"]').getAttribute('content')
+                },
+                body: JSON.stringify(formData)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.text().then(text => {
+                        try {
+                            const data = JSON.parse(text);
+                            throw new Error(data.message || 'Error en la respuesta del servidor');
+                        } catch (e) {
+                            throw new Error(text || 'Error en la respuesta del servidor');
+                        }
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    mostrarExito(data.message);
+                    document.getElementById('ingresoForm').reset();
+                    document.getElementById('productInfo').classList.remove('active');
+                } else {
+                    mostrarError(data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                mostrarError(error.message);
+            });
+        });
+
+        function mostrarError(mensaje) {
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'alert alert-danger';
+            errorDiv.textContent = mensaje;
+            document.querySelector('.form-container').prepend(errorDiv);
+            setTimeout(() => errorDiv.remove(), 5000);
+        }
+
+        function mostrarExito(mensaje) {
+            const exitoDiv = document.createElement('div');
+            exitoDiv.className = 'alert alert-success';
+            exitoDiv.textContent = mensaje;
+            document.querySelector('.form-container').prepend(exitoDiv);
+            setTimeout(() => exitoDiv.remove(), 5000);
+        }
+    </script>
+</body>
+</html> 

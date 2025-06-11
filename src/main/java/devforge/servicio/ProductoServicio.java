@@ -31,4 +31,8 @@ public interface ProductoServicio {
     List<Producto> listarProductosPorLicoreria(Long licoreriaId);
     List<Producto> listarProductosPorLicoreriaYCategoria(Long licoreriaId, String categoria);
     void eliminarProductosPorLicoreria(Long licoreriaId);
+    
+    // Métodos para ingreso de stock
+    List<Producto> obtenerTodos();
+    void registrarIngresoStock(Long productoId, Integer cantidad, String motivo);
 }

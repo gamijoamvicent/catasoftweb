@@ -119,6 +119,17 @@
                     </div>
                 </div>
 
+                <div class="card inventario" sec:authorize="hasAnyRole('BODEGA', 'ADMIN_LOCAL', 'SUPER_ADMIN')">
+                    <div class="card-header">
+                        <img src="/icons/stock.png" alt="IngresoStock" class="card-icon">
+                        <h3 class="card-title">Ingreso de Stock</h3>
+                    </div>
+                    <div class="card-content">
+                        <p>Registrar ingreso de productos al inventario</p>
+                        <a th:href="@{/inventario/ingreso}" class="btn btn-primary">Registrar Ingreso</a>
+                    </div>
+                </div>
+
                 <div class="card inventario" sec:authorize="hasAnyRole('ADMIN_LOCAL', 'SUPER_ADMIN')">
                     <div class="card-header">
                         <img src="/icons/combo.png" alt="AgregarCombo" class="card-icon">
