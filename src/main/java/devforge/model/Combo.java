@@ -33,6 +33,10 @@ public class Combo {
     @Column(name = "fecha_creacion")
     private LocalDateTime fechaCreacion = LocalDateTime.now();
 
+    @ManyToOne
+    @JoinColumn(name = "creado_por", nullable = true) // Cambiar a nullable = true
+    private Usuario creadoPor;
+
     @OneToMany(mappedBy = "combo", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ComboProducto> productos = new ArrayList<>();
 
@@ -105,5 +109,13 @@ public class Combo {
 
     public void setProductos(List<ComboProducto> productos) {
         this.productos = productos;
+    }
+
+    public Usuario getCreadoPor() {
+        return creadoPor;
+    }
+
+    public void setCreadoPor(Usuario creadoPor) {
+        this.creadoPor = creadoPor;
     }
 } 

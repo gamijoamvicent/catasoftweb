@@ -4,10 +4,15 @@ import devforge.config.LicoreriaContext;
 import devforge.model.Combo;
 import devforge.model.ComboProducto;
 import devforge.model.Producto;
+import devforge.model.Usuario;
 import devforge.repository.ComboProductoRepository;
 import devforge.repository.ComboRepository;
 import devforge.repository.ProductoRepository;
+import devforge.repository.UsuarioRepository;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -26,15 +31,18 @@ public class ComboController {
     private final ProductoRepository productoRepository;
     private final ComboProductoRepository comboProductoRepository;
     private final LicoreriaContext licoreriaContext;
+    private final UsuarioRepository usuarioRepository;
 
     public ComboController(ComboRepository comboRepository, 
                           ProductoRepository productoRepository,
                           ComboProductoRepository comboProductoRepository,
-                          LicoreriaContext licoreriaContext) {
+                          LicoreriaContext licoreriaContext,
+                          UsuarioRepository usuarioRepository) {
         this.comboRepository = comboRepository;
         this.productoRepository = productoRepository;
         this.comboProductoRepository = comboProductoRepository;
         this.licoreriaContext = licoreriaContext;
+        this.usuarioRepository = usuarioRepository;
     }
 
     @GetMapping("/agregar")
@@ -48,7 +56,7 @@ public class ComboController {
 
     @PostMapping("/api/combos")
     @ResponseBody
-    public ResponseEntity<?> crearCombo(@RequestBody Map<String, Object> payload) {
+    public ResponseEntity<?> crearCombo(@RequestBody Map<String, Object> payload, @AuthenticationPrincipal UserDetails userDetails) {
         try {
             if (licoreriaContext.getLicoreriaActual() == null) {
                 return ResponseEntity.badRequest().body("Debe seleccionar una licorería primero");
@@ -60,12 +68,17 @@ public class ComboController {
             @SuppressWarnings("unchecked")
             List<Map<String, Object>> productos = (List<Map<String, Object>>) payload.get("productos");
 
+            // Obtener el usuario actual
+            Usuario usuario = usuarioRepository.findByUsername(userDetails.getUsername())
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+
             Combo combo = new Combo();
             combo.setNombre(nombre);
             combo.setPrecio(precio);
             combo.setTipoTasa(Combo.TipoTasa.valueOf(tipoTasaStr));
             combo.setLicoreria(licoreriaContext.getLicoreriaActual());
             combo.setActivo(true); // Por defecto, los combos nuevos están activos
+            combo.setCreadoPor(usuario); // Establecer el usuario que crea el combo
             combo = comboRepository.save(combo);
 
             for (Map<String, Object> productoData : productos) {
@@ -106,21 +119,39 @@ public class ComboController {
 
         Long licoreriaId = licoreriaContext.getLicoreriaId();
 
-        // Usar el método del repositorio que filtra directamente
-        return comboRepository.findByLicoreriaIdAndActivoTrue(licoreriaId)
-            .stream()
-            .map(combo -> {
-                Map<String, Object> comboData = new HashMap<>();
-                comboData.put("id", combo.getId());
-                comboData.put("nombre", combo.getNombre());
-                comboData.put("precio", combo.getPrecio());
-                comboData.put("tipoTasa", combo.getTipoTasa().toString());
-                comboData.put("fechaCreacion", combo.getFechaCreacion());
-                comboData.put("activo", combo.getActivo());
-                comboData.put("licoreriaId", combo.getLicoreria().getId()); // Agregar el ID de la licorería para verificación
-                return comboData;
-            })
-            .toList();
+        try {
+            // Usar el método del repositorio que filtra directamente
+            return comboRepository.findByLicoreriaIdAndActivoTrue(licoreriaId)
+                .stream()
+                .map(combo -> {
+                    Map<String, Object> comboData = new HashMap<>();
+                    comboData.put("id", combo.getId());
+                    comboData.put("nombre", combo.getNombre());
+                    comboData.put("precio", combo.getPrecio());
+                    comboData.put("tipoTasa", combo.getTipoTasa().toString());
+                    comboData.put("fechaCreacion", combo.getFechaCreacion());
+                    comboData.put("activo", combo.getActivo());
+                    comboData.put("licoreriaId", combo.getLicoreria().getId()); // Agregar el ID de la licorería para verificación
+
+                    // Manejar de forma segura la información del usuario creador
+                    try {
+                        if (combo.getCreadoPor() != null) {
+                            comboData.put("creadoPor", combo.getCreadoPor().getUsername());
+                        } else {
+                            comboData.put("creadoPor", "Usuario no disponible");
+                        }
+                    } catch (jakarta.persistence.EntityNotFoundException e) {
+                        comboData.put("creadoPor", "Usuario no disponible");
+                    }
+
+                    return comboData;
+                })
+                .toList();
+        } catch (Exception e) {
+            // Loggear el error y devolver una lista vacía para evitar errores en el cliente
+            System.err.println("Error al listar combos: " + e.getMessage());
+            return new ArrayList<>();
+        }
     }
 
     @GetMapping("/api/combos/{id}/productos")
