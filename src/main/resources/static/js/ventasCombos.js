@@ -1,12 +1,9 @@
 $(document).ready(function() {
+    // Variables globales
     let carrito = [];
-    let tasasDolar = {
-        BCV: 0,
-        PARALELA: 0,
-        PROMEDIO: 0
-    };
     const token = $("meta[name='_csrf']").attr("content");
     const header = $("meta[name='_csrf_header']").attr("content");
+    const precioDolar = parseFloat(document.getElementById("precioDolarLabel")?.textContent.replace(' Bs', '') || 1);
 
     // Obtener las tasas del dólar
     function obtenerTasasDolar() {
@@ -218,53 +215,43 @@ $(document).ready(function() {
             return;
         }
 
-        const combosVendidos = carrito.map(item => ({
-            id: item.id,
-            cantidad: item.cantidad
-        }));
+        const combo = carrito[0]; // Por ahora solo manejamos un combo por venta
+        const valorUSD = combo.precio;
+        const valorBS = valorUSD * precioDolar;
 
-        console.log('Enviando datos de venta:', combosVendidos);
+        const ventaData = {
+            comboId: combo.id,
+            valorVentaUSD: valorUSD,
+            valorVentaBS: valorBS,
+            tasaConversion: precioDolar,
+            metodoPago: 'EFECTIVO' // Por defecto
+        };
 
-        $.ajax({
-            url: '/ventas/combos/confirmar',
+        // Obtener el token CSRF
+        const token = document.querySelector('meta[name="_csrf"]')?.getAttribute('content');
+        const header = document.querySelector('meta[name="_csrf_header"]')?.getAttribute('content');
+
+        fetch('/ventas/combos/registrar', {
             method: 'POST',
-            contentType: 'application/json',
-            data: JSON.stringify({ items: combosVendidos }),
-            success: function(response) {
-                console.log('Respuesta del servidor:', response);
-                if (response.success) {
-                    mostrarNotificacion('✅ Venta realizada exitosamente', 'success');
-                    carrito = [];
-                    actualizarCarrito();
-                    setTimeout(() => {
-                        window.location.reload();
-                    }, 2000);
-                } else {
-                    mostrarNotificacion('❌ ' + (response.message || 'Error al procesar la venta'), 'error');
-                }
+            headers: {
+                'Content-Type': 'application/json',
+                [header]: token
             },
-            error: function(xhr, status, error) {
-                console.error('Error en la petición:', { xhr, status, error });
-                let mensaje = 'Error al procesar la venta';
-                
-                try {
-                    if (xhr.responseJSON && xhr.responseJSON.message) {
-                        mensaje = xhr.responseJSON.message;
-                    } else if (xhr.responseText) {
-                        const response = JSON.parse(xhr.responseText);
-                        if (response.message) {
-                            mensaje = response.message;
-                        }
-                    }
-                } catch (e) {
-                    console.error('Error al procesar la respuesta:', e);
-                    if (xhr.responseText) {
-                        mensaje = xhr.responseText;
-                    }
-                }
-                
-                mostrarNotificacion('❌ ' + mensaje, 'error');
+            body: JSON.stringify(ventaData)
+        })
+        .then(response => response.json())
+        .then(result => {
+            if (result.mensaje && result.mensaje.includes('exitosamente')) {
+                mostrarNotificacion('✅ Venta registrada exitosamente', 'success');
+                carrito = [];
+                actualizarCarrito();
+            } else {
+                throw new Error(result.error || 'Error desconocido');
             }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            mostrarNotificacion('❌ Error al registrar la venta: ' + error.message, 'error');
         });
     });
 
@@ -362,4 +349,4 @@ $(document).ready(function() {
             }
         });
     }
-}); 
+});

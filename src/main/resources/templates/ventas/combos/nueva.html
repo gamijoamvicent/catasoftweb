@@ -4,10 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Venta de Combos</title>
+    <meta th:name="_csrf" th:content="${_csrf.token}"/>
+    <meta th:name="_csrf_header" th:content="${_csrf.headerName}"/>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" th:href="@{/css/ventasCombos.css}">
 </head>
 <body>
+    <!-- Precio del dólar -->
+    <div class="dolar-info">
+        <span class="label-info">Precio del Dólar:</span>
+        <span class="precio-dolar" id="precioDolarLabel" th:text="${precioDolar} ?: '0.00 Bs'"></span>
+    </div>
+
     <div class="container">
         <div class="search-container">
             <div class="search-box">
@@ -20,7 +28,11 @@
             <div th:each="combo : ${combos}" class="combo-card" th:data-nombre="${combo.nombre}">
                 <div class="combo-header">
                     <h3 th:text="${combo.nombre}">Nombre del Combo</h3>
-                    <span class="combo-price" th:text="'$' + ${#numbers.formatDecimal(combo.precio, 1, 2)}">$0.00</span>
+                    <div class="precio-container">
+                        <span class="combo-price" th:text="'$' + ${#numbers.formatDecimal(combo.precio, 1, 2)}">$0.00</span>
+                        <span class="combo-price-bs" 
+                              th:text="${#numbers.formatDecimal(combo.precio * precioDolar, 1, 2)} + ' Bs'">0.00 Bs</span>
+                    </div>
                 </div>
                 <div class="combo-content">
                     <div class="combo-products">
@@ -51,8 +63,12 @@
             </div>
             <div class="cart-summary">
                 <div class="total">
-                    <span>Total:</span>
+                    <span>Total USD:</span>
                     <span class="total-amount">$0.00</span>
+                </div>
+                <div class="total">
+                    <span>Total BS:</span>
+                    <span class="total-amount-bs">0.00 Bs</span>
                 </div>
                 <button id="btnConfirmarVenta" disabled>
                     <i class="fas fa-check-circle"></i>
@@ -65,4 +81,4 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script th:src="@{/js/ventasCombos.js}"></script>
 </body>
-</html> 
+</html>
