@@ -217,13 +217,34 @@ $(document).ready(function() {
 
         const combo = carrito[0]; // Por ahora solo manejamos un combo por venta
         const valorUSD = combo.precio;
-        const valorBS = valorUSD * precioDolar;
+
+        // Normalizar el tipo de tasa del combo
+        let tipoTasaNormalizado = combo.tipoTasa;
+        if (tipoTasaNormalizado === 'PARALELO') {
+            tipoTasaNormalizado = 'PARALELA';
+        }
+
+        // Obtener la tasa según el tipo configurado en el combo
+        const tasaEfectiva = tasasDolar[tipoTasaNormalizado] || tasasDolar['BCV'];
+        if (!tasaEfectiva) {
+            mostrarNotificacion(`No hay tasa de cambio disponible para el tipo ${tipoTasaNormalizado}`, 'error');
+            return;
+        }
+
+        const valorBS = valorUSD * tasaEfectiva;
+        console.log('Calculando venta:', {
+            combo,
+            valorUSD,
+            tipoTasa: tipoTasaNormalizado,
+            tasaEfectiva,
+            valorBS
+        });
 
         const ventaData = {
             comboId: combo.id,
             valorVentaUSD: valorUSD,
             valorVentaBS: valorBS,
-            tasaConversion: precioDolar,
+            tasaConversion: tasaEfectiva,
             metodoPago: 'EFECTIVO' // Por defecto
         };
 
