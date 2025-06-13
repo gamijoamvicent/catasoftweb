@@ -70,6 +70,10 @@ public class VentaComboController {
                     .body(Map.of("error", "El valor en USD no coincide con el precio del combo"));
             }            // Obtener y validar la tasa de cambio del combo
             String tipoTasaStr = combo.getTipoTasa().name();
+            // Normalizar el tipo de tasa para asegurar que usamos PARALELA en lugar de PARALELO
+            if ("PARALELO".equals(tipoTasaStr)) {
+                tipoTasaStr = "PARALELA";
+            }
             TipoTasa tipoTasa = TipoTasa.valueOf(tipoTasaStr);            // Buscar la tasa más reciente para la licorería actual
             List<PrecioDolar> tasasCombo = precioDolarRepository.findByLicoreriaIdAndTipoTasaOrderByFechaDolarDesc(
                 licoreria.getId(), 
