@@ -10,4 +10,5 @@ public class VentaComboDTO {
     private BigDecimal valorVentaBS;
     private BigDecimal tasaConversion;
     private String metodoPago;
+    private Integer cantidad;
 }

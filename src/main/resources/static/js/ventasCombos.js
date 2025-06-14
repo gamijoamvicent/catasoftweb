@@ -215,55 +215,41 @@ $(document).ready(function() {
             return;
         }
 
-        const combo = carrito[0]; // Por ahora solo manejamos un combo por venta
-        const valorUSD = combo.precio;
-
-        // Normalizar el tipo de tasa del combo
-        let tipoTasaNormalizado = combo.tipoTasa;
-        if (tipoTasaNormalizado === 'PARALELO') {
-            tipoTasaNormalizado = 'PARALELA';
-        }
-
-        // Obtener la tasa según el tipo configurado en el combo
-        const tasaEfectiva = tasasDolar[tipoTasaNormalizado] || tasasDolar['BCV'];
-        if (!tasaEfectiva) {
-            mostrarNotificacion(`No hay tasa de cambio disponible para el tipo ${tipoTasaNormalizado}`, 'error');
-            return;
-        }
-
-        const valorBS = valorUSD * tasaEfectiva;
-        console.log('Calculando venta:', {
-            combo,
-            valorUSD,
-            tipoTasa: tipoTasaNormalizado,
-            tasaEfectiva,
-            valorBS
-        });
-
-        const ventaData = {
-            comboId: combo.id,
-            valorVentaUSD: valorUSD,
-            valorVentaBS: valorBS,
-            tasaConversion: tasaEfectiva,
-            metodoPago: 'EFECTIVO' // Por defecto
-        };
-
         // Obtener el token CSRF
         const token = document.querySelector('meta[name="_csrf"]')?.getAttribute('content');
         const header = document.querySelector('meta[name="_csrf_header"]')?.getAttribute('content');
 
-        fetch('/ventas/combos/registrar', {
+        // Preparar el array de ventas
+        const ventasData = carrito.map(combo => {
+            const valorUSD = combo.precio;
+            let tipoTasaNormalizado = combo.tipoTasa;
+            if (tipoTasaNormalizado === 'PARALELO') {
+                tipoTasaNormalizado = 'PARALELA';
+            }
+            const tasaEfectiva = tasasDolar[tipoTasaNormalizado] || tasasDolar['BCV'];
+            const valorBS = valorUSD * tasaEfectiva;
+            return {
+                comboId: combo.id,
+                valorVentaUSD: valorUSD,
+                valorVentaBS: valorBS,
+                tasaConversion: tasaEfectiva,
+                metodoPago: 'EFECTIVO',
+                cantidad: combo.cantidad
+            };
+        });
+
+        fetch('/ventas/combos/registrar-multiple', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 [header]: token
             },
-            body: JSON.stringify(ventaData)
+            body: JSON.stringify(ventasData)
         })
         .then(response => response.json())
         .then(result => {
             if (result.mensaje && result.mensaje.includes('exitosamente')) {
-                mostrarNotificacion('✅ Venta registrada exitosamente', 'success');
+                mostrarNotificacion('✅ Venta(s) registrada(s) exitosamente', 'success');
                 carrito = [];
                 actualizarCarrito();
             } else {

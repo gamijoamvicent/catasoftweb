@@ -35,6 +35,10 @@ public class VentaCombo {
     
     @Column(name = "metodo_pago", nullable = false)
     private String metodoPago;
-      @Column(name = "fecha_venta", columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
+    
+    @Column(name = "fecha_venta", columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
     private LocalDateTime fechaVenta;
+    
+    @Column(name = "cantidad", nullable = false)
+    private Integer cantidad;
 }

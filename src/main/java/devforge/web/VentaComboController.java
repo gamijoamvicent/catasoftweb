@@ -12,6 +12,7 @@ import devforge.repository.PrecioDolarRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.transaction.annotation.Transactional;
 import java.util.Map;
 import java.math.BigDecimal;
 import java.util.List;
@@ -99,7 +100,14 @@ public class VentaComboController {
                         "valorEsperado", valorBsEsperado,
                         "tasaUsada", tasaBs
                     ));
-            }// Crear la venta
+            }
+            // Validar cantidad
+            if (ventaDTO.getCantidad() == null || ventaDTO.getCantidad() < 1) {
+                return ResponseEntity.badRequest()
+                    .body(Map.of("error", "Debe indicar la cantidad de combos a vender"));
+            }
+
+            // Crear la venta
             VentaCombo venta = new VentaCombo();
             venta.setCombo(combo);
             venta.setValorVentaUSD(ventaDTO.getValorVentaUSD());
@@ -107,6 +115,10 @@ public class VentaComboController {
             venta.setTasaConversion(tasaBs);
             venta.setMetodoPago(ventaDTO.getMetodoPago());
             venta.setLicoreria(licoreria);
+            venta.setCantidad(ventaDTO.getCantidad());
+            
+            // Decrementar stock de productos en el combo según la cantidad
+            ventaComboService.decrementarStockProductos(combo, ventaDTO.getCantidad());
             
             // Guardar la venta
             venta = ventaComboService.guardar(venta);
@@ -157,6 +169,27 @@ public class VentaComboController {
             e.printStackTrace(); // You should use a proper logger in production
             return ResponseEntity.internalServerError()
                 .body(Map.of("error", "Error al obtener las ventas"));
+        }
+    }
+
+    @PostMapping("/registrar-multiple")
+    @ResponseBody
+    @Transactional
+    public ResponseEntity<?> registrarVentaMultiple(@RequestBody List<VentaComboDTO> ventasDTO) {
+        try {
+            if (ventasDTO == null || ventasDTO.isEmpty()) {
+                return ResponseEntity.badRequest().body(Map.of("error", "El carrito está vacío"));
+            }
+            var licoreria = licoreriaContext.getLicoreriaActual();
+            if (licoreria == null) {
+                return ResponseEntity.badRequest().body(Map.of("error", "Debe seleccionar una licorería primero"));
+            }
+            // Validar y procesar todas las ventas en una sola transacción
+            ventaComboService.procesarCarrito(ventasDTO, licoreria);
+            return ResponseEntity.ok(Map.of("mensaje", "Venta(s) registrada(s) exitosamente"));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.internalServerError().body(Map.of("error", e.getMessage()));
         }
     }
 }
