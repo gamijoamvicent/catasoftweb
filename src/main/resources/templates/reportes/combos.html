@@ -36,6 +36,7 @@
                 <a href="/reportes/ventas" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Volver a Reporte Ventas</a>
                 <h2>Dashboard de Ventas de Combos</h2>
             </div>
+            <div id="pdf-btn-container"></div>
             <p>Visualiza el rendimiento y las estadísticas de ventas de los combos.</p>
         </div>
         <div class="stats-grid">
@@ -56,14 +57,20 @@
                 <div class="stat-value" id="ticket-promedio-combo">$0.00</div>
             </div>
         </div>
-        <div class="charts-container">
-            <div class="chart-card">
-                <h3>Ventas de Combos por Día</h3>
-                <canvas id="combosPorDiaChart"></canvas>
+        <!-- Filtros por fecha -->
+        <div class="row mb-3">
+            <div class="col-md-3">
+                <label for="fecha-inicio" class="form-label">Fecha Inicio</label>
+                <input type="date" class="form-control" id="fecha-inicio" name="fechaInicio">
             </div>
-            <div class="chart-card">
-                <h3>Top 5 Combos Vendidos</h3>
-                <canvas id="topCombosChart"></canvas>
+            <div class="col-md-3">
+                <label for="fecha-fin" class="form-label">Fecha Fin</label>
+                <input type="date" class="form-control" id="fecha-fin" name="fechaFin">
+            </div>
+            <div class="col-md-3 d-flex align-items-end">
+                <button type="button" class="btn btn-primary w-100" id="filtrar-combos">
+                    <i class="fas fa-filter"></i> Filtrar
+                </button>
             </div>
         </div>
         <div class="table-container">
